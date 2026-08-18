@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: release-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+      - name: Verify release tag is valid and based on main
+        shell: bash
+        run: |
+          if [[ ! "${{ github.event.release.tag_name }}" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Release tag must be a semantic version such as v1.3.1" >&2
+            exit 1
+          fi
+          git fetch origin main --depth=1
+          git merge-base --is-ancestor HEAD origin/main
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Derive release version from tag
+        shell: bash
+        run: |
+          echo "RELEASE_VERSION=${{ github.event.release.tag_name }}" | sed 's/^RELEASE_VERSION=v/RELEASE_VERSION=/' >> "$GITHUB_ENV"
+      - name: Prepare npm package version
+        run: npm version "$RELEASE_VERSION" --no-git-tag-version
+      - name: Test
+        run: |
+          go test ./...
+          sh scripts/test-install.sh
+          npm test
+      - name: Verify production API compatibility
+        shell: bash
+        run: |
+          production_contract=$(mktemp)
+          trap 'rm -f -- "$production_contract"' EXIT
+          curl -fsS --retry 3 --output "$production_contract" https://api.epismo.ai/openapi.json
+          sh scripts/check-openapi.sh "$production_contract"
+      - name: Build release archives
+        run: ./scripts/release.sh dist
+      - name: Stage and verify npm package
+        run: |
+          sh scripts/stage-npm-package.sh dist
+          node npm/bin/epismo.js --version | grep -Fx "$RELEASE_VERSION"
+          npm pack --dry-run
+          sh scripts/test-npm-package.sh "$RELEASE_VERSION"
+      - name: Attest build artifacts
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with:
+          subject-path: |
+            dist/epismo_darwin_*
+            dist/epismo_linux_*
+            dist/epismo_windows_*
+            dist/checksums.txt
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/* --clobber
+      - name: Publish npm package
+        run: npm publish --provenance --access public

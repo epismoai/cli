@@ -1,0 +1,6 @@
+darwin-amd64 epismo_darwin_amd64 epismo
+darwin-arm64 epismo_darwin_arm64 epismo
+linux-amd64 epismo_linux_amd64 epismo
+linux-arm64 epismo_linux_arm64 epismo
+windows-amd64 epismo_windows_amd64.exe epismo.exe
+windows-arm64 epismo_windows_arm64.exe epismo.exe
