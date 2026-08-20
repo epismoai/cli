@@ -18,13 +18,17 @@ type optionSpec struct {
 }
 
 type command struct {
-	Path     string
-	Summary  string
-	Args     []string
-	Options  []optionSpec
-	Input    bool
-	Mutation bool
-	Run      func(*app, invocation) (any, error)
+	Path      string
+	Summary   string
+	Examples  []string
+	Args      []string
+	Options   []optionSpec
+	Input     bool
+	InputHelp string
+	Mutation  bool
+	Dangerous bool
+	RawOutput bool
+	Run       func(*app, invocation) (any, error)
 }
 
 type invocation struct {
@@ -49,7 +53,11 @@ func (i invocation) positional(index int) string {
 func baseOptions(cmd *command) []optionSpec {
 	options := append([]optionSpec{}, cmd.Options...)
 	if cmd.Input || cmd.Mutation {
-		options = append([]optionSpec{{Name: "--input", Field: "_input", Help: "JSON object, @file, or - for stdin", Kind: kindString}}, options...)
+		help := cmd.InputHelp
+		if help == "" {
+			help = "JSON object, @file, or - for stdin"
+		}
+		options = append([]optionSpec{{Name: "--input", Field: "_input", Help: help, Kind: kindString}}, options...)
 	}
 	if cmd.Mutation {
 		options = append(options, optionSpec{Name: "--idempotency-key", Field: "idempotencyKey", Help: "retry key; generated automatically when omitted", Kind: kindString})
@@ -82,9 +90,14 @@ func parseInvocation(cmd *command, args []string, stdin io.Reader) (invocation, 
 		name, raw, hasEquals := strings.Cut(argument, "=")
 		option, ok := byName[name]
 		if !ok {
-			return invocation{}, &Error{Code: "UNKNOWN_OPTION", Message: fmt.Sprintf("unknown option %q", name), Hint: "Run the command again with --help to see available options.", ExitCode: 1}
+			return invocation{}, &Error{Code: "UNKNOWN_OPTION", Message: fmt.Sprintf("Unknown option %q.", name), Hint: "Run the command again with --help to see available options.", ExitCode: 1}
 		}
 		if !hasEquals {
+			if option.Kind == kindBoolean {
+				values[option.Field] = true
+				present[option.Field] = true
+				continue
+			}
 			index++
 			if index >= len(args) || strings.HasPrefix(args[index], "--") {
 				return invocation{}, required(name)
@@ -96,16 +109,16 @@ func parseInvocation(cmd *command, args []string, stdin io.Reader) (invocation, 
 			return invocation{}, err
 		}
 		if len(option.Choices) > 0 && !contains(option.Choices, fmt.Sprint(value)) {
-			return invocation{}, &Error{Code: "INVALID_ARGUMENT", Message: fmt.Sprintf("option %s argument %q is invalid. Allowed choices are %s.", name, raw, strings.Join(option.Choices, ", ")), ExitCode: 1}
+			return invocation{}, &Error{Code: "INVALID_ARGUMENT", Message: fmt.Sprintf("Option %s argument %q is invalid. Allowed choices are %s.", name, raw, strings.Join(option.Choices, ", ")), ExitCode: 1}
 		}
 		values[option.Field] = value
 		present[option.Field] = true
 	}
 	if len(positionals) < len(cmd.Args) {
-		return invocation{}, &Error{Code: "MISSING_ARGUMENT", Message: fmt.Sprintf("missing required argument %q", cmd.Args[len(positionals)]), Hint: "Run the command again with --help to see required arguments.", ExitCode: 1}
+		return invocation{}, &Error{Code: "MISSING_ARGUMENT", Message: fmt.Sprintf("Missing required argument %q.", cmd.Args[len(positionals)]), Hint: "Run the command again with --help to see required arguments.", ExitCode: 1}
 	}
 	if len(positionals) > len(cmd.Args) {
-		return invocation{}, &Error{Code: "COMMAND_ERROR", Message: fmt.Sprintf("too many arguments for %s", cmd.Path), Hint: "Run the command again with --help to inspect the expected arguments.", ExitCode: 1}
+		return invocation{}, &Error{Code: "UNEXPECTED_ARGUMENT", Message: fmt.Sprintf("Too many arguments for %s.", cmd.Path), Hint: "Run the command again with --help to inspect the expected arguments.", ExitCode: 1}
 	}
 	if !cmd.Input && !cmd.Mutation {
 		for _, option := range options {
@@ -142,9 +155,27 @@ func printCommandHelp(w io.Writer, cmd *command) {
 			if option.Required {
 				required = " (required)"
 			}
-			fmt.Fprintf(w, "  %-28s %s%s\n", option.Name+" <value>", option.Help, required)
+			name := option.Name + " <value>"
+			if option.Kind == kindBoolean {
+				name = option.Name
+			}
+			details := option.Help
+			if len(option.Choices) > 0 {
+				details += " (values: " + strings.Join(option.Choices, ", ") + ")"
+			}
+			if option.Default != nil {
+				details += fmt.Sprintf(" (default: %v)", option.Default)
+			}
+			fmt.Fprintf(w, "  %-28s %s%s\n", name, details, required)
 		}
 	}
+	if len(cmd.Examples) > 0 {
+		fmt.Fprintln(w, "\nExamples:")
+		for _, example := range cmd.Examples {
+			fmt.Fprintf(w, "  %s\n", example)
+		}
+	}
+	fmt.Fprintln(w, "\nGlobal options: --workspace/-w <id-or-handle>, --output/-o <json|table|yaml|jsonl|value>, --diagnostic-format <json|human>, --field <path>, --jq <projection>, --dry-run, --yes/-y, --schema")
 }
 
 func printGroupHelp(w io.Writer, prefix string, commands []*command) {

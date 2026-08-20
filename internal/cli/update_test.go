@@ -165,6 +165,35 @@ func TestFetchLatestVersion(t *testing.T) {
 	}
 }
 
+func TestUpdateResponseUsesCamelCaseStatus(t *testing.T) {
+	latest := "1.0.0"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = io.WriteString(w, `{"tag_name":"v`+latest+`"}`)
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_UPDATE_API_URL", server.URL)
+
+	a := &app{version: "1.0.0", distribution: "release"}
+	result, err := a.updateCLI()
+	if err != nil {
+		t.Fatal(err)
+	}
+	update := result.(map[string]any)["update"].(map[string]any)
+	if update["status"] != "up_to_date" {
+		t.Fatalf("up-to-date status = %#v", update["status"])
+	}
+
+	latest = "1.1.0"
+	result, err = a.updateCLI()
+	if err != nil {
+		t.Fatal(err)
+	}
+	update = result.(map[string]any)["update"].(map[string]any)
+	if update["status"] != "action_required" {
+		t.Fatalf("action-required status = %#v", update["status"])
+	}
+}
+
 func TestFetchLatestVersionFromRedirect(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
 		if request.URL.Path == "/releases/latest" {

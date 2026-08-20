@@ -107,7 +107,7 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 		"suggestion resolve":         {"post", "/v1/suggestions/{suggestionId}/resolve"},
 	}
 	localOrAuth := map[string]bool{
-		"login": true, "logout": true, "whoami": true, "update": true,
+		"login": true, "logout": true, "whoami": true, "update": true, "completion": true, "doctor": true, "examples": true, "docs": true, "playbook init": true,
 		"workspace current": true, "workspace clear": true,
 	}
 	for _, cmd := range buildCommands() {
@@ -183,6 +183,9 @@ func TestQueryCommandOptionsMatchOpenAPI(t *testing.T) {
 				}
 			}
 			for _, option := range commands[commandPath].Options {
+				if strings.HasPrefix(option.Field, "_") {
+					continue
+				}
 				if !documented[option.Field] {
 					t.Errorf("option %s (%s) is absent from GET %s query parameters", option.Name, option.Field, route)
 				}

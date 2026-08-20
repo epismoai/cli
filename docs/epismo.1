@@ -1,0 +1,42 @@
+.TH EPISMO 1
+.SH NAME
+epismo \- command-line interface for Epismo
+.SH SYNOPSIS
+.B epismo
+[global options] command [options]
+.SH DESCRIPTION
+Epismo is an agent-first CLI. Commands return JSON by default and support
+table, YAML, JSONL, and scalar output for interactive terminal use.
+.SH GLOBAL OPTIONS
+.TP
+.B -w, --workspace ID-OR-HANDLE
+Select a workspace for this command. An exact workspace ID or unique handle is accepted.
+.TP
+.B -o, --output FORMAT
+Use json, table, yaml, jsonl, or value output.
+.TP
+.B --diagnostic-format FORMAT
+Use json or human diagnostics on standard error.
+.TP
+.B --field PATH
+Select a dotted field path with --output value.
+.TP
+.B --jq PROJECTION
+Apply a field projection such as .playbooks[] | .id.
+.TP
+.B --dry-run
+Preview an impactful operation without sending it.
+.TP
+.B -y, --yes
+Skip an interactive confirmation prompt.
+.SH EXAMPLES
+.nf
+epismo workspace use acme
+epismo -w acme playbook search onboarding --output table
+epismo playbook init --title Onboarding > playbook.json
+epismo playbook create --definition @playbook.json
+.fi
+.SH SEE ALSO
+.B epismo --help
+and
+.B epismo docs <command>

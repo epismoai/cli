@@ -81,11 +81,11 @@ func TestRefreshRaceAdoptsCredentialsWrittenByAnotherProcess(t *testing.T) {
 
 func TestCommandSurface(t *testing.T) {
 	expected := strings.Fields(`
-		login logout whoami update
+		login logout whoami update completion doctor examples docs
 		workspace/list workspace/current workspace/use workspace/clear workspace/create workspace/checkout workspace/update workspace/member/list workspace/member/upsert workspace/member/delete
 		team/list team/create team/update team/member/list team/member/add team/member/delete
 		credit/balance credit/checkout token/create token/list token/revoke
-		playbook/search playbook/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/acl playbook/archive playbook/star playbook/unstar playbook/starred playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
+		playbook/init playbook/search playbook/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/acl playbook/archive playbook/star playbook/unstar playbook/starred playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
 		case/start case/get case/list case/assign case/acl case/update case/close case/reopen
 		case/task/create case/task/list case/record/append case/record/list
 		task/list task/get task/assign task/update task/close task/reopen
@@ -113,7 +113,7 @@ func TestPlaybookSearchRequest(t *testing.T) {
 		if got := request.Header.Get("X-Epismo-Source"); got != "cli" {
 			t.Errorf("source = %q", got)
 		}
-		_, _ = io.WriteString(w, `{"playbooks":[]}`)
+		_, _ = io.WriteString(w, `{"playbooks":[{"createdAt":"2026-01-01T00:00:00Z","owner":{"accountId":"account-1"}}]}`)
 	}))
 	defer server.Close()
 	t.Setenv("EPISMO_API_URL", server.URL)
@@ -127,6 +127,9 @@ func TestPlaybookSearchRequest(t *testing.T) {
 	}
 	if requestPath != "/v1/playbooks?category=learning&pageSize=20&preferredLangs=ja&preferredLangs=fr&query=pb%3Ademo" {
 		t.Fatalf("request path = %q", requestPath)
+	}
+	if !strings.Contains(stdout.String(), `"created_at"`) || !strings.Contains(stdout.String(), `"account_id"`) || strings.Contains(stdout.String(), `"createdAt"`) || strings.Contains(stdout.String(), `"accountId"`) {
+		t.Fatalf("stdout does not use snake_case recursively: %s", stdout.String())
 	}
 }
 
@@ -364,7 +367,7 @@ func TestRequiredFieldsCanComeFromInputFile(t *testing.T) {
 	t.Setenv("EPISMO_TOKEN", "test-token")
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	inputPath := filepath.Join(t.TempDir(), "request.json")
-	if err := os.WriteFile(inputPath, []byte(`{"expectedLockVersion":2,"outcome":"completed"}`), 0o600); err != nil {
+	if err := os.WriteFile(inputPath, []byte(`{"expected_lock_version":2,"outcome":"completed"}`), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -379,7 +382,7 @@ func TestRequiredFieldsCanComeFromInputFile(t *testing.T) {
 	stdout.Reset()
 	stderr.Reset()
 	exitCode = Main([]string{"case", "close", "case-1", "--input", `{"outcome":"completed"}`}, "test", strings.NewReader(""), &stdout, &stderr)
-	if exitCode != 1 || !strings.Contains(stderr.String(), `"code": "MISSING_OPTION_VALUE"`) {
+	if exitCode != 1 || !strings.Contains(stderr.String(), `"code":"MISSING_OPTION_VALUE"`) {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
 }
@@ -472,6 +475,37 @@ func TestWorkspaceCreateIsNotScoped(t *testing.T) {
 	}
 }
 
+func TestWorkspaceCreateKeepsCheckoutFailureDomainSpecific(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		switch request.URL.Path {
+		case "/v1/workspaces":
+			_, _ = io.WriteString(w, `{"workspace":{"id":"workspace-1","handle":"team"}}`)
+		case "/v1/workspaces/workspace-1/checkout":
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_, _ = io.WriteString(w, `{"error":"checkout_unavailable"}`)
+		default:
+			t.Errorf("unexpected path = %q", request.URL.Path)
+		}
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+	t.Setenv("EPISMO_TOKEN", "test-token")
+
+	var stdout, stderr bytes.Buffer
+	exit := Main([]string{"workspace", "create", "--handle", "team"}, "test", strings.NewReader(""), &stdout, &stderr)
+	var response map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &response); err != nil {
+		t.Fatalf("stdout is not JSON: %s: %v", stdout.String(), err)
+	}
+	checkoutError, _ := response["checkout_error"].(map[string]any)
+	_, hasTopLevelHint := response["hint"]
+	_, hasPartialStatus := response["partial_success"]
+	if exit != 0 || !strings.HasPrefix(stringField(checkoutError, "hint"), "Retry with") || hasTopLevelHint || hasPartialStatus {
+		t.Fatalf("exit = %d, stdout = %s, stderr = %s", exit, stdout.String(), stderr.String())
+	}
+}
+
 func TestWorkspaceSelectionLifecycle(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
 		if request.URL.Path != "/v1/workspaces" {
@@ -498,13 +532,13 @@ func TestWorkspaceSelectionLifecycle(t *testing.T) {
 
 	stdout.Reset()
 	stderr.Reset()
-	if exit := Main([]string{"workspace", "current"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 || !strings.Contains(stdout.String(), `"id": "workspace-1"`) || !strings.Contains(stdout.String(), `"source": "local-config"`) {
+	if exit := Main([]string{"workspace", "current"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 || !strings.Contains(stdout.String(), `"id": "workspace-1"`) || !strings.Contains(stdout.String(), `"source": "local_config"`) {
 		t.Fatalf("current exit = %d, stdout = %s, stderr = %s", exit, stdout.String(), stderr.String())
 	}
 
 	stdout.Reset()
 	stderr.Reset()
-	if exit := Main([]string{"workspace", "clear"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 || !strings.Contains(stdout.String(), `"cleared": true`) {
+	if exit := Main([]string{"workspace", "clear"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 || !strings.Contains(stdout.String(), `"cleared": true`) || !strings.Contains(stdout.String(), `"previous_workspace"`) || !strings.Contains(stdout.String(), `"account_id": "account-1"`) {
 		t.Fatalf("clear exit = %d, stdout = %s, stderr = %s", exit, stdout.String(), stderr.String())
 	}
 	config, err = readConfig()
@@ -523,7 +557,7 @@ func TestWorkspaceUseRejectsInaccessibleWorkspace(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	var stdout, stderr bytes.Buffer
 	exit := Main([]string{"workspace", "use", "missing"}, "test", strings.NewReader(""), &stdout, &stderr)
-	if exit != 1 || !strings.Contains(stderr.String(), `"code": "WORKSPACE_NOT_FOUND"`) {
+	if exit != 1 || !strings.Contains(stderr.String(), `"code":"WORKSPACE_NOT_FOUND"`) {
 		t.Fatalf("exit = %d, stderr = %s", exit, stderr.String())
 	}
 }
@@ -540,7 +574,7 @@ func TestHTTPErrorIsStructured(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	var stdout, stderr bytes.Buffer
 	exit := Main([]string{"credit", "balance"}, "test", strings.NewReader(""), &stdout, &stderr)
-	if exit != 1 || !strings.Contains(stderr.String(), `"code": "RATE_LIMITED"`) || !strings.Contains(stderr.String(), `"retryAfter": "10"`) || !strings.Contains(stderr.String(), `"apiDetails"`) || !strings.Contains(stderr.String(), `"quantity"`) {
+	if exit != 1 || !strings.Contains(stderr.String(), `"code":"RATE_LIMITED"`) || !strings.Contains(stderr.String(), `"retry_after":"10"`) || !strings.Contains(stderr.String(), `"api_details"`) || !strings.Contains(stderr.String(), `"quantity"`) {
 		t.Fatalf("exit = %d, stderr = %s", exit, stderr.String())
 	}
 }
@@ -586,7 +620,7 @@ func TestPaymentRequiredError(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	var stdout, stderr bytes.Buffer
 	exit := Main([]string{"credit", "balance"}, "test", strings.NewReader(""), &stdout, &stderr)
-	if exit != 1 || !strings.Contains(stderr.String(), `"code": "PAYMENT_REQUIRED"`) {
+	if exit != 1 || !strings.Contains(stderr.String(), `"code":"PAYMENT_REQUIRED"`) {
 		t.Fatalf("exit = %d, stderr = %s", exit, stderr.String())
 	}
 }

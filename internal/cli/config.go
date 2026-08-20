@@ -88,7 +88,10 @@ func readConfig() (cliConfig, error) {
 		}
 	}
 	config.LastLoginEmail = strings.TrimSpace(config.LastLoginEmail)
-	return config, err
+	if err != nil {
+		return config, &Error{Code: "CONFIG_READ_FAILED", Message: "Failed to read CLI configuration.", Hint: "Check that the configuration file contains valid JSON and is readable.", Details: map[string]any{"path": configPath()}, ExitCode: 1, Cause: err}
+	}
+	return config, nil
 }
 
 func writeJSONAtomic(path string, value any) error {
@@ -120,13 +123,21 @@ func writeJSONAtomic(path string, value any) error {
 	return replaceFile(tmpPath, path)
 }
 
-func writeConfig(config cliConfig) error { return writeJSONAtomic(configPath(), config) }
+func writeConfig(config cliConfig) error {
+	if err := writeJSONAtomic(configPath(), config); err != nil {
+		return &Error{Code: "CONFIG_WRITE_FAILED", Message: "Failed to save CLI configuration.", Hint: "Check that the configuration directory is writable.", Details: map[string]any{"path": configPath()}, ExitCode: 1, Cause: err}
+	}
+	return nil
+}
 
 func readCredentials() (*storedCredentials, error) {
 	var credentials storedCredentials
 	found, err := readJSONFile(credentialsPath(), &credentials)
-	if err != nil || !found {
-		return nil, err
+	if err != nil {
+		return nil, &Error{Code: "CREDENTIALS_READ_FAILED", Message: "Failed to read saved credentials.", Hint: "Check that the credentials file contains valid JSON and is readable.", Details: map[string]any{"path": credentialsPath()}, ExitCode: 1, Cause: err}
+	}
+	if !found {
+		return nil, nil
 	}
 	if credentials.AccessToken == "" || credentials.RefreshToken == "" || credentials.ExpiresAt == "" || credentials.UserID == "" {
 		return nil, nil
@@ -135,10 +146,18 @@ func readCredentials() (*storedCredentials, error) {
 }
 
 func writeCredentials(credentials storedCredentials) error {
-	return writeJSONAtomic(credentialsPath(), credentials)
+	if err := writeJSONAtomic(credentialsPath(), credentials); err != nil {
+		return &Error{Code: "CREDENTIALS_WRITE_FAILED", Message: "Failed to save credentials.", Hint: "Check that the credentials directory is writable.", Details: map[string]any{"path": credentialsPath()}, ExitCode: 1, Cause: err}
+	}
+	return nil
 }
 
-func clearCredentials() error { return writeJSONAtomic(credentialsPath(), map[string]any{}) }
+func clearCredentials() error {
+	if err := writeJSONAtomic(credentialsPath(), map[string]any{}); err != nil {
+		return &Error{Code: "CREDENTIALS_CLEAR_FAILED", Message: "Failed to clear saved credentials.", Hint: "Check that the credentials directory is writable.", Details: map[string]any{"path": credentialsPath()}, ExitCode: 1, Cause: err}
+	}
+	return nil
+}
 
 func apiURL() string {
 	if override := strings.TrimRight(strings.TrimSpace(os.Getenv("EPISMO_API_URL")), "/"); override != "" {
