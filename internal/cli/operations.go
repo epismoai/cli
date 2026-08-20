@@ -35,7 +35,7 @@ func requiredOption(option optionSpec) optionSpec           { option.Required = 
 func defaultOption(option optionSpec, value any) optionSpec { option.Default = value; return option }
 
 func pagingOptions() []optionSpec {
-	return []optionSpec{integer("--page-size", "pageSize", "results per page (1-100)"), str("--cursor", "cursor", "cursor returned by the previous page")}
+	return []optionSpec{integer("--page-size", "pageSize", "results per page (1-100)"), str("--cursor", "cursor", "cursor returned by the previous page"), boolOption("--all", "_all", "fetch every available page"), integer("--limit", "_limit", "maximum number of results to return")}
 }
 
 func (i invocation) payload(a *app) (map[string]any, error) {
@@ -46,6 +46,11 @@ func (i invocation) payload(a *app) (map[string]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		converted, err := apiJSON(base)
+		if err != nil {
+			return nil, err
+		}
+		base = converted.(map[string]any)
 	}
 	overrides := map[string]any{}
 	for field, value := range i.Values {
@@ -53,7 +58,11 @@ func (i invocation) payload(a *app) (map[string]any, error) {
 			continue
 		}
 		if i.Present[field] {
-			overrides[field] = value
+			converted, err := apiJSON(value)
+			if err != nil {
+				return nil, err
+			}
+			overrides[field] = converted
 		}
 	}
 	result := mergeDefined(base, overrides)
@@ -133,7 +142,14 @@ func apiOperationUnscoped(path, summary string, args []string, method string, en
 }
 
 func apiOperationScoped(path, summary string, args []string, method string, endpoint func(invocation) string, mode requestMode, mutation, scoped bool, options ...optionSpec) *command {
-	cmd := &command{Path: path, Summary: summary, Args: args, Options: options, Input: mode != requestNone, Mutation: mutation}
+	inputHelp := ""
+	if mode == requestBody {
+		inputHelp = "request-body JSON object, @file, or - for stdin"
+	}
+	if mode == requestQuery {
+		inputHelp = "query-parameters JSON object, @file, or - for stdin"
+	}
+	cmd := &command{Path: path, Summary: summary, Args: args, Options: options, Input: mode != requestNone, InputHelp: inputHelp, Mutation: mutation}
 	cmd.Run = func(a *app, inv invocation) (any, error) {
 		payload, err := inv.payload(a)
 		if err != nil {
@@ -146,7 +162,7 @@ func apiOperationScoped(path, summary string, args []string, method string, endp
 		requestPath := endpoint(inv)
 		var body any
 		if mode == requestQuery {
-			requestPath = queryString(requestPath, payload)
+			return pagedRequest(a, method, requestPath, ctx, payload)
 		} else if mode == requestBody {
 			body = payload
 		}
@@ -156,6 +172,86 @@ func apiOperationScoped(path, summary string, args []string, method string, endp
 		return a.client.request(method, requestPath, ctx.Auth.AccessToken, body)
 	}
 	return cmd
+}
+
+func pagedRequest(a *app, method, path string, ctx executionContext, payload map[string]any) (map[string]any, error) {
+	all, hasFlagAll := payload["_all"].(bool)
+	if !hasFlagAll {
+		all, _ = payload["all"].(bool)
+	}
+	limit, hasFlagLimit := exactInteger(payload["_limit"])
+	if !hasFlagLimit {
+		limit, _ = exactInteger(payload["limit"])
+	}
+	delete(payload, "_all")
+	delete(payload, "_limit")
+	delete(payload, "all")
+	delete(payload, "limit")
+	pageSize := 0
+	if limit > 0 {
+		pageSize, _ = exactInteger(payload["pageSize"])
+		if pageSize <= 0 || pageSize > limit {
+			pageSize = min(limit, 100)
+		}
+		payload["pageSize"] = pageSize
+	}
+	result, err := a.client.request(method, withWorkspace(queryString(path, payload), ctx.WorkspaceID), ctx.Auth.AccessToken, nil)
+	if err != nil {
+		return result, err
+	}
+	itemsKey, items := responseItems(result)
+	if !all {
+		if limit > 0 && len(items) > limit {
+			result[itemsKey] = items[:limit]
+		}
+		return result, nil
+	}
+	if limit > 0 && len(items) >= limit {
+		result[itemsKey] = items[:limit]
+		return result, nil
+	}
+	for cursor := responseCursor(result); cursor != ""; cursor = responseCursor(result) {
+		if limit > 0 {
+			payload["pageSize"] = min(pageSize, limit-len(items))
+		}
+		payload["cursor"] = cursor
+		next, nextErr := a.client.request(method, withWorkspace(queryString(path, payload), ctx.WorkspaceID), ctx.Auth.AccessToken, nil)
+		if nextErr != nil {
+			return nil, nextErr
+		}
+		_, more := responseItems(next)
+		items = append(items, more...)
+		result = next
+		result[itemsKey] = items
+		if limit > 0 && len(items) >= limit {
+			result[itemsKey] = items[:limit]
+			break
+		}
+	}
+	return result, nil
+}
+
+func responseItems(response map[string]any) (string, []any) {
+	for key, value := range response {
+		if items, ok := value.([]any); ok {
+			return key, items
+		}
+	}
+	return "items", nil
+}
+func responseCursor(response map[string]any) string {
+	for _, key := range []string{"nextCursor", "next_cursor", "cursor"} {
+		if cursor := stringField(response, key); cursor != "" {
+			return cursor
+		}
+	}
+	return ""
+}
+func min(left, right int) int {
+	if left < right {
+		return left
+	}
+	return right
 }
 
 func staticEndpoint(path string) func(invocation) string {

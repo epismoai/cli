@@ -240,7 +240,7 @@ func (a *app) login(email string) (map[string]any, error) {
 		}
 		loginMethod := stringField(method, "method")
 		if loginMethod != "otp" && loginMethod != "sso" {
-			return nil, &Error{Code: "LOGIN_METHOD_INVALID", Message: "The server returned an unsupported login method.", Retryable: true, ExitCode: 1}
+			return nil, &Error{Code: "LOGIN_METHOD_INVALID", Message: "The server returned an unsupported login method.", Hint: "Update the Epismo CLI and try again.", ExitCode: 1}
 		}
 		if loginMethod == "otp" {
 			credentials, verifiedEmail, err = a.loginOTP(requestedEmail)
@@ -295,7 +295,7 @@ func (a *app) loginOTP(email string) (storedCredentials, string, error) {
 	if otpID == "" {
 		return storedCredentials{}, "", &Error{Code: "OTP_ID_MISSING", Message: "Failed to obtain an OTP id from the server.", Retryable: true, ExitCode: 1}
 	}
-	printWarning(a.stderr, "OTP_SENT", "A sign-in code was sent to "+email+".")
+	a.event("info", "OTP_SENT", "A sign-in code was sent.", map[string]any{"email": email})
 	_, _ = fmt.Fprint(a.stderr, "Code: ")
 	code, _ := bufio.NewReader(a.stdin).ReadString('\n')
 	code = strings.TrimSpace(code)
@@ -332,10 +332,12 @@ func (a *app) loginBrowser(email string) (storedCredentials, string, string, err
 	}
 	defer stop()
 	target := authorizationURL(redirectURI, challenge, state, email)
-	printWarning(a.stderr, "BROWSER_OPENING", "Opening browser for authorization...")
-	printWarning(a.stderr, "BROWSER_FALLBACK_URL", "If the browser does not open, visit: "+target)
-	_ = openBrowser(target)
-	printWarning(a.stderr, "BROWSER_WAITING", "Waiting for authorization in your browser (times out in 5 minutes)...")
+	a.event("info", "BROWSER_OPENING", "Opening browser for authorization...", nil)
+	if err := openBrowser(target); err != nil {
+		a.event("warning", "BROWSER_OPEN_FAILED", "Could not open the browser automatically.", nil)
+	}
+	a.event("info", "BROWSER_FALLBACK_URL", "Open this URL if the browser did not open.", map[string]any{"url": target})
+	a.event("info", "BROWSER_WAITING", "Waiting for authorization in your browser (times out in 5 minutes)...", map[string]any{"timeout_seconds": 300})
 	var result callbackResult
 	select {
 	case result = <-callback:
@@ -345,7 +347,7 @@ func (a *app) loginBrowser(email string) (storedCredentials, string, string, err
 	if result.err != nil {
 		return storedCredentials{}, "", "", result.err
 	}
-	printWarning(a.stderr, "BROWSER_AUTHORIZED", "Authorization received. Completing sign-in...")
+	a.event("info", "BROWSER_AUTHORIZED", "Authorization received. Completing sign-in...", nil)
 	token, err := a.token(map[string]any{"grant_type": "authorization_code", "code": result.code, "client_id": cliClientID, "redirect_uri": redirectURI, "code_verifier": verifier})
 	if err != nil {
 		return storedCredentials{}, "", "", err
@@ -363,9 +365,9 @@ func loginResult(credentials storedCredentials, email string, config cliConfig, 
 	if already {
 		delete(result, "loggedIn")
 		result["alreadyLoggedIn"] = true
-		result["hint"] = "Already logged in. Run `epismo logout` first to switch accounts, or pass --email <other> to sign in as someone else."
+		result["nextActions"] = []any{"Run `epismo logout` first to switch accounts, or pass --email <other> to sign in as someone else."}
 	} else if config.DefaultWorkspace == nil {
-		result["hint"] = "No default workspace set. Run `epismo workspace use <workspace-id>` to set a default workspace."
+		result["nextActions"] = []any{"Run `epismo workspace use <workspace-id>` to set a default workspace."}
 	}
 	if email != "" {
 		result["lastLoginEmail"] = email
@@ -436,11 +438,23 @@ func (a *app) logout() (map[string]any, error) {
 		return nil, err
 	}
 	hadCredentials := credentials != nil && credentials.AccessToken != ""
+	remoteRevocation := "not_needed"
+	var revocationError map[string]any
 	if credentials != nil && credentials.RefreshToken != "" {
-		_, _ = a.client.request(http.MethodPost, "/oauth/revoke", credentials.AccessToken, map[string]any{"token": credentials.RefreshToken, "client_id": credentials.ClientID})
+		remoteRevocation = "succeeded"
+		if _, revokeErr := a.client.request(http.MethodPost, "/oauth/revoke", credentials.AccessToken, map[string]any{"token": credentials.RefreshToken, "client_id": credentials.ClientID}); revokeErr != nil {
+			remoteRevocation = "failed"
+			normalized := normalizeError(revokeErr)
+			revocationError = errorPayload(normalized)
+			a.event("warning", "TOKEN_REVOCATION_FAILED", "Local credentials will be cleared, but remote token revocation failed.", map[string]any{"error": revocationError})
+		}
 	}
 	if err := clearCredentials(); err != nil {
 		return nil, err
 	}
-	return map[string]any{"cleared": true, "hadCredentials": hadCredentials}, nil
+	result := map[string]any{"cleared": true, "hadCredentials": hadCredentials, "remoteRevocation": remoteRevocation}
+	if revocationError != nil {
+		result["revocationError"] = revocationError
+	}
+	return result, nil
 }

@@ -7,6 +7,16 @@ import (
 
 func playbookCommands() []*command {
 	page := pagingOptions()
+	init := &command{Path: "playbook init", Summary: "print a minimal Playbook Definition template", Options: []optionSpec{str("--title", "title", "initial Playbook title"), choice("--category", "category", "initial category", "productivity", "programming", "design", "sales", "marketing", "operations", "learning")}, Examples: []string{"epismo playbook init --title Onboarding > playbook.json", "epismo playbook create --definition @playbook.json"}, Run: func(_ *app, inv invocation) (any, error) {
+		definition := map[string]any{"title": inv.text("title"), "steps": []any{}}
+		if definition["title"] == "" {
+			definition["title"] = "Untitled Playbook"
+		}
+		if category := inv.text("category"); category != "" {
+			definition["category"] = category
+		}
+		return definition, nil
+	}}
 	search := apiOperation("playbook search", "search readable Playbooks, including pb: alias references", nil, http.MethodGet, staticEndpoint("/v1/playbooks"), requestQuery, false, append(page, str("--query", "query", "full-text query or pb: alias reference"), choice("--category", "category", "Playbook category", "productivity", "programming", "design", "sales", "marketing", "operations", "learning"), csv("--lang", "preferredLangs", "comma-separated two-letter content languages in priority order"))...)
 	list := apiOperation("playbook list", "list readable Playbooks, most recently updated first", nil, http.MethodGet, staticEndpoint("/v1/playbooks"), requestQuery, false, page...)
 	create := apiOperation("playbook create", "create a Playbook and its first Version", nil, http.MethodPost, staticEndpoint("/v1/playbooks"), requestBody, true, str("--owner-id", "ownerId", "owner Account ID"), csv("--acl", "acl", "comma-separated ACL principals"), objectSource("--definition", "definition", "Playbook Definition JSON object"))
@@ -64,7 +74,7 @@ func playbookCommands() []*command {
 	unstar := apiOperation("playbook unstar", "remove a Playbook star", []string{"playbook-id"}, http.MethodDelete, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/star" }, requestBody, true)
 	starred := apiOperation("playbook starred", "list your starred Playbooks", nil, http.MethodGet, staticEndpoint("/v1/me/starred-playbooks"), requestQuery, false, page...)
 	share := apiOperation("playbook share", "create a share link", []string{"playbook-id"}, http.MethodPost, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/share" }, requestBody, true)
-	return []*command{search, list, create, get, versionList, versionGet, versionArchive, versionPublish, draftGet, draftSave, draftDiscard, draftPublish, acl, archive, star, unstar, starred, share}
+	return []*command{init, search, list, create, get, versionList, versionGet, versionArchive, versionPublish, draftGet, draftSave, draftDiscard, draftPublish, acl, archive, star, unstar, starred, share}
 }
 
 func aliasCommands() []*command {
@@ -173,7 +183,7 @@ func lockedMutation(path, summary, arg, method string, endpoint func(invocation)
 
 func taskCommands() []*command {
 	listOptions := append(pagingOptions(), str("--case-id", "caseId", "Case ID"), str("--assigned-to", "assignedTo", "assignee Account ID or me"), choice("--status", "status", "Task status", "open", "closed"))
-	list := &command{Path: "task list", Summary: "list your assigned Tasks across Cases", Options: listOptions, Input: true, Run: func(a *app, inv invocation) (any, error) {
+	list := &command{Path: "task list", Summary: "list your assigned Tasks across Cases", Options: listOptions, Input: true, InputHelp: "query-parameters JSON object, @file, or - for stdin", Run: func(a *app, inv invocation) (any, error) {
 		payload, err := inv.payload(a)
 		if err != nil {
 			return nil, err
@@ -185,7 +195,7 @@ func taskCommands() []*command {
 		if err != nil {
 			return nil, err
 		}
-		return a.client.request(http.MethodGet, withWorkspace(queryString("/v1/tasks", payload), ctx.WorkspaceID), ctx.Auth.AccessToken, nil)
+		return pagedRequest(a, http.MethodGet, "/v1/tasks", ctx, payload)
 	}}
 	get := apiOperation("task get", "get a Task", []string{"task-id"}, http.MethodGet, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) }, requestNone, false)
 	assign := lockedMutation("task assign", "assign a Task", "task-id", http.MethodPatch, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) + "/assignee" }, str("--assigned-to", "assignedTo", "omit in --input to clear assignment"))

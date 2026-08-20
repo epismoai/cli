@@ -271,6 +271,30 @@ func TestLogoutRevokesAndClearsCredentials(t *testing.T) {
 	}
 }
 
+func TestLogoutReportsRemoteRevocationFailure(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_, _ = io.WriteString(w, `{"error":"revoke_failed"}`)
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+	if err := writeCredentials(storedCredentials{AccessToken: "access", RefreshToken: "refresh", ExpiresAt: "2999-01-01T00:00:00Z", ClientID: cliClientID, UserID: "user"}); err != nil {
+		t.Fatal(err)
+	}
+	var stderr bytes.Buffer
+	result, err := (&app{client: newAPIClient("test"), stderr: &stderr}).logout()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result["remoteRevocation"] != "failed" || result["revocationError"] == nil || !strings.Contains(stderr.String(), `"code":"TOKEN_REVOCATION_FAILED"`) {
+		t.Fatalf("result = %#v, stderr = %s", result, stderr.String())
+	}
+	if credentials, err := readCredentials(); err != nil || credentials != nil {
+		t.Fatalf("credentials after logout = %#v, err = %v", credentials, err)
+	}
+}
+
 func TestAPIRequestTimeout(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		time.Sleep(50 * time.Millisecond)

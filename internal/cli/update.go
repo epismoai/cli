@@ -53,11 +53,11 @@ func updateCommand() *command {
 
 func (a *app) updateCLI() (any, error) {
 	if !isReleaseVersion(a.version) {
-		return nil, &Error{Code: "UPDATE_UNAVAILABLE", Message: "update checks are unavailable for development builds", Hint: "Install a released Epismo CLI before using this command.", ExitCode: 1}
+		return nil, &Error{Code: "UPDATE_UNAVAILABLE", Message: "Update checks are unavailable for development builds.", Hint: "Install a released Epismo CLI before using this command.", ExitCode: 1}
 	}
 	latest, err := fetchLatestVersion(10 * time.Second)
 	if err != nil {
-		return nil, &Error{Code: "UPDATE_CHECK_FAILED", Message: "could not determine the latest Epismo CLI version", Retryable: true, Hint: updateDocsURL, Cause: err, ExitCode: 1}
+		return nil, &Error{Code: "UPDATE_CHECK_FAILED", Message: "Could not determine the latest Epismo CLI version.", Retryable: true, Hint: updateDocsURL, Cause: err, ExitCode: 1}
 	}
 	result := map[string]any{"currentVersion": a.version, "latestVersion": latest}
 	install := detectInstallation(a.version, a.distribution)
@@ -167,7 +167,7 @@ func isYarnClassic(version string) bool {
 }
 
 func (a *app) maybeCheckForUpdate(args []string) {
-	if !a.updateTTY || strings.TrimSpace(os.Getenv("EPISMO_UPDATE_CHECK")) == "0" || !isReleaseVersion(a.version) {
+	if a.options.Quiet || !a.updateTTY || strings.TrimSpace(os.Getenv("EPISMO_UPDATE_CHECK")) == "0" || !isReleaseVersion(a.version) {
 		return
 	}
 	if len(args) > 0 && args[0] == "update" {
@@ -177,7 +177,7 @@ func (a *app) maybeCheckForUpdate(args []string) {
 	now := time.Now()
 	displayed := found && isNewerVersion(cache.LatestVersion, a.version)
 	if displayed {
-		printWarning(a.stderr, "UPDATE_AVAILABLE", fmt.Sprintf("Update available: %s → %s. Run: epismo update", a.version, cache.LatestVersion))
+		a.event("warning", "UPDATE_AVAILABLE", fmt.Sprintf("Update available: %s → %s. Run: epismo update", a.version, cache.LatestVersion), nil)
 	}
 	if found && now.Sub(time.UnixMilli(cache.LastChecked)) <= updateCheckInterval {
 		return
@@ -200,7 +200,7 @@ func refreshUpdateCache(a *app, now time.Time, displayed bool) {
 		}
 		_ = writeJSONAtomic(updateCachePath(), updateCache{LastChecked: now.UnixMilli(), LatestVersion: latest})
 		if !displayed && isNewerVersion(latest, a.version) {
-			printWarning(a.stderr, "UPDATE_AVAILABLE", fmt.Sprintf("Update available: %s → %s. Run: epismo update", a.version, latest))
+			a.event("warning", "UPDATE_AVAILABLE", fmt.Sprintf("Update available: %s → %s. Run: epismo update", a.version, latest), nil)
 		}
 	}()
 	select {
