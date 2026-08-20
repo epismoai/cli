@@ -44,7 +44,7 @@ func Main(args []string, version string, stdin io.Reader, stdout, stderr io.Writ
 func MainWithDistribution(args []string, version, distribution string, stdin io.Reader, stdout, stderr io.Writer) int {
 	parsedArgs, options, err := extractGlobalOptions(args)
 	if err != nil {
-		return printError(stderr, err)
+		return printAppError(&app{stderr: stderr, options: options}, err)
 	}
 	args = parsedArgs
 	a := &app{version: version, distribution: distribution, stdin: stdin, stdout: stdout, stderr: stderr, client: newAPIClient(version), isTTY: terminalReader(stdin) && terminalWriter(stderr), updateTTY: terminalWriter(stdout) && terminalWriter(stderr), options: options}
@@ -136,8 +136,12 @@ func printDocs(a *app, commands []*command, args []string) int {
 		_, _ = io.WriteString(a.stdout, "https://github.com/epismoai/cli#readme\n")
 		return 0
 	}
-	cmd, consumed := resolveCommand(commands, args)
-	if cmd != nil && consumed == len(args) {
+	commandArgs := args
+	if len(commandArgs) > 1 && (commandArgs[len(commandArgs)-1] == "--help" || commandArgs[len(commandArgs)-1] == "-h") {
+		commandArgs = commandArgs[:len(commandArgs)-1]
+	}
+	cmd, consumed := resolveCommand(commands, commandArgs)
+	if cmd != nil && consumed == len(commandArgs) {
 		printCommandHelp(a.stdout, cmd)
 		return 0
 	}

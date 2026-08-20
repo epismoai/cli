@@ -77,6 +77,16 @@ func TestGlobalBooleanOptionsAcceptExplicitValues(t *testing.T) {
 	}
 }
 
+func TestGlobalOptionValidationUsesDiagnosticFormat(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	if exit := Main([]string{"--diagnostic-format", "human", "--output", "xml", "playbook", "list"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 1 {
+		t.Fatalf("exit = %d", exit)
+	}
+	if stdout.Len() != 0 || !strings.HasPrefix(stderr.String(), "error: Invalid --output value.") {
+		t.Fatalf("stdout=%q stderr=%q", stdout.String(), stderr.String())
+	}
+}
+
 func TestDangerousDryRunValidatesPayload(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	var stdout, stderr bytes.Buffer
@@ -95,6 +105,11 @@ func TestCompletionAndDocs(t *testing.T) {
 	stderr.Reset()
 	if exit := Main([]string{"docs", "playbook", "search"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 || !strings.Contains(stdout.String(), "Usage: epismo playbook search") {
 		t.Fatalf("docs exit=%d stdout=%s stderr=%s", exit, stdout.String(), stderr.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if exit := Main([]string{"docs", "playbook", "search", "--help"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 || !strings.Contains(stdout.String(), "Usage: epismo playbook search") {
+		t.Fatalf("docs command help exit=%d stdout=%s stderr=%s", exit, stdout.String(), stderr.String())
 	}
 	stdout.Reset()
 	stderr.Reset()
