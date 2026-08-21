@@ -18,7 +18,8 @@ func playbookCommands() []*command {
 		return definition, nil
 	}}
 	search := apiOperation("playbook search", "search readable Playbooks, including pb: alias references", nil, http.MethodGet, staticEndpoint("/v1/playbooks"), requestQuery, false, append(page, str("--query", "query", "full-text query or pb: alias reference"), choice("--category", "category", "Playbook category", "productivity", "programming", "design", "sales", "marketing", "operations", "learning"), csv("--lang", "preferredLangs", "comma-separated two-letter content languages in priority order"))...)
-	list := apiOperation("playbook list", "list readable Playbooks, most recently updated first", nil, http.MethodGet, staticEndpoint("/v1/playbooks"), requestQuery, false, page...)
+	list := apiOperation("playbook list", "list readable Playbooks, most recently updated first", nil, http.MethodGet, staticEndpoint("/v1/playbooks"), requestQuery, false, append(page, choice("--resource-kind", "resourceKind", "resource kind", "skill", "mcp", "cli", "api", "plugin", "graph", "document", "agent", "custom"), str("--resource-ref", "resourceRef", "normalized or provider-specific resource reference"))...)
+	resourceList := apiOperation("playbook resource list", "list resource references used by readable Playbooks", nil, http.MethodGet, staticEndpoint("/v1/playbook-resources"), requestQuery, false, choice("--kind", "kind", "resource kind", "skill", "mcp", "cli", "api", "plugin", "graph", "document", "agent", "custom"), integer("--page-size", "pageSize", "results per page (1-200)"))
 	create := apiOperation("playbook create", "create a Playbook and its first Version", nil, http.MethodPost, staticEndpoint("/v1/playbooks"), requestBody, true, str("--owner-id", "ownerId", "owner Account ID"), csv("--acl", "acl", "comma-separated ACL principals"), objectSource("--definition", "definition", "Playbook Definition JSON object"))
 	create.Run = func(a *app, inv invocation) (any, error) {
 		payload, err := inv.payload(a)
@@ -74,7 +75,7 @@ func playbookCommands() []*command {
 	unstar := apiOperation("playbook unstar", "remove a Playbook star", []string{"playbook-id"}, http.MethodDelete, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/star" }, requestBody, true)
 	starred := apiOperation("playbook starred", "list your starred Playbooks", nil, http.MethodGet, staticEndpoint("/v1/me/starred-playbooks"), requestQuery, false, page...)
 	share := apiOperation("playbook share", "create a share link", []string{"playbook-id"}, http.MethodPost, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/share" }, requestBody, true)
-	return []*command{init, search, list, create, get, versionList, versionGet, versionArchive, versionPublish, draftGet, draftSave, draftDiscard, draftPublish, acl, archive, star, unstar, starred, share}
+	return []*command{init, search, list, resourceList, create, get, versionList, versionGet, versionArchive, versionPublish, draftGet, draftSave, draftDiscard, draftPublish, acl, archive, star, unstar, starred, share}
 }
 
 func aliasCommands() []*command {

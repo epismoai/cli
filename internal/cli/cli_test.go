@@ -85,7 +85,7 @@ func TestCommandSurface(t *testing.T) {
 		workspace/list workspace/current workspace/use workspace/clear workspace/create workspace/checkout workspace/update workspace/member/list workspace/member/upsert workspace/member/delete
 		team/list team/create team/update team/member/list team/member/add team/member/delete
 		credit/balance credit/checkout token/create token/list token/revoke
-		playbook/init playbook/search playbook/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/acl playbook/archive playbook/star playbook/unstar playbook/starred playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
+		playbook/init playbook/search playbook/list playbook/resource/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/acl playbook/archive playbook/star playbook/unstar playbook/starred playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
 		case/start case/get case/list case/assign case/acl case/update case/close case/reopen
 		case/task/create case/task/list case/record/append case/record/list
 		task/list task/get task/assign task/update task/close task/reopen
@@ -130,6 +130,27 @@ func TestPlaybookSearchRequest(t *testing.T) {
 	}
 	if !strings.Contains(stdout.String(), `"created_at"`) || !strings.Contains(stdout.String(), `"account_id"`) || strings.Contains(stdout.String(), `"createdAt"`) || strings.Contains(stdout.String(), `"accountId"`) {
 		t.Fatalf("stdout does not use snake_case recursively: %s", stdout.String())
+	}
+}
+
+func TestPlaybookResourceCommands(t *testing.T) {
+	var requestPath string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		requestPath = request.URL.RequestURI()
+		_, _ = io.WriteString(w, `{"resources":[]}`)
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_TOKEN", "test-token")
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+
+	var stdout, stderr bytes.Buffer
+	exitCode := Main([]string{"playbook", "resource", "list", "--kind", "cli", "--page-size", "20"}, "test", strings.NewReader(""), &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
+	}
+	if requestPath != "/v1/playbook-resources?kind=cli&pageSize=20" {
+		t.Fatalf("request path = %q", requestPath)
 	}
 }
 
