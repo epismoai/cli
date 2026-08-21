@@ -62,6 +62,7 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 		"token revoke":               {"delete", "/v1/cli/tokens/{tokenId}"},
 		"playbook search":            {"get", "/v1/playbooks"},
 		"playbook list":              {"get", "/v1/playbooks"},
+		"playbook resource list":     {"get", "/v1/playbook-resources"},
 		"playbook create":            {"post", "/v1/playbooks"},
 		"playbook get":               {"get", "/v1/playbooks/{playbookId}"},
 		"playbook version list":      {"get", "/v1/playbooks/{playbookId}/versions"},
@@ -152,6 +153,7 @@ func TestQueryCommandOptionsMatchOpenAPI(t *testing.T) {
 	routes := map[string]string{
 		"playbook search":          "/v1/playbooks",
 		"playbook list":            "/v1/playbooks",
+		"playbook resource list":   "/v1/playbook-resources",
 		"playbook version list":    "/v1/playbooks/{playbookId}/versions",
 		"playbook starred":         "/v1/me/starred-playbooks",
 		"playbook alias list":      "/v1/aliases",

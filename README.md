@@ -44,6 +44,7 @@ epismo login
 epismo workspace list
 epismo workspace use acme # optional: save a default workspace by ID or handle
 epismo --workspace acme playbook search onboarding
+epismo playbook resource list --kind cli
 epismo playbook init --title Onboarding > playbook.json
 epismo playbook create --definition @playbook.json
 ```
