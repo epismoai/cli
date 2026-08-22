@@ -113,7 +113,7 @@ func TestPlaybookSearchRequest(t *testing.T) {
 		if got := request.Header.Get("X-Epismo-Source"); got != "cli" {
 			t.Errorf("source = %q", got)
 		}
-		_, _ = io.WriteString(w, `{"playbooks":[{"createdAt":"2026-01-01T00:00:00Z","owner":{"accountId":"account-1"}}]}`)
+		_, _ = io.WriteString(w, `{"playbooks":[{"createdAt":"2026-01-01T00:00:00Z","owner":{"accountId":"account-1"}}],"resourceBacklinks":[{"playbookId":"11111111-1111-4111-8111-111111111111","versionId":"22222222-2222-4222-8222-222222222222","kind":"cli","normalizedRef":"github:epismoai/cli","mentions":[{"stepId":"ABCD","stepIndex":1,"resourcePosition":0}]}]}`)
 	}))
 	defer server.Close()
 	t.Setenv("EPISMO_API_URL", server.URL)
@@ -130,6 +130,9 @@ func TestPlaybookSearchRequest(t *testing.T) {
 	}
 	if !strings.Contains(stdout.String(), `"created_at"`) || !strings.Contains(stdout.String(), `"account_id"`) || strings.Contains(stdout.String(), `"createdAt"`) || strings.Contains(stdout.String(), `"accountId"`) {
 		t.Fatalf("stdout does not use snake_case recursively: %s", stdout.String())
+	}
+	if !strings.Contains(stdout.String(), `"resource_backlinks"`) || !strings.Contains(stdout.String(), `"step_index"`) || !strings.Contains(stdout.String(), `"resource_position"`) {
+		t.Fatalf("stdout does not preserve resource backlinks: %s", stdout.String())
 	}
 }
 

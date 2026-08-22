@@ -12954,6 +12954,64 @@
         },
         "additionalProperties": false
       },
+      "ResourceMention": {
+        "type": "object",
+        "required": [
+          "stepId",
+          "stepIndex",
+          "resourcePosition"
+        ],
+        "properties": {
+          "stepId": {
+            "type": "string"
+          },
+          "stepIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "resourcePosition": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "selector": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResourceBacklink": {
+        "type": "object",
+        "required": [
+          "playbookId",
+          "versionId",
+          "kind",
+          "normalizedRef",
+          "mentions"
+        ],
+        "properties": {
+          "playbookId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "versionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "normalizedRef": {
+            "type": "string"
+          },
+          "mentions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResourceMention"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "PlaybookListResponse": {
         "type": "object",
         "required": [
@@ -12968,6 +13026,12 @@
           },
           "nextCursor": {
             "type": "string"
+          },
+          "resourceBacklinks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResourceBacklink"
+            }
           }
         },
         "additionalProperties": false
