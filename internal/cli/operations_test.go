@@ -33,6 +33,30 @@ func TestAllPaginationAndJQProjection(t *testing.T) {
 	}
 }
 
+func TestAllPaginationMergesResourceBacklinks(t *testing.T) {
+	var calls int
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if r.URL.Query().Get("cursor") == "" {
+			_, _ = io.WriteString(w, `{"playbooks":[{"id":"one"}],"resourceBacklinks":[{"playbookId":"one","mentions":[{"stepIndex":0,"resourcePosition":0}]}],"nextCursor":"two"}`)
+			return
+		}
+		_, _ = io.WriteString(w, `{"playbooks":[{"id":"two"}],"resourceBacklinks":[{"playbookId":"two","mentions":[{"stepIndex":1,"resourcePosition":0}]}]}`)
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_TOKEN", "test-token")
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+
+	var stdout, stderr bytes.Buffer
+	if exit := Main([]string{"playbook", "list", "--all", "--resource-kind", "cli", "--resource-ref", "github:epismoai/cli"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+		t.Fatalf("exit = %d stderr=%s", exit, stderr.String())
+	}
+	if calls != 2 || !strings.Contains(stdout.String(), `"playbook_id": "one"`) || !strings.Contains(stdout.String(), `"playbook_id": "two"`) {
+		t.Fatalf("calls=%d stdout=%s", calls, stdout.String())
+	}
+}
+
 func TestAllPaginationControlsMayComeFromInput(t *testing.T) {
 	var calls int
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

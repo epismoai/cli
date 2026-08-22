@@ -200,6 +200,7 @@ func pagedRequest(a *app, method, path string, ctx executionContext, payload map
 		return result, err
 	}
 	itemsKey, items := responseItems(result)
+	mergedResourceBacklinks := arrayField(result, "resourceBacklinks")
 	if !all {
 		if limit > 0 && len(items) > limit {
 			result[itemsKey] = items[:limit]
@@ -223,6 +224,10 @@ func pagedRequest(a *app, method, path string, ctx executionContext, payload map
 		items = append(items, more...)
 		result = next
 		result[itemsKey] = items
+		mergedResourceBacklinks = append(mergedResourceBacklinks, arrayField(next, "resourceBacklinks")...)
+		if mergedResourceBacklinks != nil {
+			result["resourceBacklinks"] = mergedResourceBacklinks
+		}
 		if limit > 0 && len(items) >= limit {
 			result[itemsKey] = items[:limit]
 			break
@@ -232,12 +237,34 @@ func pagedRequest(a *app, method, path string, ctx executionContext, payload map
 }
 
 func responseItems(response map[string]any) (string, []any) {
+	for _, key := range []string{
+		"playbooks",
+		"resources",
+		"versions",
+		"workspaces",
+		"teams",
+		"cases",
+		"tasks",
+		"records",
+		"suggestions",
+		"aliases",
+		"tokens",
+	} {
+		if items, ok := response[key].([]any); ok {
+			return key, items
+		}
+	}
 	for key, value := range response {
 		if items, ok := value.([]any); ok {
 			return key, items
 		}
 	}
 	return "items", nil
+}
+
+func arrayField(response map[string]any, key string) []any {
+	items, _ := response[key].([]any)
+	return items
 }
 func responseCursor(response map[string]any) string {
 	for _, key := range []string{"nextCursor", "next_cursor", "cursor"} {
