@@ -108,7 +108,7 @@ EPISMO_WORKSPACE=acme epismo case list
 
 Workspace references accept an exact ID or unique handle. The effective workspace is chosen in this order: `--workspace`, `EPISMO_WORKSPACE`, a workspace-scoped token, then the saved default workspace. A scoped token cannot grant access outside its scope.
 
-`--dry-run` previews archive, delete, revoke, close, ACL replacement, and workspace-clear operations without sending a request. In an interactive terminal those operations ask for confirmation; pass `--yes` to skip that prompt in scripts that allocate a TTY.
+`--dry-run` previews any command that changes remote or local state without sending a request, opening an authorization or checkout flow, or changing local configuration. This includes creates, updates, publishes, draft saves, assignments, records, stars, aliases, membership changes, archive/delete/revoke/close operations, and login/logout or workspace-selection changes. Read-only commands reject `--dry-run` instead of silently ignoring it. In an interactive terminal, especially impactful operations still ask for confirmation during a real run; pass `--yes` to skip that prompt in scripts that allocate a TTY.
 
 `--input` also works on list/search commands for agent workflows; there it supplies query parameters rather than a request body.
 

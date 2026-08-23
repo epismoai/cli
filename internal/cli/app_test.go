@@ -46,18 +46,71 @@ func TestSearchConvenienceArgumentPreservesOptionValues(t *testing.T) {
 	}
 }
 
-func TestDangerousDryRunDoesNotCallAPI(t *testing.T) {
+func TestDryRunDoesNotCallAPIForAnyMutationClass(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { t.Fatal("API should not be called") }))
 	defer server.Close()
 	t.Setenv("EPISMO_API_URL", server.URL)
-	t.Setenv("EPISMO_TOKEN", "test-token")
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
-	var stdout, stderr bytes.Buffer
-	if exit := Main([]string{"playbook", "archive", "playbook-1", "--dry-run"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
-		t.Fatalf("exit = %d, stderr = %s", exit, stderr.String())
+
+	tests := [][]string{
+		{"playbook", "archive", "playbook-1", "--dry-run"},                                    // dangerous API mutation
+		{"playbook", "create", "--definition", `{"title":"Preview","steps":[]}`, "--dry-run"}, // non-dangerous idempotent API mutation
+		{"playbook", "draft", "save", "playbook-1", "--definition", `{"title":"Draft","steps":[]}`, "--dry-run"},
+		{"team", "create", "--name", "Preview", "--dry-run"},   // API mutation without idempotency support
+		{"workspace", "use", "acme", "--dry-run"},              // local mutation that normally resolves remote state
+		{"login", "--email", "owner@example.com", "--dry-run"}, // auth and local credential mutation
 	}
-	if !strings.Contains(stdout.String(), `"dry_run": true`) {
-		t.Fatalf("stdout = %s", stdout.String())
+	for _, args := range tests {
+		var stdout, stderr bytes.Buffer
+		if exit := Main(args, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+			t.Fatalf("args=%v exit=%d stderr=%s", args, exit, stderr.String())
+		}
+		if !strings.Contains(stdout.String(), `"dry_run": true`) {
+			t.Fatalf("args=%v stdout=%s", args, stdout.String())
+		}
+	}
+}
+
+func TestDryRunRejectsReadOnlyCommands(t *testing.T) {
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+	for _, args := range [][]string{
+		{"playbook", "list", "--dry-run"},
+		{"playbook", "list", "--dry-run", "--help"},
+		{"playbook", "list", "--dry-run", "--schema"},
+		{"docs", "playbook", "create", "--dry-run"},
+	} {
+		var stdout, stderr bytes.Buffer
+		exit := Main(args, "test", strings.NewReader(""), &stdout, &stderr)
+		if exit != 1 || stdout.Len() != 0 || !strings.Contains(stderr.String(), `"code":"DRY_RUN_NOT_SUPPORTED"`) {
+			t.Fatalf("args=%v exit=%d stdout=%s stderr=%s", args, exit, stdout.String(), stderr.String())
+		}
+	}
+}
+
+func TestEveryCommandHasExpectedDryRunSupport(t *testing.T) {
+	want := map[string]bool{
+		"login": true, "logout": true,
+		"workspace use": true, "workspace clear": true, "workspace create": true, "workspace checkout": true, "workspace update": true,
+		"workspace member upsert": true, "workspace member delete": true,
+		"team create": true, "team update": true, "team member add": true, "team member delete": true,
+		"credit checkout": true, "token create": true, "token revoke": true,
+		"playbook create": true, "playbook version archive": true, "playbook version publish": true,
+		"playbook draft save": true, "playbook draft discard": true, "playbook draft publish": true,
+		"playbook acl": true, "playbook archive": true, "playbook star": true, "playbook unstar": true, "playbook share": true,
+		"playbook alias set": true, "playbook alias delete": true,
+		"case start": true, "case assign": true, "case acl": true, "case update": true, "case close": true, "case reopen": true,
+		"case task create": true, "case record append": true,
+		"task assign": true, "task update": true, "task close": true, "task reopen": true,
+		"playbook suggestion create": true, "suggestion update": true, "suggestion resolve": true,
+	}
+	for _, cmd := range buildCommands() {
+		if cmd.Safety.DryRun != want[cmd.Path] {
+			t.Errorf("%s Safety.DryRun=%v, want %v", cmd.Path, cmd.Safety.DryRun, want[cmd.Path])
+		}
+		delete(want, cmd.Path)
+	}
+	if len(want) != 0 {
+		t.Fatalf("unknown expected commands: %#v", want)
 	}
 }
 
@@ -87,7 +140,7 @@ func TestGlobalOptionValidationUsesDiagnosticFormat(t *testing.T) {
 	}
 }
 
-func TestDangerousDryRunValidatesPayload(t *testing.T) {
+func TestDryRunValidatesPayload(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	var stdout, stderr bytes.Buffer
 	exit := Main([]string{"task", "close", "task-1", "--lock-version", "1", "--dry-run"}, "test", strings.NewReader(""), &stdout, &stderr)

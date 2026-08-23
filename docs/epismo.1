@@ -25,7 +25,9 @@ Select a dotted field path with --output value.
 Apply a field projection such as .playbooks[] | .id.
 .TP
 .B --dry-run
-Preview an impactful operation without sending it.
+Preview any state-changing command without sending a request, opening an
+authorization or checkout flow, or changing local configuration. Read-only
+commands reject this option instead of ignoring it.
 .TP
 .B -y, --yes
 Skip an interactive confirmation prompt.
