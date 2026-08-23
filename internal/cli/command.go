@@ -17,18 +17,33 @@ type optionSpec struct {
 	Default  any
 }
 
+type inputSpec struct {
+	Help string
+}
+
+type commandSafety struct {
+	DryRun         bool
+	IdempotencyKey bool
+	Confirmation   bool
+}
+
+type outputMode uint8
+
+const (
+	outputStructured outputMode = iota
+	outputRaw
+)
+
 type command struct {
-	Path      string
-	Summary   string
-	Examples  []string
-	Args      []string
-	Options   []optionSpec
-	Input     bool
-	InputHelp string
-	Mutation  bool
-	Dangerous bool
-	RawOutput bool
-	Run       func(*app, invocation) (any, error)
+	Path     string
+	Summary  string
+	Examples []string
+	Args     []string
+	Options  []optionSpec
+	Input    *inputSpec
+	Safety   commandSafety
+	Output   outputMode
+	Run      func(*app, invocation) (any, error)
 }
 
 type invocation struct {
@@ -52,14 +67,14 @@ func (i invocation) positional(index int) string {
 
 func baseOptions(cmd *command) []optionSpec {
 	options := append([]optionSpec{}, cmd.Options...)
-	if cmd.Input || cmd.Mutation {
-		help := cmd.InputHelp
+	if cmd.Input != nil {
+		help := cmd.Input.Help
 		if help == "" {
 			help = "JSON object, @file, or - for stdin"
 		}
 		options = append([]optionSpec{{Name: "--input", Field: "_input", Help: help, Kind: kindString}}, options...)
 	}
-	if cmd.Mutation {
+	if cmd.Safety.IdempotencyKey {
 		options = append(options, optionSpec{Name: "--idempotency-key", Field: "idempotencyKey", Help: "retry key; generated automatically when omitted", Kind: kindString})
 	}
 	return options
@@ -120,7 +135,7 @@ func parseInvocation(cmd *command, args []string, stdin io.Reader) (invocation, 
 	if len(positionals) > len(cmd.Args) {
 		return invocation{}, &Error{Code: "UNEXPECTED_ARGUMENT", Message: fmt.Sprintf("Too many arguments for %s.", cmd.Path), Hint: "Run the command again with --help to inspect the expected arguments.", ExitCode: 1}
 	}
-	if !cmd.Input && !cmd.Mutation {
+	if cmd.Input == nil {
 		for _, option := range options {
 			if option.Required && !present[option.Field] {
 				return invocation{}, required(option.Name)

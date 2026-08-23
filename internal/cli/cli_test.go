@@ -312,7 +312,7 @@ func TestUnsupportedOperationsDoNotAdvertiseIdempotency(t *testing.T) {
 		tokenCreateCommand(),
 	}
 	for _, cmd := range commands {
-		if cmd.Mutation {
+		if cmd.Safety.IdempotencyKey {
 			t.Errorf("%s unexpectedly marked as an idempotent mutation", cmd.Path)
 		}
 		for _, option := range baseOptions(cmd) {

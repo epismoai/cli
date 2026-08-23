@@ -80,7 +80,7 @@ func (i invocation) payload(a *app) (map[string]any, error) {
 			return nil, required(option.Name)
 		}
 	}
-	if i.Command.Mutation {
+	if i.Command.Safety.IdempotencyKey {
 		if key, _ := result["idempotencyKey"].(string); strings.TrimSpace(key) == "" {
 			result["idempotencyKey"] = newUUID()
 		}
@@ -133,23 +133,23 @@ const (
 	requestBody
 )
 
-func apiOperation(path, summary string, args []string, method string, endpoint func(invocation) string, mode requestMode, mutation bool, options ...optionSpec) *command {
-	return apiOperationScoped(path, summary, args, method, endpoint, mode, mutation, true, options...)
+func apiOperation(path, summary string, args []string, method string, endpoint func(invocation) string, mode requestMode, idempotencyKey bool, options ...optionSpec) *command {
+	return apiOperationScoped(path, summary, args, method, endpoint, mode, idempotencyKey, true, options...)
 }
 
-func apiOperationUnscoped(path, summary string, args []string, method string, endpoint func(invocation) string, mode requestMode, mutation bool, options ...optionSpec) *command {
-	return apiOperationScoped(path, summary, args, method, endpoint, mode, mutation, false, options...)
+func apiOperationUnscoped(path, summary string, args []string, method string, endpoint func(invocation) string, mode requestMode, idempotencyKey bool, options ...optionSpec) *command {
+	return apiOperationScoped(path, summary, args, method, endpoint, mode, idempotencyKey, false, options...)
 }
 
-func apiOperationScoped(path, summary string, args []string, method string, endpoint func(invocation) string, mode requestMode, mutation, scoped bool, options ...optionSpec) *command {
-	inputHelp := ""
+func apiOperationScoped(path, summary string, args []string, method string, endpoint func(invocation) string, mode requestMode, idempotencyKey, scoped bool, options ...optionSpec) *command {
+	var input *inputSpec
 	if mode == requestBody {
-		inputHelp = "request-body JSON object, @file, or - for stdin"
+		input = &inputSpec{Help: "request-body JSON object, @file, or - for stdin"}
 	}
 	if mode == requestQuery {
-		inputHelp = "query-parameters JSON object, @file, or - for stdin"
+		input = &inputSpec{Help: "query-parameters JSON object, @file, or - for stdin"}
 	}
-	cmd := &command{Path: path, Summary: summary, Args: args, Options: options, Input: mode != requestNone, InputHelp: inputHelp, Mutation: mutation}
+	cmd := &command{Path: path, Summary: summary, Args: args, Options: options, Input: input, Safety: commandSafety{DryRun: requestMethodDryRun(method), IdempotencyKey: idempotencyKey}}
 	cmd.Run = func(a *app, inv invocation) (any, error) {
 		payload, err := inv.payload(a)
 		if err != nil {
@@ -172,6 +172,15 @@ func apiOperationScoped(path, summary string, args []string, method string, endp
 		return a.client.request(method, requestPath, ctx.Auth.AccessToken, body)
 	}
 	return cmd
+}
+
+func requestMethodDryRun(method string) bool {
+	switch method {
+	case http.MethodGet, http.MethodHead, http.MethodOptions:
+		return false
+	default:
+		return true
+	}
 }
 
 func pagedRequest(a *app, method, path string, ctx executionContext, payload map[string]any) (map[string]any, error) {

@@ -39,14 +39,12 @@ func enrichCommands(commands []*command) []*command {
 		if values, ok := examples[command.Path]; ok {
 			command.Examples = values
 		}
-		if dangerousPath(command.Path) {
-			command.Dangerous = true
-		}
+		command.Safety.Confirmation = requiresConfirmation(command.Path)
 	}
 	return commands
 }
 
-func dangerousPath(path string) bool {
+func requiresConfirmation(path string) bool {
 	for _, token := range []string{" archive", " delete", " revoke", " close", " acl", "workspace clear"} {
 		if strings.Contains(" "+path, token) {
 			return true
@@ -56,7 +54,7 @@ func dangerousPath(path string) bool {
 }
 
 func completionCommand() *command {
-	return &command{Path: "completion", Summary: "print shell completion instructions", Args: []string{"shell"}, RawOutput: true, Run: func(_ *app, inv invocation) (any, error) {
+	return &command{Path: "completion", Summary: "print shell completion instructions", Args: []string{"shell"}, Output: outputRaw, Run: func(_ *app, inv invocation) (any, error) {
 		shell := inv.positional(0)
 		if !contains([]string{"bash", "zsh", "fish", "powershell"}, shell) {
 			return nil, &Error{Code: "INVALID_ARGUMENT", Message: "Unsupported shell. Use bash, zsh, fish, or powershell.", ExitCode: 1}
@@ -116,7 +114,7 @@ func docsCommand() *command {
 }
 
 func loginCommand() *command {
-	return &command{Path: "login", Summary: "log in through a browser, or use email with automatic SSO discovery", Input: true, Options: []optionSpec{str("--email", "email", "use company SSO when configured, otherwise enter a code here")}, Run: func(a *app, inv invocation) (any, error) {
+	return &command{Path: "login", Summary: "log in through a browser, or use email with automatic SSO discovery", Input: &inputSpec{}, Safety: commandSafety{DryRun: true}, Options: []optionSpec{str("--email", "email", "use company SSO when configured, otherwise enter a code here")}, Run: func(a *app, inv invocation) (any, error) {
 		payload, err := inv.payload(a)
 		if err != nil {
 			return nil, err
@@ -126,7 +124,7 @@ func loginCommand() *command {
 }
 
 func logoutCommand() *command {
-	return &command{Path: "logout", Summary: "revoke credentials and clear ~/.epismo/credentials", Run: func(a *app, _ invocation) (any, error) { return a.logout() }}
+	return &command{Path: "logout", Summary: "revoke credentials and clear ~/.epismo/credentials", Safety: commandSafety{DryRun: true}, Run: func(a *app, _ invocation) (any, error) { return a.logout() }}
 }
 
 func whoamiCommand() *command {
@@ -234,7 +232,7 @@ func workspaceCurrentCommand() *command {
 }
 
 func workspaceUseCommand() *command {
-	return &command{Path: "workspace use", Summary: "set the default workspace by ID or handle", Args: []string{"workspace"}, Examples: []string{"epismo workspace use acme", "epismo workspace use ws_01abc"}, Run: func(a *app, inv invocation) (any, error) {
+	return &command{Path: "workspace use", Summary: "set the default workspace by ID or handle", Args: []string{"workspace"}, Examples: []string{"epismo workspace use acme", "epismo workspace use ws_01abc"}, Safety: commandSafety{DryRun: true}, Run: func(a *app, inv invocation) (any, error) {
 		auth, err := a.resolveAuthentication()
 		if err != nil {
 			return nil, err
@@ -268,7 +266,7 @@ func workspaceUseCommand() *command {
 }
 
 func workspaceClearCommand() *command {
-	return &command{Path: "workspace clear", Summary: "clear the saved workspace (reverts to personal space)", Run: func(_ *app, _ invocation) (any, error) {
+	return &command{Path: "workspace clear", Summary: "clear the saved workspace (reverts to personal space)", Safety: commandSafety{DryRun: true}, Run: func(_ *app, _ invocation) (any, error) {
 		config, err := readConfig()
 		if err != nil {
 			return nil, err
@@ -365,7 +363,7 @@ func selectedWorkspaceRequest(a *app, workspaceID, method, suffix string, body a
 }
 
 func workspaceMemberUpsertCommand() *command {
-	return &command{Path: "workspace member upsert", Summary: "add a workspace member or update the member role", Args: []string{"user-ids"}, Options: []optionSpec{workspaceIDOption(), requiredOption(choice("--role", "role", "owner | admin | member", "owner", "admin", "member"))}, Run: func(a *app, inv invocation) (any, error) {
+	return &command{Path: "workspace member upsert", Summary: "add a workspace member or update the member role", Args: []string{"user-ids"}, Options: []optionSpec{workspaceIDOption(), requiredOption(choice("--role", "role", "owner | admin | member", "owner", "admin", "member"))}, Safety: commandSafety{DryRun: true}, Run: func(a *app, inv invocation) (any, error) {
 		users, err := stringArray(inv.positional(0), "<user-ids>")
 		if err != nil {
 			return nil, err
@@ -374,7 +372,7 @@ func workspaceMemberUpsertCommand() *command {
 	}}
 }
 func workspaceMemberDeleteCommand() *command {
-	return &command{Path: "workspace member delete", Summary: "remove a workspace member", Args: []string{"user-ids"}, Options: []optionSpec{workspaceIDOption()}, Run: func(a *app, inv invocation) (any, error) {
+	return &command{Path: "workspace member delete", Summary: "remove a workspace member", Args: []string{"user-ids"}, Options: []optionSpec{workspaceIDOption()}, Safety: commandSafety{DryRun: true}, Run: func(a *app, inv invocation) (any, error) {
 		users, err := stringArray(inv.positional(0), "<user-ids>")
 		if err != nil {
 			return nil, err
@@ -395,6 +393,7 @@ func teamUpdateCommand() *command {
 
 func teamMemberListCommand() *command {
 	cmd := apiOperation("team member list", "list members across one or more teams", nil, http.MethodPost, staticEndpoint("/v1/teams/members/list"), requestBody, false, csv("--team-ids", "teamIds", "JSON array or comma-separated team ids"))
+	cmd.Safety.DryRun = false // This POST is a read-only batch lookup.
 	old := cmd.Run
 	cmd.Run = func(a *app, inv invocation) (any, error) {
 		payload, err := inv.payload(a)
@@ -418,7 +417,7 @@ func teamMemberListCommand() *command {
 func teamMemberAddCommand() *command    { return teamMemberMutation("add", http.MethodPut) }
 func teamMemberDeleteCommand() *command { return teamMemberMutation("delete", http.MethodDelete) }
 func teamMemberMutation(name, method string) *command {
-	return &command{Path: "team member " + name, Summary: name + " member(s) in a team", Args: []string{"user-ids"}, Options: []optionSpec{requiredOption(str("--team-id", "teamId", "team id")), workspaceIDOption()}, Run: func(a *app, inv invocation) (any, error) {
+	return &command{Path: "team member " + name, Summary: name + " member(s) in a team", Args: []string{"user-ids"}, Options: []optionSpec{requiredOption(str("--team-id", "teamId", "team id")), workspaceIDOption()}, Safety: commandSafety{DryRun: true}, Run: func(a *app, inv invocation) (any, error) {
 		users, err := stringArray(inv.positional(0), "<user-ids>")
 		if err != nil {
 			return nil, err

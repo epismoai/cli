@@ -48,7 +48,9 @@ func MainWithDistribution(args []string, version, distribution string, stdin io.
 	}
 	args = parsedArgs
 	a := &app{version: version, distribution: distribution, stdin: stdin, stdout: stdout, stderr: stderr, client: newAPIClient(version), isTTY: terminalReader(stdin) && terminalWriter(stderr), updateTTY: terminalWriter(stdout) && terminalWriter(stderr), options: options}
-	defer a.maybeCheckForUpdate(args)
+	if !options.DryRun {
+		defer a.maybeCheckForUpdate(args)
+	}
 	commands := buildCommands()
 	if len(args) == 0 {
 		printGroupHelp(stdout, "", commands)
@@ -63,6 +65,9 @@ func MainWithDistribution(args []string, version, distribution string, stdin io.
 		return 0
 	}
 	if args[0] == "docs" {
+		if options.DryRun {
+			return printAppError(a, dryRunNotSupportedError("docs"))
+		}
 		return printDocs(a, commands, args[1:])
 	}
 
@@ -81,6 +86,9 @@ func MainWithDistribution(args []string, version, distribution string, stdin io.
 	}
 	rest := args[consumed:]
 	rest = normalizeConvenienceArgs(cmd, rest)
+	if options.DryRun && !cmd.Safety.DryRun {
+		return printAppError(a, dryRunNotSupportedError(cmd.Path))
+	}
 	if containsHelpFlag(cmd, rest) {
 		printCommandHelp(stdout, cmd)
 		return 0
@@ -92,7 +100,7 @@ func MainWithDistribution(args []string, version, distribution string, stdin io.
 	if err != nil {
 		return printAppError(a, err)
 	}
-	if options.DryRun && cmd.Dangerous {
+	if options.DryRun {
 		payload, payloadErr := invocation.payload(a)
 		if payloadErr != nil {
 			return printAppError(a, payloadErr)
@@ -103,7 +111,7 @@ func MainWithDistribution(args []string, version, distribution string, stdin io.
 		}
 		return printResultOrError(a, preview, nil)
 	}
-	if cmd.Dangerous && a.isTTY && !options.Yes && invocation.text("_input") != "-" {
+	if cmd.Safety.Confirmation && a.isTTY && !options.Yes && invocation.text("_input") != "-" {
 		if !confirm(a, cmd.Path) {
 			return printAppError(a, &Error{Code: "CONFIRMATION_REQUIRED", Message: "Operation cancelled.", Hint: "Re-run with --yes to proceed without a prompt.", ExitCode: 1})
 		}
@@ -113,7 +121,7 @@ func MainWithDistribution(args []string, version, distribution string, stdin io.
 		return printAppError(a, err)
 	}
 	if result != nil {
-		if cmd.RawOutput {
+		if cmd.Output == outputRaw {
 			_, err = io.WriteString(stdout, fmt.Sprint(result))
 		} else {
 			err = printResult(stdout, result, options)
@@ -123,6 +131,16 @@ func MainWithDistribution(args []string, version, distribution string, stdin io.
 		}
 	}
 	return 0
+}
+
+func dryRunNotSupportedError(command string) *Error {
+	return &Error{
+		Code:     "DRY_RUN_NOT_SUPPORTED",
+		Message:  "--dry-run is not supported for this command.",
+		Hint:     "Run the command without --dry-run.",
+		Details:  map[string]any{"command": command},
+		ExitCode: 1,
+	}
 }
 
 func printDocs(a *app, commands []*command, args []string) int {

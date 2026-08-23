@@ -79,7 +79,7 @@ func playbookCommands() []*command {
 }
 
 func aliasCommands() []*command {
-	set := &command{Path: "playbook alias set", Summary: "set or rename a Playbook alias in the active namespace", Args: []string{"playbook-id", "alias"}, Options: []optionSpec{str("--owner-id", "ownerId", "alias owner Account ID")}, Input: true, Mutation: true, Run: func(a *app, inv invocation) (any, error) {
+	set := &command{Path: "playbook alias set", Summary: "set or rename a Playbook alias in the active namespace", Args: []string{"playbook-id", "alias"}, Options: []optionSpec{str("--owner-id", "ownerId", "alias owner Account ID")}, Input: &inputSpec{}, Safety: commandSafety{DryRun: true, IdempotencyKey: true}, Run: func(a *app, inv invocation) (any, error) {
 		payload, err := inv.payload(a)
 		if err != nil {
 			return nil, err
@@ -95,7 +95,7 @@ func aliasCommands() []*command {
 		}
 		return a.client.request(http.MethodPut, withWorkspace("/v1/aliases", ctx.WorkspaceID), ctx.Auth.AccessToken, payload)
 	}}
-	list := &command{Path: "playbook alias list", Summary: "list aliases for a Playbook", Args: []string{"playbook-id"}, Options: []optionSpec{str("--owner-id", "ownerId", "filter by alias owner Account ID")}, Input: true, Run: func(a *app, inv invocation) (any, error) {
+	list := &command{Path: "playbook alias list", Summary: "list aliases for a Playbook", Args: []string{"playbook-id"}, Options: []optionSpec{str("--owner-id", "ownerId", "filter by alias owner Account ID")}, Input: &inputSpec{}, Run: func(a *app, inv invocation) (any, error) {
 		payload, err := inv.payload(a)
 		if err != nil {
 			return nil, err
@@ -107,7 +107,7 @@ func aliasCommands() []*command {
 		}
 		return a.client.request(http.MethodGet, withWorkspace(queryString("/v1/aliases", payload), ctx.WorkspaceID), ctx.Auth.AccessToken, nil)
 	}}
-	remove := &command{Path: "playbook alias delete", Summary: "delete an alias from the active namespace", Args: []string{"alias"}, Options: []optionSpec{str("--owner-id", "ownerId", "alias owner Account ID")}, Input: true, Mutation: true, Run: func(a *app, inv invocation) (any, error) {
+	remove := &command{Path: "playbook alias delete", Summary: "delete an alias from the active namespace", Args: []string{"alias"}, Options: []optionSpec{str("--owner-id", "ownerId", "alias owner Account ID")}, Input: &inputSpec{}, Safety: commandSafety{DryRun: true, IdempotencyKey: true}, Run: func(a *app, inv invocation) (any, error) {
 		payload, err := inv.payload(a)
 		if err != nil {
 			return nil, err
@@ -184,7 +184,7 @@ func lockedMutation(path, summary, arg, method string, endpoint func(invocation)
 
 func taskCommands() []*command {
 	listOptions := append(pagingOptions(), str("--case-id", "caseId", "Case ID"), str("--assigned-to", "assignedTo", "assignee Account ID or me"), choice("--status", "status", "Task status", "open", "closed"))
-	list := &command{Path: "task list", Summary: "list your assigned Tasks across Cases", Options: listOptions, Input: true, InputHelp: "query-parameters JSON object, @file, or - for stdin", Run: func(a *app, inv invocation) (any, error) {
+	list := &command{Path: "task list", Summary: "list your assigned Tasks across Cases", Options: listOptions, Input: &inputSpec{Help: "query-parameters JSON object, @file, or - for stdin"}, Run: func(a *app, inv invocation) (any, error) {
 		payload, err := inv.payload(a)
 		if err != nil {
 			return nil, err
