@@ -49,6 +49,17 @@ epismo playbook init --title Onboarding > playbook.json
 epismo playbook create --definition @playbook.json
 ```
 
+## Playbook access
+
+Use `visibility` and explicit editors instead of a raw ACL:
+
+```sh
+epismo playbook access get PLAYBOOK_ID
+epismo playbook access set PLAYBOOK_ID --visibility public --editors USER_ID,TEAM_ID
+```
+
+`public` permits published reads only. Editors can read and edit Playbook content; the owner is implicit and is not included in `--editors`. Owner managers, including Workspace Owners and Admins for a Workspace-owned Playbook, manage access and archive Playbooks or historical Versions.
+
 Run `epismo --help` for command groups, or append `--help` to any group or command for its options.
 
 Use `epismo examples` for common workflows, `epismo doctor` to inspect local setup, and `epismo completion zsh` (or `bash`, `fish`, `powershell`) to install shell completion.

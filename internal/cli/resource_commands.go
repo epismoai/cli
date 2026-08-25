@@ -20,7 +20,7 @@ func playbookCommands() []*command {
 	search := apiOperation("playbook search", "search readable Playbooks, including pb: alias references", nil, http.MethodGet, staticEndpoint("/v1/playbooks"), requestQuery, false, append(page, str("--query", "query", "full-text query or pb: alias reference"), choice("--category", "category", "Playbook category", "productivity", "programming", "design", "sales", "marketing", "operations", "learning"), csv("--lang", "preferredLangs", "comma-separated two-letter content languages in priority order"))...)
 	list := apiOperation("playbook list", "list readable Playbooks, most recently updated first", nil, http.MethodGet, staticEndpoint("/v1/playbooks"), requestQuery, false, append(page, choice("--resource-kind", "resourceKind", "resource kind", "skill", "mcp", "cli", "api", "plugin", "graph", "document", "agent", "custom"), str("--resource-ref", "resourceRef", "normalized or provider-specific resource reference"))...)
 	resourceList := apiOperation("playbook resource list", "list resource references used by readable Playbooks", nil, http.MethodGet, staticEndpoint("/v1/playbook-resources"), requestQuery, false, choice("--kind", "kind", "resource kind", "skill", "mcp", "cli", "api", "plugin", "graph", "document", "agent", "custom"), integer("--page-size", "pageSize", "results per page (1-200)"))
-	create := apiOperation("playbook create", "create a Playbook and its first Version", nil, http.MethodPost, staticEndpoint("/v1/playbooks"), requestBody, true, str("--owner-id", "ownerId", "owner Account ID"), csv("--acl", "acl", "comma-separated ACL principals"), objectSource("--definition", "definition", "Playbook Definition JSON object"))
+	create := apiOperation("playbook create", "create a Playbook and its first Version", nil, http.MethodPost, staticEndpoint("/v1/playbooks"), requestBody, true, str("--owner-id", "ownerId", "owner Account ID"), defaultOption(choice("--visibility", "visibility", "published visibility", "private", "public"), "private"), csv("--editors", "editors", "comma-separated editor Account or Team IDs"), objectSource("--definition", "definition", "Playbook Definition JSON object"))
 	create.Run = func(a *app, inv invocation) (any, error) {
 		payload, err := inv.payload(a)
 		if err != nil {
@@ -44,6 +44,15 @@ func playbookCommands() []*command {
 			}
 			payload["ownerId"] = accountID
 		}
+		if _, supplied := payload["access"]; !supplied {
+			access := map[string]any{"visibility": payload["visibility"]}
+			if editors, ok := payload["editors"]; ok {
+				access["editors"] = editors
+			}
+			payload["access"] = access
+		}
+		delete(payload, "visibility")
+		delete(payload, "editors")
 		return a.client.request(http.MethodPost, withWorkspace("/v1/playbooks", ctx.WorkspaceID), ctx.Auth.AccessToken, payload)
 	}
 	get := &command{Path: "playbook get", Summary: "get a Playbook and its latest immutable Version", Args: []string{"playbook-id-or-ref"}, Run: func(a *app, inv invocation) (any, error) {
@@ -69,13 +78,14 @@ func playbookCommands() []*command {
 	draftSave := apiOperation("playbook draft save", "create or overwrite the Draft", []string{"playbook-id"}, http.MethodPut, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/draft" }, requestBody, false, defaultOption(integer("--base-revision", "baseRevision", "revision last read (0 for a new Draft)"), 0), objectSource("--definition", "definition", "Playbook Definition JSON object"))
 	draftDiscard := apiOperation("playbook draft discard", "discard the Draft", []string{"playbook-id"}, http.MethodDelete, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/draft" }, requestBody, true)
 	draftPublish := apiOperation("playbook draft publish", "publish the Draft as a new Version", []string{"playbook-id"}, http.MethodPost, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/draft/publish" }, requestBody, true, requiredOption(integer("--expected-draft-revision", "expectedDraftRevision", "Draft revision last read and reviewed")))
-	acl := apiOperation("playbook acl", "replace the ACL", []string{"playbook-id"}, http.MethodPatch, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/acl" }, requestBody, true, requiredOption(csv("--acl", "acl", "comma-separated ACL principals")))
+	accessGet := apiOperation("playbook access get", "get public/private visibility and explicit editors", []string{"playbook-id"}, http.MethodGet, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/access" }, requestNone, false)
+	accessSet := apiOperation("playbook access set", "set public/private visibility and explicit editors", []string{"playbook-id"}, http.MethodPut, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/access" }, requestBody, true, requiredOption(choice("--visibility", "visibility", "published visibility", "private", "public")), csv("--editors", "editors", "comma-separated editor Account or Team IDs"))
 	archive := apiOperation("playbook archive", "archive a Playbook", []string{"playbook-id"}, http.MethodDelete, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) }, requestBody, true)
 	star := apiOperation("playbook star", "star a Playbook", []string{"playbook-id"}, http.MethodPut, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/star" }, requestBody, true)
 	unstar := apiOperation("playbook unstar", "remove a Playbook star", []string{"playbook-id"}, http.MethodDelete, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/star" }, requestBody, true)
 	starred := apiOperation("playbook starred", "list your starred Playbooks", nil, http.MethodGet, staticEndpoint("/v1/me/starred-playbooks"), requestQuery, false, page...)
 	share := apiOperation("playbook share", "create a share link", []string{"playbook-id"}, http.MethodPost, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/share" }, requestBody, true)
-	return []*command{init, search, list, resourceList, create, get, versionList, versionGet, versionArchive, versionPublish, draftGet, draftSave, draftDiscard, draftPublish, acl, archive, star, unstar, starred, share}
+	return []*command{init, search, list, resourceList, create, get, versionList, versionGet, versionArchive, versionPublish, draftGet, draftSave, draftDiscard, draftPublish, accessGet, accessSet, archive, star, unstar, starred, share}
 }
 
 func aliasCommands() []*command {
