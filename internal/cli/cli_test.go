@@ -85,7 +85,7 @@ func TestCommandSurface(t *testing.T) {
 		workspace/list workspace/current workspace/use workspace/clear workspace/create workspace/checkout workspace/update workspace/member/list workspace/member/upsert workspace/member/delete
 		team/list team/create team/update team/member/list team/member/add team/member/delete
 		credit/balance credit/checkout token/create token/list token/revoke
-		playbook/init playbook/search playbook/list playbook/resource/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/acl playbook/archive playbook/star playbook/unstar playbook/starred playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
+		playbook/init playbook/search playbook/list playbook/resource/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/access/get playbook/access/set playbook/archive playbook/star playbook/unstar playbook/starred playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
 		case/start case/get case/list case/assign case/acl case/update case/close case/reopen
 		case/task/create case/task/list case/record/append case/record/list
 		task/list task/get task/assign task/update task/close task/reopen
@@ -154,6 +154,40 @@ func TestPlaybookResourceCommands(t *testing.T) {
 	}
 	if requestPath != "/v1/playbook-resources?kind=cli&pageSize=20" {
 		t.Fatalf("request path = %q", requestPath)
+	}
+}
+
+func TestPlaybookAccessCommandsUsePublicTerminology(t *testing.T) {
+	var method, requestPath string
+	var body map[string]any
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		method = request.Method
+		requestPath = request.URL.Path
+		_ = json.NewDecoder(request.Body).Decode(&body)
+		_, _ = io.WriteString(w, `{"playbookId":"playbook-1","visibility":"public","editors":["team-1"]}`)
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_TOKEN", "test-token")
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+
+	var stdout, stderr bytes.Buffer
+	exitCode := Main([]string{"playbook", "access", "set", "playbook-1", "--visibility", "public", "--editors", "team-1,user-1", "--yes"}, "test", strings.NewReader(""), &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
+	}
+	if method != http.MethodPut || requestPath != "/v1/playbooks/playbook-1/access" {
+		t.Fatalf("request = %s %s", method, requestPath)
+	}
+	if _, exists := body["acl"]; exists {
+		t.Fatalf("request exposed internal ACL terminology: %#v", body)
+	}
+	if body["visibility"] != "public" {
+		t.Fatalf("visibility = %#v", body["visibility"])
+	}
+	editors, _ := body["editors"].([]any)
+	if len(editors) != 2 || editors[0] != "team-1" || editors[1] != "user-1" {
+		t.Fatalf("editors = %#v", body["editors"])
 	}
 }
 

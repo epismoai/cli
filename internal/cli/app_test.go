@@ -96,7 +96,7 @@ func TestEveryCommandHasExpectedDryRunSupport(t *testing.T) {
 		"credit checkout": true, "token create": true, "token revoke": true,
 		"playbook create": true, "playbook version archive": true, "playbook version publish": true,
 		"playbook draft save": true, "playbook draft discard": true, "playbook draft publish": true,
-		"playbook acl": true, "playbook archive": true, "playbook star": true, "playbook unstar": true, "playbook share": true,
+		"playbook access set": true, "playbook archive": true, "playbook star": true, "playbook unstar": true, "playbook share": true,
 		"playbook alias set": true, "playbook alias delete": true,
 		"case start": true, "case assign": true, "case acl": true, "case update": true, "case close": true, "case reopen": true,
 		"case task create": true, "case record append": true,

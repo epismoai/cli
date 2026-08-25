@@ -5664,7 +5664,8 @@
         "tags": [
           "playbooks"
         ],
-        "summary": "DELETE /v1/playbooks/{playbookId}/versions/{versionId}",
+        "summary": "Archive a historical Playbook Version",
+        "description": "Only a Playbook owner can archive a Version. The latest Version cannot be archived.",
         "parameters": [
           {
             "name": "playbookId",
@@ -6388,7 +6389,9 @@
         "tags": [
           "playbooks"
         ],
-        "summary": "PATCH /v1/playbooks/{playbookId}/acl",
+        "summary": "Replace Playbook access (legacy)",
+        "description": "Deprecated compatibility endpoint. Use GET and PUT /v1/playbooks/{playbookId}/access.",
+        "deprecated": true,
         "parameters": [
           {
             "name": "playbookId",
@@ -6431,6 +6434,289 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PlaybookResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/playbooks/{playbookId}/access": {
+      "get": {
+        "operationId": "getV1PlaybooksPlaybookIdAccess",
+        "tags": [
+          "playbooks"
+        ],
+        "summary": "Get Playbook access",
+        "description": "Returns public/private visibility and explicit editors. Owners are implicit and are not editors.",
+        "parameters": [
+          {
+            "name": "playbookId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaybookAccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "putV1PlaybooksPlaybookIdAccess",
+        "tags": [
+          "playbooks"
+        ],
+        "summary": "Set Playbook access",
+        "description": "Public grants published read access only. Editors may change content. Owners can always read, edit, manage access, and archive.",
+        "parameters": [
+          {
+            "name": "playbookId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPlaybookAccessRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaybookAccessResponse"
                 }
               }
             }
@@ -11475,13 +11761,33 @@
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
-          "acl": {
-            "default": [],
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1
-            }
+          "access": {
+            "default": {
+              "visibility": "private",
+              "editors": []
+            },
+            "type": "object",
+            "properties": {
+              "visibility": {
+                "default": "private",
+                "description": "Public permits published reads only; private requires ownership or an editor grant.",
+                "type": "string",
+                "enum": [
+                  "private",
+                  "public"
+                ]
+              },
+              "editors": {
+                "default": [],
+                "description": "Account or Team principal IDs that may edit content. Owners are implicit and omitted.",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "additionalProperties": false
           },
           "definition": {
             "type": "object",
@@ -11549,14 +11855,17 @@
                               "document",
                               "agent",
                               "custom"
-                            ]
+                            ],
+                            "description": "Type of resource referenced by this step."
                           },
                           "ref": {
                             "type": "string",
                             "minLength": 1,
-                            "maxLength": 2048
+                            "maxLength": 2048,
+                            "description": "Stable resource or container reference. For a GitHub-backed resource, use github:owner/repo and put any path inside the repository in selector."
                           },
                           "selector": {
+                            "description": "Optional location or pinned version within ref, such as skills/verification-before-completion or ^1. Do not use a default branch name such as main unless that specific branch is intentionally required.",
                             "anyOf": [
                               {
                                 "type": "string",
@@ -11620,7 +11929,8 @@
           "ownerId",
           "definition",
           "idempotencyKey"
-        ]
+        ],
+        "additionalProperties": false
       },
       "PlaybookMutationRequest": {
         "type": "object",
@@ -11709,14 +12019,17 @@
                               "document",
                               "agent",
                               "custom"
-                            ]
+                            ],
+                            "description": "Type of resource referenced by this step."
                           },
                           "ref": {
                             "type": "string",
                             "minLength": 1,
-                            "maxLength": 2048
+                            "maxLength": 2048,
+                            "description": "Stable resource or container reference. For a GitHub-backed resource, use github:owner/repo and put any path inside the repository in selector."
                           },
                           "selector": {
+                            "description": "Optional location or pinned version within ref, such as skills/verification-before-completion or ^1. Do not use a default branch name such as main unless that specific branch is intentionally required.",
                             "anyOf": [
                               {
                                 "type": "string",
@@ -11870,14 +12183,17 @@
                               "document",
                               "agent",
                               "custom"
-                            ]
+                            ],
+                            "description": "Type of resource referenced by this step."
                           },
                           "ref": {
                             "type": "string",
                             "minLength": 1,
-                            "maxLength": 2048
+                            "maxLength": 2048,
+                            "description": "Stable resource or container reference. For a GitHub-backed resource, use github:owner/repo and put any path inside the repository in selector."
                           },
                           "selector": {
+                            "description": "Optional location or pinned version within ref, such as skills/verification-before-completion or ^1. Do not use a default branch name such as main unless that specific branch is intentionally required.",
                             "anyOf": [
                               {
                                 "type": "string",
@@ -11975,6 +12291,37 @@
           "acl",
           "idempotencyKey"
         ]
+      },
+      "SetPlaybookAccessRequest": {
+        "type": "object",
+        "properties": {
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "private",
+              "public"
+            ]
+          },
+          "editors": {
+            "default": [],
+            "description": "Account or Team principal IDs that may edit content. Owners are implicit and omitted.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "visibility",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
       },
       "CreateShareTokenRequest": {
         "type": "object",
@@ -12950,6 +13297,34 @@
         "properties": {
           "playbook": {
             "$ref": "#/components/schemas/Playbook"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PlaybookAccessResponse": {
+        "type": "object",
+        "required": [
+          "playbookId",
+          "visibility",
+          "editors"
+        ],
+        "properties": {
+          "playbookId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "private",
+              "public"
+            ]
+          },
+          "editors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "additionalProperties": false

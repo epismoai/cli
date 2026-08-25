@@ -45,7 +45,7 @@ func enrichCommands(commands []*command) []*command {
 }
 
 func requiresConfirmation(path string) bool {
-	for _, token := range []string{" archive", " delete", " revoke", " close", " acl", "workspace clear"} {
+	for _, token := range []string{" archive", " delete", " revoke", " close", " acl", " access set", "workspace clear"} {
 		if strings.Contains(" "+path, token) {
 			return true
 		}
