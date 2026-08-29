@@ -86,7 +86,7 @@ func TestCommandSurface(t *testing.T) {
 		team/list team/create team/update team/member/list team/member/add team/member/delete
 		credit/balance credit/checkout token/create token/list token/revoke
 		playbook/init playbook/search playbook/list playbook/resource/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/access/get playbook/access/set playbook/archive playbook/star playbook/unstar playbook/starred playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
-		case/start case/get case/list case/assign case/acl case/update case/close case/reopen
+		case/start case/get case/list case/assign case/acl case/update case/handoff case/handoff/graph case/close case/reopen
 		case/task/create case/task/list case/record/append case/record/list
 		task/list task/get task/assign task/update task/close task/reopen
 		playbook/suggestion/create playbook/suggestion/list

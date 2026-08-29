@@ -60,6 +60,18 @@ epismo playbook access set PLAYBOOK_ID --visibility public --editors USER_ID,TEA
 
 `public` permits published reads only. Editors can read and edit Playbook content; the owner is implicit and is not included in `--editors`. Owner managers, including Workspace Owners and Admins for a Workspace-owned Playbook, manage access and archive Playbooks or historical Versions.
 
+## Cases and handoffs
+
+Start a Case, append timeline Records, connect dependent workflows, and explore the DAG:
+
+```sh
+epismo case start --title "Customer Onboarding"
+epismo case record append CASE_ID --kind result --content "Completed setup"
+epismo case handoff FIRST_CASE_ID --to-case-id SECOND_CASE_ID
+epismo case handoff graph CASE_ID --scope connected
+epismo case record list CASE_ID --scope ancestors
+```
+
 Run `epismo --help` for command groups, or append `--help` to any group or command for its options.
 
 Use `epismo examples` for common workflows, `epismo doctor` to inspect local setup, and `epismo completion zsh` (or `bash`, `fish`, `powershell`) to install shell completion.
@@ -119,7 +131,7 @@ EPISMO_WORKSPACE=acme epismo case list
 
 Workspace references accept an exact ID or unique handle. The effective workspace is chosen in this order: `--workspace`, `EPISMO_WORKSPACE`, a workspace-scoped token, then the saved default workspace. A scoped token cannot grant access outside its scope.
 
-`--dry-run` previews any command that changes remote or local state without sending a request, opening an authorization or checkout flow, or changing local configuration. This includes creates, updates, publishes, draft saves, assignments, records, stars, aliases, membership changes, archive/delete/revoke/close operations, and login/logout or workspace-selection changes. Read-only commands reject `--dry-run` instead of silently ignoring it. In an interactive terminal, especially impactful operations still ask for confirmation during a real run; pass `--yes` to skip that prompt in scripts that allocate a TTY.
+`--dry-run` previews any command that changes remote or local state without sending a request, opening an authorization or checkout flow, or changing local configuration. This includes creates, updates, publishes, draft saves, assignments, records, handoffs, stars, aliases, membership changes, archive/delete/revoke/close operations, and login/logout or workspace-selection changes. Read-only commands reject `--dry-run` instead of silently ignoring it. In an interactive terminal, especially impactful operations still ask for confirmation during a real run; pass `--yes` to skip that prompt in scripts that allocate a TTY.
 
 `--input` also works on list/search commands for agent workflows; there it supplies query parameters rather than a request body.
 

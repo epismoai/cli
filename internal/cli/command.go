@@ -8,13 +8,14 @@ import (
 )
 
 type optionSpec struct {
-	Name     string
-	Field    string
-	Help     string
-	Kind     optionKind
-	Required bool
-	Choices  []string
-	Default  any
+	Name                string
+	Field               string
+	Help                string
+	Kind                optionKind
+	Required            bool
+	RequiredAlternative string
+	Choices             []string
+	Default             any
 }
 
 type inputSpec struct {
@@ -43,6 +44,7 @@ type command struct {
 	Input    *inputSpec
 	Safety   commandSafety
 	Output   outputMode
+	Prepare  func(invocation) (invocation, error)
 	Run      func(*app, invocation) (any, error)
 }
 
@@ -137,7 +139,11 @@ func parseInvocation(cmd *command, args []string, stdin io.Reader) (invocation, 
 	}
 	if cmd.Input == nil {
 		for _, option := range options {
-			if option.Required && !present[option.Field] {
+			alternativePresent := false
+			if alternative, ok := byName[option.RequiredAlternative]; ok {
+				alternativePresent = present[alternative.Field]
+			}
+			if option.Required && !present[option.Field] && !alternativePresent {
 				return invocation{}, required(option.Name)
 			}
 		}
@@ -169,6 +175,9 @@ func printCommandHelp(w io.Writer, cmd *command) {
 			required := ""
 			if option.Required {
 				required = " (required)"
+				if option.RequiredAlternative != "" {
+					required = " (required unless " + option.RequiredAlternative + ")"
+				}
 			}
 			name := option.Name + " <value>"
 			if option.Kind == kindBoolean {
@@ -213,6 +222,7 @@ func printGroupHelp(w io.Writer, prefix string, commands []*command) {
 		"playbook draft":   "edit a mutable Draft before publishing",
 		"playbook alias":   "manage Playbook aliases in the active namespace",
 		"case":             "start, assign, and close Cases",
+		"case handoff":     "hand work off to another Case or inspect handoffs",
 		"task":             "manage materialized Case Tasks",
 		"record":           "append Records and browse the ACL-scoped activity feed",
 		"suggestion":       "manage Playbook Suggestions",
