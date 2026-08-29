@@ -49,6 +49,8 @@ epismo playbook init --title Onboarding > playbook.json
 epismo playbook create --definition @playbook.json
 ```
 
+`epismo workspace checkout <workspace-id>` starts a hosted subscription checkout. If the workspace has a cancellation scheduled for the end of its current billing period, it resumes that subscription instead of creating a second one.
+
 ## Playbook access
 
 Use `visibility` and explicit editors instead of a raw ACL:

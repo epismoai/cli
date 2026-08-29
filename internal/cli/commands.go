@@ -332,7 +332,7 @@ func workspaceCreateCommand() *command {
 }
 
 func workspaceCheckoutCommand() *command {
-	return apiOperationUnscoped("workspace checkout", "get the billing URL for a workspace", []string{"workspace-id"}, http.MethodPost, func(i invocation) string { return "/v1/workspaces/" + escaped(i.positional(0)) + "/checkout" }, requestNone, false)
+	return apiOperationUnscoped("workspace checkout", "start or resume a workspace subscription", []string{"workspace-id"}, http.MethodPost, func(i invocation) string { return "/v1/workspaces/" + escaped(i.positional(0)) + "/checkout" }, requestNone, false)
 }
 func workspaceUpdateCommand() *command {
 	return apiOperationUnscoped("workspace update", "update a workspace you own", []string{"workspace-id"}, http.MethodPatch, func(i invocation) string { return "/v1/workspaces/" + escaped(i.positional(0)) }, requestBody, false, str("--handle", "handle", "updated workspace handle"))
