@@ -157,12 +157,64 @@ func caseCommands() []*command {
 	start := apiOperation("case start", "start a Playbook or ad-hoc Case", nil, http.MethodPost, staticEndpoint("/v1/cases"), requestBody, true, str("--version-id", "versionId", "Playbook Version ID"), str("--title", "title", "Case title"), object("--case-input", "input", "Case input JSON object"), csv("--acl", "acl", "comma-separated ACL principals"))
 	get := apiOperation("case get", "get a Case with its status, ACL, and lock version", []string{"case-id"}, http.MethodGet, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) }, requestNone, false)
 	list := apiOperation("case list", "list readable Cases", nil, http.MethodGet, staticEndpoint("/v1/cases"), requestQuery, false, append(pagingOptions(), str("--assigned-to", "assignedTo", "only Cases assigned to this account"), choice("--status", "status", "Case status", "open", "closed"))...)
-	assign := lockedMutation("case assign", "hand overall responsibility for a Case", "case-id", http.MethodPatch, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/assignee" }, requiredOption(str("--assigned-to", "assignedTo", "account responsible for the Case")))
+	assign := lockedMutation("case assign", "change which account is responsible for a Case", "case-id", http.MethodPatch, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/assignee" }, requiredOption(str("--assigned-to", "assignedTo", "account responsible for the Case")))
 	acl := lockedMutation("case acl", "replace a Case ACL", "case-id", http.MethodPatch, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/acl" }, requiredOption(csv("--acl", "acl", "comma-separated ACL principals")))
 	update := lockedMutation("case update", "update editable Case fields", "case-id", http.MethodPatch, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) }, str("--title", "title", "Case title"))
 	close := lockedMutation("case close", "close a Case", "case-id", http.MethodPost, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/close" }, choice("--outcome", "outcome", "Case outcome", "completed", "cancelled", "abandoned"), array("--records", "records", "JSON array of final Records"))
 	reopen := lockedMutation("case reopen", "reopen a closed Case", "case-id", http.MethodPost, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/reopen" })
 	return []*command{start, get, list, assign, acl, update, close, reopen}
+}
+
+func caseHandoffCommands() []*command {
+	handoff := apiOperation("case handoff", "connect this Case to the Case before or after it", []string{"case-id"}, http.MethodPost, func(i invocation) string {
+		return "/v1/cases/" + escaped(i.positional(0)) + "/handoffs"
+	}, requestBody, true,
+		requiredOptionUnless(str("--to-case-id", "toCaseId", "Case receiving work from case-id"), "--from-case-id"),
+		str("--from-case-id", "_fromCaseId", "Case handing work off to case-id; mutually exclusive with --to-case-id"),
+	)
+	handoff.Prepare = prepareCaseHandoff
+	graph := apiOperation("case handoff graph", "get a Case handoff graph, or only the directly connected Cases", []string{"case-id"}, http.MethodGet, func(i invocation) string {
+		return "/v1/cases/" + escaped(i.positional(0)) + "/handoff-graph"
+	}, requestQuery, false, choice("--scope", "scope", "handoff scope", "self", "ancestors", "descendants", "neighbors", "connected"))
+	return []*command{handoff, graph}
+}
+
+func prepareCaseHandoff(inv invocation) (invocation, error) {
+	hasTo := inv.Present["toCaseId"]
+	hasFrom := inv.Present["_fromCaseId"]
+	if hasTo && hasFrom {
+		return invocation{}, &Error{
+			Code:     "INVALID_ARGUMENT",
+			Message:  "Options --to-case-id and --from-case-id are mutually exclusive.",
+			Hint:     "Specify exactly one handoff direction.",
+			ExitCode: 1,
+		}
+	}
+	if !hasFrom {
+		return inv, nil
+	}
+
+	// The API is anchored at the source Case. For the reverse CLI form, move the
+	// explicit source into the path and the positional Case into the request body.
+	values := make(map[string]any, len(inv.Values))
+	for field, value := range inv.Values {
+		values[field] = value
+	}
+	present := make(map[string]bool, len(inv.Present))
+	for field, value := range inv.Present {
+		present[field] = value
+	}
+	positionals := append([]string(nil), inv.Positionals...)
+	positionals[0] = inv.text("_fromCaseId")
+	values["toCaseId"] = inv.positional(0)
+	present["toCaseId"] = true
+	delete(values, "_fromCaseId")
+	delete(present, "_fromCaseId")
+
+	inv.Positionals = positionals
+	inv.Values = values
+	inv.Present = present
+	return inv, nil
 }
 
 func caseTaskCommands() []*command {
@@ -180,7 +232,7 @@ func caseRecordCommands() []*command {
 	appendRecord := apiOperation("case record append", "append an immutable Record to a Case", []string{"case-id"}, http.MethodPost, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/records"
 	}, requestBody, true, str("--task-id", "taskId", "Task this Record belongs to"), str("--source-step-id", "sourceStepId", "four-character Step ID"), str("--kind", "kind", "Record kind"), str("--content", "content", "Record content"), object("--data", "data", "Record data JSON object"), choice("--origin", "origin", "Record origin", "user", "agent"), str("--client-name", "clientName", "client name"), str("--client-version", "clientVersion", "client version"))
-	listOptions := append(pagingOptions(), str("--task-id", "taskId", "Task ID"), str("--created-by", "createdBy", "creator Account ID or me"), csv("--kinds", "kinds", "comma-separated Record kinds"), csv("--origins", "origins", "comma-separated origins"), csv("--acl", "acl", "ACL principals"), defaultOption(choice("--order", "order", "sort order", "asc", "desc"), "desc"))
+	listOptions := append(pagingOptions(), choice("--scope", "scope", "handoff scope", "self", "ancestors", "descendants", "neighbors", "connected"), str("--task-id", "taskId", "Task ID"), str("--created-by", "createdBy", "creator Account ID or me"), csv("--kinds", "kinds", "comma-separated Record kinds"), csv("--origins", "origins", "comma-separated origins"), csv("--acl", "acl", "ACL principals"), defaultOption(choice("--order", "order", "sort order", "asc", "desc"), "desc"))
 	list := apiOperation("case record list", "list Records in a Case", []string{"case-id"}, http.MethodGet, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/records"
 	}, requestQuery, false, listOptions...)

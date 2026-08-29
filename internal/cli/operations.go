@@ -31,7 +31,12 @@ func csv(name, field, help string) optionSpec {
 func choice(name, field, help string, choices ...string) optionSpec {
 	return optionSpec{Name: name, Field: field, Help: help, Kind: kindString, Choices: choices}
 }
-func requiredOption(option optionSpec) optionSpec           { option.Required = true; return option }
+func requiredOption(option optionSpec) optionSpec { option.Required = true; return option }
+func requiredOptionUnless(option optionSpec, alternative string) optionSpec {
+	option.Required = true
+	option.RequiredAlternative = alternative
+	return option
+}
 func defaultOption(option optionSpec, value any) optionSpec { option.Default = value; return option }
 
 func pagingOptions() []optionSpec {

@@ -100,6 +100,12 @@ func MainWithDistribution(args []string, version, distribution string, stdin io.
 	if err != nil {
 		return printAppError(a, err)
 	}
+	if cmd.Prepare != nil {
+		invocation, err = cmd.Prepare(invocation)
+		if err != nil {
+			return printAppError(a, err)
+		}
+	}
 	if options.DryRun {
 		payload, payloadErr := invocation.payload(a)
 		if payloadErr != nil {
@@ -252,7 +258,12 @@ func containsSchemaFlag(rest []string) bool {
 func printCommandSchema(w io.Writer, cmd *command) int {
 	options := make([]any, 0, len(baseOptions(cmd)))
 	for _, option := range baseOptions(cmd) {
-		options = append(options, map[string]any{"name": option.Name, "required": option.Required, "kind": optionKindName(option.Kind), "choices": option.Choices, "default": option.Default, "description": option.Help})
+		required := option.Required && option.RequiredAlternative == ""
+		entry := map[string]any{"name": option.Name, "required": required, "kind": optionKindName(option.Kind), "choices": option.Choices, "default": option.Default, "description": option.Help}
+		if option.RequiredAlternative != "" {
+			entry["requiredUnless"] = option.RequiredAlternative
+		}
+		options = append(options, entry)
 	}
 	if err := printJSON(w, map[string]any{"command": cmd.Path, "arguments": cmd.Args, "options": options, "examples": cmd.Examples}); err != nil {
 		return 1

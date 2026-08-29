@@ -18,6 +18,7 @@ func buildCommands() []*command {
 	commands = append(commands, playbookCommands()...)
 	commands = append(commands, aliasCommands()...)
 	commands = append(commands, caseCommands()...)
+	commands = append(commands, caseHandoffCommands()...)
 	commands = append(commands, caseTaskCommands()...)
 	commands = append(commands, caseRecordCommands()...)
 	commands = append(commands, taskCommands()...)
@@ -32,6 +33,7 @@ func enrichCommands(commands []*command) []*command {
 		"playbook search":    {"epismo playbook search --query onboarding", "epismo -w acme playbook search onboarding"},
 		"playbook create":    {`epismo playbook create --definition '{"title":"Onboarding","steps":[]}'`, "epismo playbook create --input @playbook.json"},
 		"case start":         {"epismo case start --version-id VERSION_ID --title 'Launch review'"},
+		"case handoff":       {"epismo case handoff SALES_CASE_ID --to-case-id ENGINEERING_CASE_ID", "epismo case handoff ENGINEERING_CASE_ID --from-case-id SALES_CASE_ID"},
 		"case record append": {`epismo case record append CASE_ID --content 'Completed research' --kind note`, "epismo case record append CASE_ID --input @record.json"},
 		"workspace list":     {"epismo workspace list --output table", "epismo --workspace acme workspace member list"},
 	}
