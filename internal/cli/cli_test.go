@@ -88,9 +88,10 @@ func TestCommandSurface(t *testing.T) {
 		playbook/init playbook/search playbook/list playbook/resource/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/access/get playbook/access/set playbook/archive playbook/star playbook/unstar playbook/starred playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
 		case/start case/get case/list case/assign case/acl case/update case/handoff case/handoff/graph case/close case/reopen
 		case/task/create case/task/list case/record/append case/record/list
-		task/list task/get task/assign task/update task/close task/reopen
+		record/append record/list
+		task/create task/list task/get task/assign task/update task/close task/reopen
 		playbook/suggestion/create playbook/suggestion/list
-		suggestion/get suggestion/list suggestion/update suggestion/resolve
+		suggestion/create suggestion/get suggestion/list suggestion/update suggestion/resolve
 	`)
 	actual := make([]string, 0, len(buildCommands()))
 	for _, command := range buildCommands() {
@@ -112,6 +113,9 @@ func TestPlaybookSearchRequest(t *testing.T) {
 		}
 		if got := request.Header.Get("X-Epismo-Source"); got != "cli" {
 			t.Errorf("source = %q", got)
+		}
+		if got := request.Header.Get("X-Epismo-Anonymous-Id"); !uuidPattern.MatchString(got) {
+			t.Errorf("anonymous id = %q", got)
 		}
 		_, _ = io.WriteString(w, `{"playbooks":[{"createdAt":"2026-01-01T00:00:00Z","owner":{"accountId":"account-1"}}],"resourceBacklinks":[{"playbookId":"11111111-1111-4111-8111-111111111111","versionId":"22222222-2222-4222-8222-222222222222","kind":"cli","normalizedRef":"github:epismoai/cli","mentions":[{"stepId":"ABCD","stepIndex":1,"resourcePosition":0}]}]}`)
 	}))
@@ -715,6 +719,43 @@ func TestParseJSONRejectsTrailingData(t *testing.T) {
 	for _, input := range []string{`{"title":"x"} trailing`, `{"title":"x"} {"title":"y"}`} {
 		if _, err := parseJSON([]byte(input), "--input"); err == nil {
 			t.Fatalf("parseJSON(%q) accepted trailing data", input)
+		}
+	}
+}
+
+func TestConvenienceAliases(t *testing.T) {
+	var requestedPath string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		requestedPath = request.URL.Path
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	defer server.Close()
+
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_TOKEN", "test-token")
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+
+	tests := []struct {
+		args     []string
+		wantPath string
+	}{
+		{[]string{"task", "create", "case-123", "--title", "test"}, "/v1/cases/case-123/tasks"},
+		{[]string{"task", "create", "--case-id", "case-123", "--title", "test"}, "/v1/cases/case-123/tasks"},
+		{[]string{"record", "append", "case-123", "--content", "note"}, "/v1/cases/case-123/records"},
+		{[]string{"record", "append", "--case-id", "case-123", "--content", "note"}, "/v1/cases/case-123/records"},
+		{[]string{"record", "list", "case-123"}, "/v1/cases/case-123/records"},
+		{[]string{"record", "list", "--case-id", "case-123"}, "/v1/cases/case-123/records"},
+		{[]string{"suggestion", "create", "pb-123", "--title", "sug"}, "/v1/playbooks/pb-123/suggestions"},
+		{[]string{"suggestion", "create", "--playbook-id", "pb-123", "--title", "sug"}, "/v1/playbooks/pb-123/suggestions"},
+	}
+
+	for _, tt := range tests {
+		requestedPath = ""
+		var stdout, stderr bytes.Buffer
+		exit := Main(tt.args, "test", strings.NewReader(""), &stdout, &stderr)
+		if exit != 0 || requestedPath != tt.wantPath {
+			t.Errorf("args=%v exit=%d path=%q, want %q; stderr=%s", tt.args, exit, requestedPath, tt.wantPath, stderr.String())
 		}
 	}
 }

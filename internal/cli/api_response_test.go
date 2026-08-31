@@ -9,6 +9,7 @@ import (
 )
 
 func TestAPIErrorPreservesStructuredServerError(t *testing.T) {
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		_, _ = io.WriteString(w, `{"error":{"code":"workspaceHandleTaken","message":"Handle is already in use.","retryable":false,"conflictingWorkspaceId":"workspace-1"}}`)
@@ -38,6 +39,7 @@ func TestInvalidSuccessfulAPIResponseFails(t *testing.T) {
 		"multiple":  `{} {}`,
 	} {
 		t.Run(name, func(t *testing.T) {
+			t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				_, _ = io.WriteString(w, response)
 			}))

@@ -139,14 +139,18 @@ const (
 )
 
 func apiOperation(path, summary string, args []string, method string, endpoint func(invocation) string, mode requestMode, idempotencyKey bool, options ...optionSpec) *command {
-	return apiOperationScoped(path, summary, args, method, endpoint, mode, idempotencyKey, true, options...)
+	return apiOperationScoped(path, summary, args, method, endpoint, mode, idempotencyKey, true, false, options...)
 }
 
 func apiOperationUnscoped(path, summary string, args []string, method string, endpoint func(invocation) string, mode requestMode, idempotencyKey bool, options ...optionSpec) *command {
-	return apiOperationScoped(path, summary, args, method, endpoint, mode, idempotencyKey, false, options...)
+	return apiOperationScoped(path, summary, args, method, endpoint, mode, idempotencyKey, false, false, options...)
 }
 
-func apiOperationScoped(path, summary string, args []string, method string, endpoint func(invocation) string, mode requestMode, idempotencyKey, scoped bool, options ...optionSpec) *command {
+func publicApiOperation(path, summary string, args []string, method string, endpoint func(invocation) string, mode requestMode, options ...optionSpec) *command {
+	return apiOperationScoped(path, summary, args, method, endpoint, mode, false, true, true, options...)
+}
+
+func apiOperationScoped(path, summary string, args []string, method string, endpoint func(invocation) string, mode requestMode, idempotencyKey, scoped, allowAnonymous bool, options ...optionSpec) *command {
 	var input *inputSpec
 	if mode == requestBody {
 		input = &inputSpec{Help: "request-body JSON object, @file, or - for stdin"}
@@ -160,7 +164,12 @@ func apiOperationScoped(path, summary string, args []string, method string, endp
 		if err != nil {
 			return nil, err
 		}
-		ctx, err := a.context()
+		var ctx executionContext
+		if allowAnonymous {
+			ctx, err = a.publicReadContext()
+		} else {
+			ctx, err = a.context()
+		}
 		if err != nil {
 			return nil, err
 		}

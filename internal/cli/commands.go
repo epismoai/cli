@@ -21,6 +21,7 @@ func buildCommands() []*command {
 	commands = append(commands, caseHandoffCommands()...)
 	commands = append(commands, caseTaskCommands()...)
 	commands = append(commands, caseRecordCommands()...)
+	commands = append(commands, recordCommands()...)
 	commands = append(commands, taskCommands()...)
 	commands = append(commands, playbookSuggestionCommands()...)
 	commands = append(commands, suggestionCommands()...)
@@ -84,7 +85,7 @@ func completionScript(shell string) string {
 }
 
 func buildCommandWords() []string {
-	return []string{"login", "logout", "whoami", "workspace", "team", "playbook", "case", "task", "suggestion", "token", "credit", "doctor", "examples", "completion", "docs", "update"}
+	return []string{"login", "logout", "whoami", "workspace", "team", "playbook", "case", "task", "record", "suggestion", "token", "credit", "doctor", "examples", "completion", "docs", "update"}
 }
 
 func doctorCommand() *command {

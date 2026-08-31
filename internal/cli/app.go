@@ -178,35 +178,51 @@ func printDocs(a *app, commands []*command, args []string) int {
 }
 
 func normalizeConvenienceArgs(cmd *command, args []string) []string {
-	if cmd.Path != "playbook search" {
+	switch cmd.Path {
+	case "playbook search":
+		normalized := append([]string(nil), args...)
+		for index, arg := range normalized {
+			if arg == "-q" {
+				normalized[index] = "--query"
+			}
+		}
+		if contains(normalized, "--query") || containsPrefix(normalized, "--query=") {
+			return normalized
+		}
+		return convertFirstPositionalToOption(cmd, normalized, "--query")
+	case "task create", "record append", "record list":
+		if contains(args, "--case-id") || containsPrefix(args, "--case-id=") {
+			return args
+		}
+		return convertFirstPositionalToOption(cmd, args, "--case-id")
+	case "suggestion create":
+		if contains(args, "--playbook-id") || containsPrefix(args, "--playbook-id=") {
+			return args
+		}
+		return convertFirstPositionalToOption(cmd, args, "--playbook-id")
+	default:
 		return args
 	}
-	normalized := append([]string(nil), args...)
-	for index, arg := range normalized {
-		if arg == "-q" {
-			normalized[index] = "--query"
-		}
-	}
-	if contains(normalized, "--query") || containsPrefix(normalized, "--query=") {
-		return normalized
-	}
+}
+
+func convertFirstPositionalToOption(cmd *command, args []string, optionName string) []string {
 	byName := map[string]optionSpec{}
 	for _, option := range baseOptions(cmd) {
 		byName[option.Name] = option
 	}
 	result := make([]string, 0, len(args)+1)
-	for index := 0; index < len(normalized); index++ {
-		arg := normalized[index]
+	for index := 0; index < len(args); index++ {
+		arg := args[index]
 		if !strings.HasPrefix(arg, "-") {
-			result = append(result, "--query", arg)
-			result = append(result, normalized[index+1:]...)
+			result = append(result, optionName, arg)
+			result = append(result, args[index+1:]...)
 			return result
 		}
 		result = append(result, arg)
 		name, _, hasEquals := strings.Cut(arg, "=")
-		if option, ok := byName[name]; ok && option.Kind != kindBoolean && !hasEquals && index+1 < len(normalized) {
+		if option, ok := byName[name]; ok && option.Kind != kindBoolean && !hasEquals && index+1 < len(args) {
 			index++
-			result = append(result, normalized[index])
+			result = append(result, args[index])
 		}
 	}
 	return result
@@ -416,6 +432,26 @@ func (a *app) context() (executionContext, error) {
 		a.workspaceAnnounced = true
 	}
 	return executionContext{Auth: auth, WorkspaceID: workspaceID}, nil
+}
+
+// publicReadContext uses saved authentication when available, but permits the
+// Public Playbook Explore surface to work before login. Any local-state
+// problem that amounts to "not logged in" (no credentials, or a credentials
+// file that can't be read) falls back to anonymous access instead of failing
+// the command, since Public Playbooks are documented to work without an
+// account regardless of local CLI state.
+func (a *app) publicReadContext() (executionContext, error) {
+	if strings.TrimSpace(os.Getenv("EPISMO_TOKEN")) != "" || strings.TrimSpace(a.options.Workspace) != "" || strings.TrimSpace(os.Getenv("EPISMO_WORKSPACE")) != "" {
+		return a.context()
+	}
+	ctx, err := a.context()
+	if err == nil {
+		return ctx, nil
+	}
+	if appErr, ok := err.(*Error); ok && (appErr.Code == "NOT_AUTHENTICATED" || appErr.Code == "CREDENTIALS_READ_FAILED") {
+		return executionContext{}, nil
+	}
+	return executionContext{}, err
 }
 
 func (a *app) event(level, code, message string, details map[string]any) {

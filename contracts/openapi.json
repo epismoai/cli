@@ -4467,6 +4467,7 @@
           "playbooks"
         ],
         "summary": "GET /v1/playbooks",
+        "description": "Listing Public Playbooks works without authentication and is free. Supplying query runs metered relevance search and requires OAuth.",
         "parameters": [
           {
             "name": "workspaceId",
@@ -4828,8 +4829,7 @@
             "OAuth2": [
               "read"
             ]
-          },
-          {}
+          }
         ],
         "responses": {
           "200": {
@@ -4942,6 +4942,7 @@
           "playbooks"
         ],
         "summary": "GET /v1/playbooks/{playbookId}",
+        "description": "Returns the Playbook along with its open Suggestions, bundled as one billable Playbook read.",
         "parameters": [
           {
             "name": "playbookId",
@@ -4974,7 +4975,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PlaybookResponse"
+                  "$ref": "#/components/schemas/PlaybookOverviewResponse"
                 }
               }
             }
@@ -5264,8 +5265,7 @@
             "OAuth2": [
               "read"
             ]
-          },
-          {}
+          }
         ],
         "responses": {
           "200": {
@@ -5553,8 +5553,7 @@
             "OAuth2": [
               "read"
             ]
-          },
-          {}
+          }
         ],
         "responses": {
           "200": {
@@ -8175,7 +8174,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CaseResponse"
+                  "$ref": "#/components/schemas/CaseOverviewResponse"
                 }
               }
             }
@@ -8910,6 +8909,173 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CaseHandoffGraphResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/handoff-candidates": {
+      "get": {
+        "operationId": "getV1CasesCaseIdHandoffCandidates",
+        "tags": [
+          "cases"
+        ],
+        "summary": "GET /v1/cases/{caseId}/handoff-candidates",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "incoming",
+                "outgoing"
+              ],
+              "default": "outgoing"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseListResponse"
                 }
               }
             }
@@ -13459,6 +13625,28 @@
         },
         "additionalProperties": false
       },
+      "PlaybookOverviewResponse": {
+        "type": "object",
+        "required": [
+          "playbook",
+          "suggestions"
+        ],
+        "properties": {
+          "playbook": {
+            "$ref": "#/components/schemas/Playbook"
+          },
+          "suggestions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Suggestion"
+            }
+          },
+          "suggestionsNextCursor": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "PlaybookAccessResponse": {
         "type": "object",
         "required": [
@@ -13844,6 +14032,46 @@
         "properties": {
           "case": {
             "$ref": "#/components/schemas/Case"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CaseOverviewResponse": {
+        "type": "object",
+        "required": [
+          "case",
+          "tasks",
+          "records",
+          "recordsScope"
+        ],
+        "properties": {
+          "case": {
+            "$ref": "#/components/schemas/Case"
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Task"
+            }
+          },
+          "tasksNextCursor": {
+            "type": "string"
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Record"
+            }
+          },
+          "recordsScope": {
+            "type": "string",
+            "const": "ancestors"
+          },
+          "recordsNextCursor": {
+            "type": "string"
+          },
+          "handoffGraph": {
+            "$ref": "#/components/schemas/CaseHandoffGraph"
           }
         },
         "additionalProperties": false

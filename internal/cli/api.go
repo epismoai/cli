@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
 )
@@ -18,13 +19,32 @@ type apiClient struct {
 	baseURL string
 	version string
 	http    *http.Client
+
+	anonymousIDOnce sync.Once
+	anonymousID     string
+	anonymousIDErr  error
 }
 
 func newAPIClient(version string) *apiClient {
 	return &apiClient{baseURL: apiURL(), version: version, http: &http.Client{Timeout: 30 * time.Second}}
 }
 
+// getAnonymousID returns the persisted anonymous ID, reading (and, on first
+// use, generating) it at most once per apiClient instance so that commands
+// issuing multiple requests in one invocation (e.g. pagination) don't
+// re-read the config file for every request.
+func (c *apiClient) getAnonymousID() (string, error) {
+	c.anonymousIDOnce.Do(func() {
+		c.anonymousID, c.anonymousIDErr = ensureAnonymousID()
+	})
+	return c.anonymousID, c.anonymousIDErr
+}
+
 func (c *apiClient) request(method, path, token string, body any) (map[string]any, error) {
+	anonymousID, err := c.getAnonymousID()
+	if err != nil {
+		return nil, err
+	}
 	var reader io.Reader
 	if body != nil {
 		encoded, err := json.Marshal(body)
@@ -39,6 +59,7 @@ func (c *apiClient) request(method, path, token string, body any) (map[string]an
 	}
 	req.Header.Set("User-Agent", "epismo/"+c.version)
 	req.Header.Set("X-Epismo-Source", "cli")
+	req.Header.Set("X-Epismo-Anonymous-Id", anonymousID)
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}

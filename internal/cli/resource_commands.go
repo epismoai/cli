@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 )
@@ -18,7 +19,7 @@ func playbookCommands() []*command {
 		return definition, nil
 	}}
 	search := apiOperation("playbook search", "search readable Playbooks, including pb: alias references", nil, http.MethodGet, staticEndpoint("/v1/playbooks"), requestQuery, false, append(page, str("--query", "query", "full-text query or pb: alias reference"), choice("--category", "category", "Playbook category", "productivity", "programming", "design", "sales", "marketing", "operations", "learning"), csv("--lang", "preferredLangs", "comma-separated two-letter content languages in priority order"))...)
-	list := apiOperation("playbook list", "list readable Playbooks, most recently updated first", nil, http.MethodGet, staticEndpoint("/v1/playbooks"), requestQuery, false, append(page, choice("--resource-kind", "resourceKind", "resource kind", "skill", "mcp", "cli", "api", "plugin", "graph", "document", "agent", "custom"), str("--resource-ref", "resourceRef", "normalized or provider-specific resource reference"))...)
+	list := publicApiOperation("playbook list", "list readable Playbooks, most recently updated first; Public Playbooks work without login", nil, http.MethodGet, staticEndpoint("/v1/playbooks"), requestQuery, append(page, choice("--resource-kind", "resourceKind", "resource kind", "skill", "mcp", "cli", "api", "plugin", "graph", "document", "agent", "custom"), str("--resource-ref", "resourceRef", "normalized or provider-specific resource reference"))...)
 	resourceList := apiOperation("playbook resource list", "list resource references used by readable Playbooks", nil, http.MethodGet, staticEndpoint("/v1/playbook-resources"), requestQuery, false, choice("--kind", "kind", "resource kind", "skill", "mcp", "cli", "api", "plugin", "graph", "document", "agent", "custom"), integer("--page-size", "pageSize", "results per page (1-200)"))
 	create := apiOperation("playbook create", "create a Playbook and its first Version", nil, http.MethodPost, staticEndpoint("/v1/playbooks"), requestBody, true, str("--owner-id", "ownerId", "owner Account ID"), defaultOption(choice("--visibility", "visibility", "published visibility", "private", "public"), "private"), csv("--editors", "editors", "comma-separated editor Account or Team IDs"), objectSource("--definition", "definition", "Playbook Definition JSON object"))
 	create.Run = func(a *app, inv invocation) (any, error) {
@@ -56,7 +57,7 @@ func playbookCommands() []*command {
 		return a.client.request(http.MethodPost, withWorkspace("/v1/playbooks", ctx.WorkspaceID), ctx.Auth.AccessToken, payload)
 	}
 	get := &command{Path: "playbook get", Summary: "get a Playbook and its latest immutable Version", Args: []string{"playbook-id-or-ref"}, Run: func(a *app, inv invocation) (any, error) {
-		ctx, err := a.context()
+		ctx, err := a.publicReadContext()
 		if err != nil {
 			return nil, err
 		}
@@ -245,6 +246,11 @@ func lockedMutation(path, summary, arg, method string, endpoint func(invocation)
 }
 
 func taskCommands() []*command {
+	create := apiOperation("task create", "create a work or review Task in a Case", nil, http.MethodPost, func(i invocation) string {
+		caseID := strings.TrimSpace(i.text("caseId"))
+		return "/v1/cases/" + escaped(caseID) + "/tasks"
+	}, requestBody, true, str("--case-id", "caseId", "Case ID"), choice("--kind", "kind", "Task kind", "work", "review"), str("--title", "title", "Task title"), str("--instructions", "instructions", "Task instructions"), str("--source-step-id", "sourceStepId", "four-character Step ID"), str("--assigned-to", "assignedTo", "Task assignee"), str("--subject-record-id", "subjectRecordId", "Record under review"))
+	create.Prepare = requireField("caseId", "Pass --case-id <case-id> or use `epismo case task create <case-id>`.")
 	listOptions := append(pagingOptions(), str("--case-id", "caseId", "Case ID"), str("--assigned-to", "assignedTo", "assignee Account ID or me"), choice("--status", "status", "Task status", "open", "closed"))
 	list := &command{Path: "task list", Summary: "list your assigned Tasks across Cases", Options: listOptions, Input: &inputSpec{Help: "query-parameters JSON object, @file, or - for stdin"}, Run: func(a *app, inv invocation) (any, error) {
 		payload, err := inv.payload(a)
@@ -265,10 +271,49 @@ func taskCommands() []*command {
 	update := lockedMutation("task update", "update editable Task fields", "task-id", http.MethodPatch, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) }, str("--title", "title", "Task title"), str("--instructions", "instructions", "Task instructions"))
 	close := lockedMutation("task close", "close a Task with an outcome", "task-id", http.MethodPost, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) + "/close" }, requiredOption(str("--outcome", "outcome", "free-text result of the Task")), array("--records", "records", "JSON array of final Records"))
 	reopen := lockedMutation("task reopen", "reopen a closed Task", "task-id", http.MethodPost, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) + "/reopen" })
-	return []*command{list, get, assign, update, close, reopen}
+	return []*command{create, list, get, assign, update, close, reopen}
+}
+
+func recordCommands() []*command {
+	appendRecord := apiOperation("record append", "append an immutable Record to a Case", nil, http.MethodPost, func(i invocation) string {
+		caseID := strings.TrimSpace(i.text("caseId"))
+		return "/v1/cases/" + escaped(caseID) + "/records"
+	}, requestBody, true, str("--case-id", "caseId", "Case ID"), str("--task-id", "taskId", "Task this Record belongs to"), str("--source-step-id", "sourceStepId", "four-character Step ID"), str("--kind", "kind", "Record kind"), str("--content", "content", "Record content"), object("--data", "data", "Record data JSON object"), choice("--origin", "origin", "Record origin", "user", "agent"), str("--client-name", "clientName", "client name"), str("--client-version", "clientVersion", "client version"))
+	appendRecord.Prepare = requireField("caseId", "Pass --case-id <case-id> or use `epismo case record append <case-id>`.")
+	listOptions := append(pagingOptions(), str("--case-id", "caseId", "Case ID"), choice("--scope", "scope", "handoff scope", "self", "ancestors", "descendants", "neighbors", "connected"), str("--task-id", "taskId", "Task ID"), str("--created-by", "createdBy", "creator Account ID or me"), csv("--kinds", "kinds", "comma-separated Record kinds"), csv("--origins", "origins", "comma-separated origins"), csv("--acl", "acl", "ACL principals"), defaultOption(choice("--order", "order", "sort order", "asc", "desc"), "desc"))
+	list := apiOperation("record list", "list Records in a Case", nil, http.MethodGet, func(i invocation) string {
+		caseID := strings.TrimSpace(i.text("caseId"))
+		return "/v1/cases/" + escaped(caseID) + "/records"
+	}, requestQuery, false, listOptions...)
+	list.Prepare = requireField("caseId", "Pass --case-id <case-id> or use `epismo case record list <case-id>`.")
+	return []*command{appendRecord, list}
+}
+
+// requireField reports an error naming the given hint when field is empty.
+// The leading-positional-to-option conversion for these convenience commands
+// already happens in normalizeConvenienceArgs before parsing, so by the time
+// a command's Prepare hook runs, the option is either already populated or
+// genuinely missing.
+func requireField(field, hint string) func(invocation) (invocation, error) {
+	return func(inv invocation) (invocation, error) {
+		if strings.TrimSpace(inv.text(field)) == "" {
+			return invocation{}, &Error{
+				Code:     "INVALID_INPUT",
+				Message:  fmt.Sprintf(`"%s" is required.`, field),
+				Hint:     hint,
+				ExitCode: 1,
+			}
+		}
+		return inv, nil
+	}
 }
 
 func suggestionCommands() []*command {
+	create := apiOperation("suggestion create", "propose a change to a Playbook against an immutable base Version", nil, http.MethodPost, func(i invocation) string {
+		playbookID := strings.TrimSpace(i.text("playbookId"))
+		return "/v1/playbooks/" + escaped(playbookID) + "/suggestions"
+	}, requestBody, true, str("--playbook-id", "playbookId", "Playbook ID"), str("--base-version-id", "baseVersionId", "base Version ID"), str("--target-step-id", "targetStepId", "target Step ID"), str("--title", "title", "Suggestion title"), str("--content", "content", "Suggestion content"))
+	create.Prepare = requireField("playbookId", "Pass --playbook-id <playbook-id> or use `epismo playbook suggestion create <playbook-id>`.")
 	get := apiOperation("suggestion get", "get a Suggestion and its resolution state", []string{"suggestion-id"}, http.MethodGet, func(i invocation) string { return "/v1/suggestions/" + escaped(i.positional(0)) }, requestNone, false)
 	listOptions := append(pagingOptions(), str("--playbook-id", "playbookId", "Playbook ID"), str("--author-id", "authorId", "author Account ID or me"), csv("--statuses", "statuses", "comma-separated statuses"))
 	list := apiOperation("suggestion list", "list Suggestions you sent", nil, http.MethodGet, staticEndpoint("/v1/suggestions"), requestQuery, false, listOptions...)
@@ -281,7 +326,7 @@ func suggestionCommands() []*command {
 	}
 	update := apiOperation("suggestion update", "edit your own open Suggestion", []string{"suggestion-id"}, http.MethodPatch, func(i invocation) string { return "/v1/suggestions/" + escaped(i.positional(0)) }, requestBody, true, str("--title", "title", "Suggestion title"), str("--content", "content", "Suggestion content"))
 	resolve := apiOperation("suggestion resolve", "apply, decline, archive, or reopen a Suggestion", []string{"suggestion-id"}, http.MethodPost, func(i invocation) string { return "/v1/suggestions/" + escaped(i.positional(0)) + "/resolve" }, requestBody, true, choice("--status", "status", "resolution status", "open", "applied", "declined", "archived"), str("--result-version-id", "resultVersionId", "Version published from it"))
-	return []*command{get, list, update, resolve}
+	return []*command{create, get, list, update, resolve}
 }
 
 func playbookSuggestionCommands() []*command {
