@@ -4975,7 +4975,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PlaybookOverviewResponse"
+                  "$ref": "#/components/schemas/PlaybookDetailResponse"
                 }
               }
             }
@@ -8174,7 +8174,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CaseOverviewResponse"
+                  "$ref": "#/components/schemas/CaseDetailResponse"
                 }
               }
             }
@@ -13625,7 +13625,7 @@
         },
         "additionalProperties": false
       },
-      "PlaybookOverviewResponse": {
+      "PlaybookDetailResponse": {
         "type": "object",
         "required": [
           "playbook",
@@ -14036,7 +14036,7 @@
         },
         "additionalProperties": false
       },
-      "CaseOverviewResponse": {
+      "CaseDetailResponse": {
         "type": "object",
         "required": [
           "case",
