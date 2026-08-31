@@ -103,7 +103,7 @@ func TestEveryCommandHasExpectedDryRunSupport(t *testing.T) {
 		"record append": true, "task create": true,
 		"task assign": true, "task update": true, "task close": true, "task reopen": true,
 		"playbook suggestion create": true,
-		"suggestion create": true, "suggestion update": true, "suggestion resolve": true,
+		"suggestion create":          true, "suggestion update": true, "suggestion resolve": true,
 	}
 	for _, cmd := range buildCommands() {
 		if cmd.Safety.DryRun != want[cmd.Path] {
