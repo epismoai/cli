@@ -39,6 +39,15 @@ The npm package contains a dependency-free JavaScript launcher and all supported
 
 ## Quick start
 
+Browse Public Playbooks without an account:
+
+```sh
+epismo playbook list
+epismo playbook get PLAYBOOK_ID
+```
+
+Log in for search, private data, and writes:
+
 ```sh
 epismo login
 epismo workspace list
@@ -140,6 +149,8 @@ Workspace references accept an exact ID or unique handle. The effective workspac
 ## Authentication and configuration
 
 `epismo login` opens a browser-based OAuth login. With `--email`, it automatically uses your organization SSO when available, otherwise it prompts for an email code.
+
+`epismo playbook list` and UUID-based `epismo playbook get` work before login, as shown above, for Public Playbooks. The CLI creates a stable random `anonymousId` in its config for analytics and fair-use rate limiting; it is not an authentication credential. Search, aliases, private data, and writes still require login.
 
 For CI or other non-interactive use, create a workspace-scoped token and pass it with `EPISMO_TOKEN`:
 

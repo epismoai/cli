@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -30,6 +32,97 @@ func TestAllPaginationAndJQProjection(t *testing.T) {
 	}
 	if calls != 2 || !strings.Contains(stdout.String(), `"one"`) || !strings.Contains(stdout.String(), `"two"`) {
 		t.Fatalf("calls=%d stdout=%s", calls, stdout.String())
+	}
+}
+
+func TestPublicPlaybookListWorksBeforeLoginWithStableAnonymousID(t *testing.T) {
+	var anonymousIDs []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		if authorization := request.Header.Get("Authorization"); authorization != "" {
+			t.Errorf("anonymous list sent authorization = %q", authorization)
+		}
+		anonymousIDs = append(anonymousIDs, request.Header.Get("X-Epismo-Anonymous-Id"))
+		_, _ = io.WriteString(w, `{"playbooks":[]}`)
+	}))
+	defer server.Close()
+	configDirectory := t.TempDir()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_CONFIG_DIR", configDirectory)
+	t.Setenv("EPISMO_TOKEN", "")
+
+	for range 2 {
+		var stdout, stderr bytes.Buffer
+		if exit := Main([]string{"playbook", "list"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+			t.Fatalf("exit = %d stderr=%s", exit, stderr.String())
+		}
+	}
+	if len(anonymousIDs) != 2 || anonymousIDs[0] == "" || anonymousIDs[0] != anonymousIDs[1] {
+		t.Fatalf("anonymous IDs = %v", anonymousIDs)
+	}
+	config, err := readConfig()
+	if err != nil || config.AnonymousID != anonymousIDs[0] {
+		t.Fatalf("config = %#v, err = %v", config, err)
+	}
+}
+
+func TestEpismoTokenWorksWhenConfigDirectoryIsUnwritable(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("cannot restrict permissions when running as root")
+	}
+	parent := t.TempDir()
+	if err := os.Chmod(parent, 0o500); err != nil {
+		t.Fatalf("chmod: %v", err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(parent, 0o700) })
+	configDirectory := filepath.Join(parent, "config")
+
+	var gotAuthorization, gotAnonymousID string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		gotAuthorization = request.Header.Get("Authorization")
+		gotAnonymousID = request.Header.Get("X-Epismo-Anonymous-Id")
+		_, _ = io.WriteString(w, `{"playbooks":[]}`)
+	}))
+	defer server.Close()
+
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_CONFIG_DIR", configDirectory)
+	t.Setenv("EPISMO_TOKEN", "test-token")
+
+	var stdout, stderr bytes.Buffer
+	if exit := Main([]string{"playbook", "list"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+		t.Fatalf("exit = %d stderr=%s", exit, stderr.String())
+	}
+	if gotAuthorization != "Bearer test-token" {
+		t.Fatalf("authorization = %q", gotAuthorization)
+	}
+	if !uuidPattern.MatchString(strings.ToLower(gotAnonymousID)) {
+		t.Fatalf("anonymous id = %q", gotAnonymousID)
+	}
+}
+
+func TestPublicPlaybookListFallsBackToAnonymousWithCorruptCredentials(t *testing.T) {
+	configDirectory := t.TempDir()
+	if err := os.WriteFile(filepath.Join(configDirectory, "credentials"), []byte("{not valid json"), 0o600); err != nil {
+		t.Fatalf("write credentials: %v", err)
+	}
+
+	var gotAuthorization string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		gotAuthorization = request.Header.Get("Authorization")
+		_, _ = io.WriteString(w, `{"playbooks":[]}`)
+	}))
+	defer server.Close()
+
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_CONFIG_DIR", configDirectory)
+	t.Setenv("EPISMO_TOKEN", "")
+
+	var stdout, stderr bytes.Buffer
+	if exit := Main([]string{"playbook", "list"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+		t.Fatalf("exit = %d stderr=%s", exit, stderr.String())
+	}
+	if gotAuthorization != "" {
+		t.Fatalf("authorization = %q, want anonymous fallback (no auth header)", gotAuthorization)
 	}
 }
 
