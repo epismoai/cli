@@ -335,3 +335,24 @@ func errorCode(err error) string {
 	}
 	return ""
 }
+
+func TestWorkspaceFromMapFallsBackToIDWhenAccountIDMissing(t *testing.T) {
+	ws := workspaceFromMap(map[string]any{
+		"id":     "ws-uuid-123",
+		"handle": "my-team",
+		"role":   "member",
+	})
+	if ws.ID != "ws-uuid-123" || ws.AccountID != "ws-uuid-123" || ws.Handle != "my-team" {
+		t.Fatalf("ws = %+v, want AccountID=ws-uuid-123", ws)
+	}
+
+	wsExplicit := workspaceFromMap(map[string]any{
+		"id":        "ws-1",
+		"accountId": "acc-1",
+		"handle":    "my-team",
+		"role":      "owner",
+	})
+	if wsExplicit.AccountID != "acc-1" {
+		t.Fatalf("wsExplicit = %+v, want AccountID=acc-1", wsExplicit)
+	}
+}
