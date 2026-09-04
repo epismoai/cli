@@ -429,7 +429,13 @@ func (a *app) resolveAuthentication() (authContext, error) {
 }
 
 func workspaceFromMap(item map[string]any) *savedWorkspace {
-	return &savedWorkspace{ID: stringField(item, "id"), Handle: stringField(item, "handle"), AccountID: stringField(item, "accountId"), Role: stringField(item, "role")}
+	// A workspace id is now the Account UUID itself, so the API no longer sends a
+	// separate `accountId`. Older servers still do — prefer it when present.
+	accountID := stringField(item, "accountId")
+	if accountID == "" {
+		accountID = stringField(item, "id")
+	}
+	return &savedWorkspace{ID: stringField(item, "id"), Handle: stringField(item, "handle"), AccountID: accountID, Role: stringField(item, "role")}
 }
 
 func (a *app) logout() (map[string]any, error) {

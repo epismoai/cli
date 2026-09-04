@@ -13433,10 +13433,6 @@
           "handle": {
             "type": "string"
           },
-          "accountId": {
-            "type": "string",
-            "format": "uuid"
-          },
           "role": {
             "type": "string"
           }
@@ -13967,7 +13963,7 @@
             "type": "string",
             "format": "uuid"
           },
-          "digest": {
+          "sourcePlaybookTitle": {
             "type": "string"
           },
           "title": {
