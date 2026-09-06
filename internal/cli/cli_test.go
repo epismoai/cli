@@ -290,9 +290,11 @@ func TestPersonalAndParentScopedListsSetImplicitFilters(t *testing.T) {
 	commands := [][]string{
 		{"task", "list"},
 		{"suggestion", "list"},
+		{"suggestion", "list", "--view", "inbox"},
 		{"case", "task", "list", "case-1"},
 		{"case", "record", "list", "case-1"},
 		{"playbook", "suggestion", "list", "playbook-1"},
+		{"playbook", "suggestion", "list", "playbook-1", "--view", "inbox"},
 	}
 	for _, args := range commands {
 		var stdout, stderr bytes.Buffer
@@ -304,9 +306,11 @@ func TestPersonalAndParentScopedListsSetImplicitFilters(t *testing.T) {
 	want := []string{
 		"/v1/tasks?assignedTo=me",
 		"/v1/suggestions?authorId=me",
+		"/v1/suggestions?view=inbox",
 		"/v1/cases/case-1/tasks",
 		"/v1/cases/case-1/records?order=desc",
 		"/v1/playbooks/playbook-1/suggestions",
+		"/v1/playbooks/playbook-1/suggestions?view=inbox",
 	}
 	if !reflect.DeepEqual(requestURIs, want) {
 		t.Fatalf("request URIs = %#v, want %#v", requestURIs, want)
