@@ -11226,6 +11226,18 @@
             }
           },
           {
+            "name": "view",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "inbox",
+                "sent"
+              ]
+            }
+          },
+          {
             "name": "pageSize",
             "in": "query",
             "required": false,
@@ -11393,6 +11405,18 @@
             "required": false,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "inbox",
+                "sent"
+              ]
             }
           },
           {
@@ -13570,6 +13594,10 @@
             "type": "string",
             "format": "uuid"
           },
+          "ownerHandle": {
+            "type": "string",
+            "description": "Public owner handle, included in Playbook lists when available."
+          },
           "ownerId": {
             "type": "string",
             "format": "uuid"
@@ -13625,7 +13653,9 @@
         "type": "object",
         "required": [
           "playbook",
-          "suggestions"
+          "suggestions",
+          "versions",
+          "aliases"
         ],
         "properties": {
           "playbook": {
@@ -13635,6 +13665,18 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Suggestion"
+            }
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlaybookVersion"
+            }
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Alias"
             }
           },
           "suggestionsNextCursor": {
@@ -14068,6 +14110,32 @@
           },
           "handoffGraph": {
             "$ref": "#/components/schemas/CaseHandoffGraph"
+          },
+          "playbook": {
+            "$ref": "#/components/schemas/Playbook"
+          },
+          "playbookVersion": {
+            "$ref": "#/components/schemas/PlaybookVersion"
+          },
+          "sharedUsers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "username"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "username": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
           }
         },
         "additionalProperties": false

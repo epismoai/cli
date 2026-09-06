@@ -315,11 +315,11 @@ func suggestionCommands() []*command {
 	}, requestBody, true, str("--playbook-id", "playbookId", "Playbook ID"), str("--base-version-id", "baseVersionId", "base Version ID"), str("--target-step-id", "targetStepId", "target Step ID"), str("--title", "title", "Suggestion title"), str("--content", "content", "Suggestion content"))
 	create.Prepare = requireField("playbookId", "Pass --playbook-id <playbook-id> or use `epismo playbook suggestion create <playbook-id>`.")
 	get := apiOperation("suggestion get", "get a Suggestion and its resolution state", []string{"suggestion-id"}, http.MethodGet, func(i invocation) string { return "/v1/suggestions/" + escaped(i.positional(0)) }, requestNone, false)
-	listOptions := append(pagingOptions(), str("--playbook-id", "playbookId", "Playbook ID"), str("--author-id", "authorId", "author Account ID or me"), csv("--statuses", "statuses", "comma-separated statuses"))
-	list := apiOperation("suggestion list", "list Suggestions you sent", nil, http.MethodGet, staticEndpoint("/v1/suggestions"), requestQuery, false, listOptions...)
+	listOptions := append(pagingOptions(), str("--playbook-id", "playbookId", "Playbook ID"), str("--author-id", "authorId", "author Account ID or me"), choice("--view", "view", "Suggestion view (inbox or sent)", "inbox", "sent"), csv("--statuses", "statuses", "comma-separated statuses"))
+	list := apiOperation("suggestion list", "list Suggestions across Playbooks", nil, http.MethodGet, staticEndpoint("/v1/suggestions"), requestQuery, false, listOptions...)
 	listRun := list.Run
 	list.Run = func(a *app, inv invocation) (any, error) {
-		if !inv.Present["playbookId"] && !inv.Present["authorId"] {
+		if !inv.Present["playbookId"] && !inv.Present["authorId"] && !inv.Present["view"] {
 			inv.Values["authorId"], inv.Present["authorId"] = "me", true
 		}
 		return listRun(a, inv)
@@ -333,7 +333,7 @@ func playbookSuggestionCommands() []*command {
 	create := apiOperation("playbook suggestion create", "propose a change to a Playbook against an immutable base Version", []string{"playbook-id"}, http.MethodPost, func(i invocation) string {
 		return "/v1/playbooks/" + escaped(i.positional(0)) + "/suggestions"
 	}, requestBody, true, str("--base-version-id", "baseVersionId", "base Version ID"), str("--target-step-id", "targetStepId", "target Step ID"), str("--title", "title", "Suggestion title"), str("--content", "content", "Suggestion content"))
-	listOptions := append(pagingOptions(), str("--author-id", "authorId", "author Account ID or me"), csv("--statuses", "statuses", "comma-separated statuses"))
+	listOptions := append(pagingOptions(), str("--author-id", "authorId", "author Account ID or me"), choice("--view", "view", "Suggestion view (inbox or sent)", "inbox", "sent"), csv("--statuses", "statuses", "comma-separated statuses"))
 	list := apiOperation("playbook suggestion list", "list Suggestions for a Playbook", []string{"playbook-id"}, http.MethodGet, func(i invocation) string {
 		return "/v1/playbooks/" + escaped(i.positional(0)) + "/suggestions"
 	}, requestQuery, false, listOptions...)
