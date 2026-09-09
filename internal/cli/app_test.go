@@ -98,10 +98,10 @@ func TestEveryCommandHasExpectedDryRunSupport(t *testing.T) {
 		"playbook draft save": true, "playbook draft discard": true, "playbook draft publish": true,
 		"playbook access set": true, "playbook archive": true, "playbook star": true, "playbook unstar": true, "playbook share": true,
 		"playbook alias set": true, "playbook alias delete": true,
-		"case start": true, "case assign": true, "case acl": true, "case update": true, "case handoff": true, "case close": true, "case reopen": true,
+		"case start": true, "case access set": true, "case share": true, "case assign": true, "case acl": true, "case update": true, "case handoff": true, "case close": true, "case reopen": true,
 		"case task create": true, "case record append": true,
 		"record append": true, "task create": true,
-		"task assign": true, "task update": true, "task close": true, "task reopen": true,
+		"task update": true, "task set status": true,
 		"playbook suggestion create": true,
 		"suggestion create":          true, "suggestion update": true, "suggestion resolve": true,
 	}
@@ -145,7 +145,7 @@ func TestGlobalOptionValidationUsesDiagnosticFormat(t *testing.T) {
 func TestDryRunValidatesPayload(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	var stdout, stderr bytes.Buffer
-	exit := Main([]string{"task", "close", "task-1", "--lock-version", "1", "--dry-run"}, "test", strings.NewReader(""), &stdout, &stderr)
+	exit := Main([]string{"task", "set", "status", "task-1", "--lock-version", "1", "--dry-run"}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exit != 1 || !strings.Contains(stderr.String(), `"code":"MISSING_OPTION_VALUE"`) || stdout.Len() != 0 {
 		t.Fatalf("exit=%d stdout=%s stderr=%s", exit, stdout.String(), stderr.String())
 	}

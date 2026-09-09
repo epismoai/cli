@@ -86,10 +86,10 @@ func TestCommandSurface(t *testing.T) {
 		team/list team/create team/update team/member/list team/member/add team/member/delete
 		credit/balance credit/checkout token/create token/list token/revoke
 		playbook/init playbook/search playbook/list playbook/resource/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/access/get playbook/access/set playbook/archive playbook/star playbook/unstar playbook/starred playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
-		case/start case/get case/list case/assign case/acl case/update case/handoff case/handoff/graph case/close case/reopen
+		case/start case/get case/list case/popular case/access/get case/access/set case/share case/assign case/acl case/update case/handoff case/handoff/graph case/handoff/candidate/list case/close case/reopen
 		case/task/create case/task/list case/record/append case/record/list
 		record/append record/list
-		task/create task/list task/get task/assign task/update task/close task/reopen
+		task/create task/list task/get task/update task/set/status
 		playbook/suggestion/create playbook/suggestion/list
 		suggestion/create suggestion/get suggestion/list suggestion/update suggestion/resolve
 	`)
@@ -761,5 +761,47 @@ func TestConvenienceAliases(t *testing.T) {
 		if exit != 0 || requestedPath != tt.wantPath {
 			t.Errorf("args=%v exit=%d path=%q, want %q; stderr=%s", tt.args, exit, requestedPath, tt.wantPath, stderr.String())
 		}
+	}
+}
+
+func TestPublicCaseReadsWithoutLogin(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		args     []string
+		path     string
+		response string
+	}{
+		{"records", []string{"case", "record", "list", "case-1", "--scope", "self", "--cursor", "older"}, "/v1/cases/case-1/records?cursor=older&order=desc&scope=self", `{"records":[]}`},
+		{"handoffs", []string{"case", "handoff", "graph", "case-1", "--scope", "neighbors"}, "/v1/cases/case-1/handoff-graph?scope=neighbors", `{"graph":{"cases":[],"handoffs":[]}}`},
+		{"popular", []string{"case", "popular", "--playbook-id", "playbook-1", "--lang", "ja,en"}, "/v1/cases/popular?playbookId=playbook-1&preferredLangs=ja&preferredLangs=en", `{"cases":[]}`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			calls := 0
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+				calls++
+				if got := request.URL.RequestURI(); got != tc.path {
+					t.Errorf("path = %q, want %q", got, tc.path)
+				}
+				if got := request.Header.Get("Authorization"); got != "" {
+					t.Errorf("authorization = %q", got)
+				}
+				if got := request.Header.Get("X-Epismo-Anonymous-Id"); !uuidPattern.MatchString(got) {
+					t.Errorf("anonymous id = %q", got)
+				}
+				_, _ = io.WriteString(w, tc.response)
+			}))
+			defer server.Close()
+			t.Setenv("EPISMO_API_URL", server.URL)
+			t.Setenv("EPISMO_TOKEN", "")
+			t.Setenv("EPISMO_WORKSPACE", "")
+			t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+			var stdout, stderr bytes.Buffer
+			if code := Main(tc.args, "test", strings.NewReader(""), &stdout, &stderr); code != 0 {
+				t.Fatalf("exit = %d, stderr = %s", code, stderr.String())
+			}
+			if calls != 1 {
+				t.Fatalf("requests = %d, want 1", calls)
+			}
+		})
 	}
 }

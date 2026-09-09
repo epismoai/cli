@@ -155,29 +155,36 @@ func addAliasOwner(a *app, ctx executionContext, payload map[string]any) error {
 }
 
 func caseCommands() []*command {
-	start := apiOperation("case start", "start a Playbook or ad-hoc Case", nil, http.MethodPost, staticEndpoint("/v1/cases"), requestBody, true, str("--version-id", "versionId", "Playbook Version ID"), str("--title", "title", "Case title"), object("--case-input", "input", "Case input JSON object"), csv("--acl", "acl", "comma-separated ACL principals"))
-	get := apiOperation("case get", "get a Case with its status, ACL, and lock version", []string{"case-id"}, http.MethodGet, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) }, requestNone, false)
-	list := apiOperation("case list", "list readable Cases", nil, http.MethodGet, staticEndpoint("/v1/cases"), requestQuery, false, append(pagingOptions(), str("--assigned-to", "assignedTo", "only Cases assigned to this account"), choice("--status", "status", "Case status", "open", "closed"))...)
+	start := apiOperation("case start", "start a research, implementation, planning, or review effort; omit --version-id without a Playbook. Reuse an existing Case for the same goal, then save context with case record append", nil, http.MethodPost, staticEndpoint("/v1/cases"), requestBody, true, str("--version-id", "versionId", "Playbook Version ID"), str("--title", "title", "Case title"), object("--case-input", "input", "Case input JSON object"), csv("--acl", "acl", "comma-separated ACL principals"))
+	get := publicApiOperation("case get", "read saved Case context before continuing; pass the UUID from its URL. Check goals, constraints, decisions, artifacts, and next steps. Public Cases return published content without login; this does not restore an agent session", []string{"case-id"}, http.MethodGet, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) }, requestNone)
+	list := apiOperation("case list", "find collaborator-accessible Cases to resume, most recently updated first; match the intended goal before case get, and ask if ambiguous", nil, http.MethodGet, staticEndpoint("/v1/cases"), requestQuery, false, append(pagingOptions(), str("--assigned-to", "assignedTo", "only Cases assigned to this account"), choice("--status", "status", "Case status", "open", "closed"))...)
+	popular := publicApiOperation("case popular", "rank public Cases for discovery", nil, http.MethodGet, staticEndpoint("/v1/cases/popular"), requestQuery, append(pagingOptions(), str("--playbook-id", "playbookId", "only Cases started from this Playbook"), csv("--lang", "preferredLangs", "preferred ISO 639-1 languages, in order"))...)
+	accessGet := apiOperation("case access get", "get a Case's Public/Private setting and work collaborators", []string{"case-id"}, http.MethodGet, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/access" }, requestNone, false)
+	accessSet := lockedMutation("case access set", "set Public/Private visibility and work collaborators", "case-id", http.MethodPut, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/access" }, requiredOption(choice("--visibility", "visibility", "Case visibility", "private", "public")), csv("--editors", "editors", "comma-separated work collaborator principals"))
+	share := apiOperation("case share", "create a share link that redirects to the Case page; Case ACLs still apply", []string{"case-id"}, http.MethodPost, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/share" }, requestBody, true)
 	assign := lockedMutation("case assign", "change which account is responsible for a Case", "case-id", http.MethodPatch, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/assignee" }, requiredOption(str("--assigned-to", "assignedTo", "account responsible for the Case")))
 	acl := lockedMutation("case acl", "replace a Case ACL", "case-id", http.MethodPatch, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/acl" }, requiredOption(csv("--acl", "acl", "comma-separated ACL principals")))
 	update := lockedMutation("case update", "update editable Case fields", "case-id", http.MethodPatch, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) }, str("--title", "title", "Case title"))
 	close := lockedMutation("case close", "close a Case", "case-id", http.MethodPost, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/close" }, choice("--outcome", "outcome", "Case outcome", "completed", "cancelled", "abandoned"), array("--records", "records", "JSON array of final Records"))
 	reopen := lockedMutation("case reopen", "reopen a closed Case", "case-id", http.MethodPost, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/reopen" })
-	return []*command{start, get, list, assign, acl, update, close, reopen}
+	return []*command{start, get, list, popular, accessGet, accessSet, share, assign, acl, update, close, reopen}
 }
 
 func caseHandoffCommands() []*command {
-	handoff := apiOperation("case handoff", "connect this Case to the Case before or after it", []string{"case-id"}, http.MethodPost, func(i invocation) string {
+	handoff := apiOperation("case handoff", "connect two distinct efforts so one Case supplies context to another; switching agents on the same effort only needs case get", []string{"case-id"}, http.MethodPost, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/handoffs"
 	}, requestBody, true,
 		requiredOptionUnless(str("--to-case-id", "toCaseId", "Case receiving work from case-id"), "--from-case-id"),
 		str("--from-case-id", "_fromCaseId", "Case handing work off to case-id; mutually exclusive with --to-case-id"),
 	)
 	handoff.Prepare = prepareCaseHandoff
-	graph := apiOperation("case handoff graph", "get a Case handoff graph, or only the directly connected Cases", []string{"case-id"}, http.MethodGet, func(i invocation) string {
+	graph := publicApiOperation("case handoff graph", "get a Case handoff graph, or only the directly connected Cases", []string{"case-id"}, http.MethodGet, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/handoff-graph"
-	}, requestQuery, false, choice("--scope", "scope", "handoff scope", "self", "ancestors", "descendants", "neighbors", "connected"))
-	return []*command{handoff, graph}
+	}, requestQuery, choice("--scope", "scope", "handoff scope", "self", "ancestors", "descendants", "neighbors", "connected"))
+	candidates := apiOperation("case handoff candidate list", "list open Cases this Case may still be connected to", []string{"case-id"}, http.MethodGet, func(i invocation) string {
+		return "/v1/cases/" + escaped(i.positional(0)) + "/handoff-candidates"
+	}, requestQuery, false, append(pagingOptions(), choice("--direction", "direction", "outgoing hands this Case off; incoming receives a handoff", "outgoing", "incoming"))...)
+	return []*command{handoff, graph, candidates}
 }
 
 func prepareCaseHandoff(inv invocation) (invocation, error) {
@@ -230,13 +237,13 @@ func caseTaskCommands() []*command {
 }
 
 func caseRecordCommands() []*command {
-	appendRecord := apiOperation("case record append", "append an immutable Record to a Case", []string{"case-id"}, http.MethodPost, func(i invocation) string {
+	appendRecord := apiOperation("case record append", "save decisions, findings, feedback, or continuation context in an open Case. Include goal, constraints, agreed decisions versus proposals, open questions, artifact references, and next step as relevant; identify superseded decisions. Do not save secrets or raw transcripts", []string{"case-id"}, http.MethodPost, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/records"
 	}, requestBody, true, str("--task-id", "taskId", "Task this Record belongs to"), str("--source-step-id", "sourceStepId", "four-character Step ID"), str("--kind", "kind", "Record kind"), str("--content", "content", "Record content"), object("--data", "data", "Record data JSON object"), choice("--origin", "origin", "Record origin", "user", "agent"), str("--client-name", "clientName", "client name"), str("--client-version", "clientVersion", "client version"))
 	listOptions := append(pagingOptions(), choice("--scope", "scope", "handoff scope", "self", "ancestors", "descendants", "neighbors", "connected"), str("--task-id", "taskId", "Task ID"), str("--created-by", "createdBy", "creator Account ID or me"), csv("--kinds", "kinds", "comma-separated Record kinds"), csv("--origins", "origins", "comma-separated origins"), csv("--acl", "acl", "ACL principals"), defaultOption(choice("--order", "order", "sort order", "asc", "desc"), "desc"))
-	list := apiOperation("case record list", "list Records in a Case", []string{"case-id"}, http.MethodGet, func(i invocation) string {
+	list := publicApiOperation("case record list", "read saved decisions and progress in a Case; follow pagination for additional context and distinguish current decisions from superseded proposals", []string{"case-id"}, http.MethodGet, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/records"
-	}, requestQuery, false, listOptions...)
+	}, requestQuery, listOptions...)
 	return []*command{appendRecord, list}
 }
 
@@ -267,11 +274,9 @@ func taskCommands() []*command {
 		return pagedRequest(a, http.MethodGet, "/v1/tasks", ctx, payload)
 	}}
 	get := apiOperation("task get", "get a Task", []string{"task-id"}, http.MethodGet, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) }, requestNone, false)
-	assign := lockedMutation("task assign", "assign a Task", "task-id", http.MethodPatch, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) + "/assignee" }, str("--assigned-to", "assignedTo", "omit in --input to clear assignment"))
-	update := lockedMutation("task update", "update editable Task fields", "task-id", http.MethodPatch, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) }, str("--title", "title", "Task title"), str("--instructions", "instructions", "Task instructions"))
-	close := lockedMutation("task close", "close a Task with an outcome", "task-id", http.MethodPost, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) + "/close" }, requiredOption(str("--outcome", "outcome", "free-text result of the Task")), array("--records", "records", "JSON array of final Records"))
-	reopen := lockedMutation("task reopen", "reopen a closed Task", "task-id", http.MethodPost, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) + "/reopen" })
-	return []*command{create, list, get, assign, update, close, reopen}
+	update := lockedMutation("task update", "update editable Task fields, including the assignee", "task-id", http.MethodPatch, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) }, str("--title", "title", "Task title"), str("--instructions", "instructions", "Task instructions"), str("--assigned-to", "assignedTo", "account responsible for the Task; empty string unassigns"))
+	setStatus := lockedMutation("task set status", "close a Task with an outcome, or reopen a closed one", "task-id", http.MethodPost, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) + "/status" }, requiredOption(choice("--status", "status", "Task status", "open", "closed")), str("--outcome", "outcome", "required when closing"), array("--records", "records", "JSON array of Records to append with the transition"))
+	return []*command{create, list, get, update, setStatus}
 }
 
 func recordCommands() []*command {

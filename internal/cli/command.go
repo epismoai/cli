@@ -204,7 +204,9 @@ func printCommandHelp(w io.Writer, cmd *command) {
 
 func printGroupHelp(w io.Writer, prefix string, commands []*command) {
 	if prefix == "" {
-		fmt.Fprintln(w, "Epismo — agent-first CLI for discovering, authoring, and coordinating reusable AI Playbooks.")
+		fmt.Fprintln(w, "Epismo — save research, decisions, and progress; continue across people, AI agents, and conversations.")
+		fmt.Fprintln(w, "\nSave: case start (or reuse a Case), then case record append. Continue: case get CASE_ID.")
+		fmt.Fprintln(w, "A Case is one ongoing effort. Keep it when switching agents. Playbooks are optional reusable methods.")
 		fmt.Fprintln(w, "\nUsage: epismo <command> [options]")
 	} else {
 		fmt.Fprintf(w, "Usage: epismo %s <command> [options]\n", prefix)
@@ -221,8 +223,8 @@ func printGroupHelp(w io.Writer, prefix string, commands []*command) {
 		"playbook version": "read and publish immutable Versions",
 		"playbook draft":   "edit a mutable Draft before publishing",
 		"playbook alias":   "manage Playbook aliases in the active namespace",
-		"case":             "start, assign, and close Cases",
-		"case handoff":     "hand work off to another Case or inspect handoffs",
+		"case":             "save and resume research, plans, implementations, and reviews",
+		"case handoff":     "connect distinct Cases and inspect their context links",
 		"task":             "manage materialized Case Tasks",
 		"record":           "append Records and browse the ACL-scoped activity feed",
 		"suggestion":       "manage Playbook Suggestions",

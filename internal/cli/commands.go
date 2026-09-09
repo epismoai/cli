@@ -33,9 +33,13 @@ func enrichCommands(commands []*command) []*command {
 	examples := map[string][]string{
 		"playbook search":    {"epismo playbook search --query onboarding", "epismo -w acme playbook search onboarding"},
 		"playbook create":    {`epismo playbook create --definition '{"title":"Onboarding","steps":[]}'`, "epismo playbook create --input @playbook.json"},
-		"case start":         {"epismo case start --version-id VERSION_ID --title 'Launch review'"},
+		"case start":         {"epismo case start --title 'Team invitation design'", "epismo case start --version-id VERSION_ID --title 'Launch review'"},
+		"case list":          {"epismo case list --assigned-to me --status open"},
+		"case get":           {"epismo case get CASE_ID"},
+		"case popular":       {"epismo case popular"},
 		"case handoff":       {"epismo case handoff SALES_CASE_ID --to-case-id ENGINEERING_CASE_ID", "epismo case handoff ENGINEERING_CASE_ID --from-case-id SALES_CASE_ID"},
-		"case record append": {`epismo case record append CASE_ID --content 'Completed research' --kind note`, "epismo case record append CASE_ID --input @record.json"},
+		"task set status":    {"epismo task set status TASK_ID --status closed --outcome approved --lock-version LOCK_VERSION"},
+		"case record append": {`epismo case record append CASE_ID --kind handoff --origin agent --content 'Goal: team invitations. Decision: reuse existing email flow. Open: expiry behavior. Next: inspect invitation code.'`, "epismo case record append CASE_ID --input @record.json"},
 		"workspace list":     {"epismo workspace list --output table", "epismo --workspace acme workspace member list"},
 	}
 	for _, command := range commands {
@@ -48,7 +52,7 @@ func enrichCommands(commands []*command) []*command {
 }
 
 func requiresConfirmation(path string) bool {
-	for _, token := range []string{" archive", " delete", " revoke", " close", " acl", " access set", "workspace clear"} {
+	for _, token := range []string{" archive", " delete", " revoke", " close", " acl", " access set", " set status", "workspace clear"} {
 		if strings.Contains(" "+path, token) {
 			return true
 		}
@@ -108,7 +112,7 @@ func doctorCommand() *command {
 
 func examplesCommand() *command {
 	return &command{Path: "examples", Summary: "show common Epismo workflows", Run: func(_ *app, _ invocation) (any, error) {
-		return map[string]any{"examples": []any{"epismo login", "epismo workspace list --output table", "epismo -w acme playbook search --query onboarding", "epismo task list --all --output table"}}, nil
+		return map[string]any{"examples": []any{"epismo login", "epismo case start --title 'Team invitation design'", "epismo case record append CASE_ID --kind handoff --origin agent --input @context.json", "epismo case list --assigned-to me --status open", "epismo case get CASE_ID", "epismo playbook list"}}, nil
 	}}
 }
 
