@@ -142,7 +142,7 @@ EPISMO_WORKSPACE=acme epismo case list
 
 Workspace references accept an exact ID or unique handle. The effective workspace is chosen in this order: `--workspace`, `EPISMO_WORKSPACE`, a workspace-scoped token, then the saved default workspace. A scoped token cannot grant access outside its scope.
 
-`--dry-run` previews any command that changes remote or local state without sending a request, opening an authorization or checkout flow, or changing local configuration. This includes creates, updates, publishes, draft saves, assignments, records, handoffs, stars, aliases, membership changes, archive/delete/revoke/close operations, and login/logout or workspace-selection changes. Read-only commands reject `--dry-run` instead of silently ignoring it. In an interactive terminal, especially impactful operations still ask for confirmation during a real run; pass `--yes` to skip that prompt in scripts that allocate a TTY.
+`--dry-run` previews any command that changes remote or local state without sending a request, opening an authorization or checkout flow, or changing local configuration. This includes creates, updates, publishes, draft saves, assignments, records, handoffs, aliases, membership changes, archive/delete/revoke/close operations, and login/logout or workspace-selection changes. Read-only commands reject `--dry-run` instead of silently ignoring it. In an interactive terminal, especially impactful operations still ask for confirmation during a real run; pass `--yes` to skip that prompt in scripts that allocate a TTY.
 
 `--input` also works on list/search commands for agent workflows; there it supplies query parameters rather than a request body.
 
@@ -150,7 +150,7 @@ Workspace references accept an exact ID or unique handle. The effective workspac
 
 `epismo login` opens a browser-based OAuth login. With `--email`, it automatically uses your organization SSO when available, otherwise it prompts for an email code.
 
-`epismo playbook list` and UUID-based `epismo playbook get` work before login, as shown above, for Public Playbooks. The CLI creates a stable random `anonymousId` in its config for analytics and fair-use rate limiting; it is not an authentication credential. Search, aliases, private data, and writes still require login.
+`epismo playbook list`, UUID-based `epismo playbook get`, `epismo case get`, `epismo case popular`, `epismo case record list`, and `epismo case handoff graph` work before login for Public Playbooks and Public Cases. Public Case reads expose the current title, Records, and readable handoffs; Tasks, assignment, input, and collaborator identities remain restricted to work collaborators. `case get` includes the latest five Records; pass its `records_next_cursor` to `case record list --cursor` with `--scope self` for older public Records. Use `case popular --playbook-id <id> --lang ja,en` to filter discovery. The CLI creates a stable random `anonymousId` in its config for analytics and fair-use rate limiting; it is not an authentication credential. Search, aliases, private data, live Case work, and writes still require login.
 
 For CI or other non-interactive use, create a workspace-scoped token and pass it with `EPISMO_TOKEN`:
 
