@@ -82,11 +82,8 @@ func playbookCommands() []*command {
 	accessGet := apiOperation("playbook access get", "get public/private visibility and explicit editors", []string{"playbook-id"}, http.MethodGet, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/access" }, requestNone, false)
 	accessSet := apiOperation("playbook access set", "set public/private visibility and explicit editors", []string{"playbook-id"}, http.MethodPut, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/access" }, requestBody, true, requiredOption(choice("--visibility", "visibility", "published visibility", "private", "public")), csv("--editors", "editors", "comma-separated editor Account or Team IDs"))
 	archive := apiOperation("playbook archive", "archive a Playbook", []string{"playbook-id"}, http.MethodDelete, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) }, requestBody, true)
-	star := apiOperation("playbook star", "star a Playbook", []string{"playbook-id"}, http.MethodPut, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/star" }, requestBody, true)
-	unstar := apiOperation("playbook unstar", "remove a Playbook star", []string{"playbook-id"}, http.MethodDelete, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/star" }, requestBody, true)
-	starred := apiOperation("playbook starred", "list your starred Playbooks", nil, http.MethodGet, staticEndpoint("/v1/me/starred-playbooks"), requestQuery, false, page...)
 	share := apiOperation("playbook share", "create a share link", []string{"playbook-id"}, http.MethodPost, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/share" }, requestBody, true)
-	return []*command{init, search, list, resourceList, create, get, versionList, versionGet, versionArchive, versionPublish, draftGet, draftSave, draftDiscard, draftPublish, accessGet, accessSet, archive, star, unstar, starred, share}
+	return []*command{init, search, list, resourceList, create, get, versionList, versionGet, versionArchive, versionPublish, draftGet, draftSave, draftDiscard, draftPublish, accessGet, accessSet, archive, share}
 }
 
 func aliasCommands() []*command {
