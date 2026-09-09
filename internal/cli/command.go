@@ -226,7 +226,7 @@ func printGroupHelp(w io.Writer, prefix string, commands []*command) {
 		"case":             "save and resume research, plans, implementations, and reviews",
 		"case handoff":     "connect distinct Cases and inspect their context links",
 		"task":             "manage materialized Case Tasks",
-		"record":           "append Records and browse the ACL-scoped activity feed",
+		"record":           "append, update, or redact Records and browse the ACL-scoped activity feed",
 		"suggestion":       "manage Playbook Suggestions",
 	}
 	needle := strings.TrimSpace(prefix)

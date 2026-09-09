@@ -87,8 +87,8 @@ func TestCommandSurface(t *testing.T) {
 		credit/balance credit/checkout token/create token/list token/revoke
 		playbook/init playbook/search playbook/list playbook/resource/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/access/get playbook/access/set playbook/archive playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
 		case/start case/get case/list case/popular case/access/get case/access/set case/share case/assign case/acl case/update case/handoff case/handoff/graph case/handoff/candidate/list case/close case/reopen
-		case/task/create case/task/list case/record/append case/record/list
-		record/append record/list
+		case/task/create case/task/list case/record/append case/record/list case/record/update case/record/delete
+		record/append record/list record/update record/delete
 		task/create task/list task/get task/update task/set/status
 		playbook/suggestion/create playbook/suggestion/list
 		suggestion/create suggestion/get suggestion/list suggestion/update suggestion/resolve
@@ -750,6 +750,10 @@ func TestConvenienceAliases(t *testing.T) {
 		{[]string{"record", "append", "--case-id", "case-123", "--content", "note"}, "/v1/cases/case-123/records"},
 		{[]string{"record", "list", "case-123"}, "/v1/cases/case-123/records"},
 		{[]string{"record", "list", "--case-id", "case-123"}, "/v1/cases/case-123/records"},
+		{[]string{"record", "update", "record-123", "--content", "edited"}, "/v1/records/record-123"},
+		{[]string{"record", "delete", "record-123"}, "/v1/records/record-123"},
+		{[]string{"case", "record", "update", "record-123", "--content", "edited"}, "/v1/records/record-123"},
+		{[]string{"case", "record", "delete", "record-123"}, "/v1/records/record-123"},
 		{[]string{"suggestion", "create", "pb-123", "--title", "sug"}, "/v1/playbooks/pb-123/suggestions"},
 		{[]string{"suggestion", "create", "--playbook-id", "pb-123", "--title", "sug"}, "/v1/playbooks/pb-123/suggestions"},
 	}

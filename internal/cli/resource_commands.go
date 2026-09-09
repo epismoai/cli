@@ -241,7 +241,13 @@ func caseRecordCommands() []*command {
 	list := publicApiOperation("case record list", "read saved decisions and progress in a Case; follow pagination for additional context and distinguish current decisions from superseded proposals", []string{"case-id"}, http.MethodGet, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/records"
 	}, requestQuery, listOptions...)
-	return []*command{appendRecord, list}
+	update := apiOperation("case record update", "edit a Record you created. Kind, content, and structured data may change; task and provenance stay fixed", []string{"record-id"}, http.MethodPatch, func(i invocation) string {
+		return "/v1/records/" + escaped(i.positional(0))
+	}, requestBody, true, str("--kind", "kind", "Record kind"), str("--content", "content", "Record content"), object("--data", "data", "Record data JSON object"))
+	deleteRecord := apiOperation("case record delete", "redact a Record you created. The id remains as a tombstone for references", []string{"record-id"}, http.MethodDelete, func(i invocation) string {
+		return "/v1/records/" + escaped(i.positional(0))
+	}, requestBody, true)
+	return []*command{appendRecord, list, update, deleteRecord}
 }
 
 func lockedMutation(path, summary, arg, method string, endpoint func(invocation) string, options ...optionSpec) *command {
@@ -277,7 +283,7 @@ func taskCommands() []*command {
 }
 
 func recordCommands() []*command {
-	appendRecord := apiOperation("record append", "append an immutable Record to a Case", nil, http.MethodPost, func(i invocation) string {
+	appendRecord := apiOperation("record append", "append a Record to a Case", nil, http.MethodPost, func(i invocation) string {
 		caseID := strings.TrimSpace(i.text("caseId"))
 		return "/v1/cases/" + escaped(caseID) + "/records"
 	}, requestBody, true, str("--case-id", "caseId", "Case ID"), str("--task-id", "taskId", "Task this Record belongs to"), str("--source-step-id", "sourceStepId", "four-character Step ID"), str("--kind", "kind", "Record kind"), str("--content", "content", "Record content"), object("--data", "data", "Record data JSON object"), choice("--origin", "origin", "Record origin", "user", "agent"), str("--client-name", "clientName", "client name"), str("--client-version", "clientVersion", "client version"))
@@ -288,7 +294,13 @@ func recordCommands() []*command {
 		return "/v1/cases/" + escaped(caseID) + "/records"
 	}, requestQuery, false, listOptions...)
 	list.Prepare = requireField("caseId", "Pass --case-id <case-id> or use `epismo case record list <case-id>`.")
-	return []*command{appendRecord, list}
+	update := apiOperation("record update", "edit a Record you created. Kind, content, and structured data may change; task and provenance stay fixed", []string{"record-id"}, http.MethodPatch, func(i invocation) string {
+		return "/v1/records/" + escaped(i.positional(0))
+	}, requestBody, true, str("--kind", "kind", "Record kind"), str("--content", "content", "Record content"), object("--data", "data", "Record data JSON object"))
+	deleteRecord := apiOperation("record delete", "redact a Record you created. The id remains as a tombstone for references", []string{"record-id"}, http.MethodDelete, func(i invocation) string {
+		return "/v1/records/" + escaped(i.positional(0))
+	}, requestBody, true)
+	return []*command{appendRecord, list, update, deleteRecord}
 }
 
 // requireField reports an error naming the given hint when field is empty.
