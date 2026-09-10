@@ -81,9 +81,10 @@ func playbookCommands() []*command {
 	draftPublish := apiOperation("playbook draft publish", "publish the Draft as a new Version", []string{"playbook-id"}, http.MethodPost, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/draft/publish" }, requestBody, true, requiredOption(integer("--expected-draft-revision", "expectedDraftRevision", "Draft revision last read and reviewed")))
 	accessGet := apiOperation("playbook access get", "get public/private visibility and explicit editors", []string{"playbook-id"}, http.MethodGet, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/access" }, requestNone, false)
 	accessSet := apiOperation("playbook access set", "set public/private visibility and explicit editors", []string{"playbook-id"}, http.MethodPut, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/access" }, requestBody, true, requiredOption(choice("--visibility", "visibility", "published visibility", "private", "public")), csv("--editors", "editors", "comma-separated editor Account or Team IDs"))
+	owner := apiOperation("playbook owner", "change which account owns a Playbook", []string{"playbook-id"}, http.MethodPatch, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/owner" }, requestBody, true, requiredOption(str("--owner-id", "ownerId", "User or Workspace account that should own the Playbook")))
 	archive := apiOperation("playbook archive", "archive a Playbook", []string{"playbook-id"}, http.MethodDelete, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) }, requestBody, true)
 	share := apiOperation("playbook share", "create a share link", []string{"playbook-id"}, http.MethodPost, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/share" }, requestBody, true)
-	return []*command{init, search, list, resourceList, create, get, versionList, versionGet, versionArchive, versionPublish, draftGet, draftSave, draftDiscard, draftPublish, accessGet, accessSet, archive, share}
+	return []*command{init, search, list, resourceList, create, get, versionList, versionGet, versionArchive, versionPublish, draftGet, draftSave, draftDiscard, draftPublish, accessGet, accessSet, owner, archive, share}
 }
 
 func aliasCommands() []*command {

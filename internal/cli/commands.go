@@ -33,6 +33,7 @@ func enrichCommands(commands []*command) []*command {
 	examples := map[string][]string{
 		"playbook search":    {"epismo playbook search --query onboarding", "epismo -w acme playbook search onboarding"},
 		"playbook create":    {`epismo playbook create --definition '{"title":"Onboarding","steps":[]}'`, "epismo playbook create --input @playbook.json"},
+		"playbook owner":     {"epismo playbook owner PLAYBOOK_ID --owner-id WORKSPACE_ID"},
 		"case start":         {"epismo case start --title 'Team invitation design'", "epismo case start --version-id VERSION_ID --title 'Launch review'"},
 		"case list":          {"epismo case list --assigned-to me --status open"},
 		"case get":           {"epismo case get CASE_ID"},
