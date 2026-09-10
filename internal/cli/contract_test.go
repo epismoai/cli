@@ -75,6 +75,7 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 		"playbook draft publish":      {"post", "/v1/playbooks/{playbookId}/draft/publish"},
 		"playbook access get":         {"get", "/v1/playbooks/{playbookId}/access"},
 		"playbook access set":         {"put", "/v1/playbooks/{playbookId}/access"},
+		"playbook owner":              {"patch", "/v1/playbooks/{playbookId}/owner"},
 		"playbook archive":            {"delete", "/v1/playbooks/{playbookId}"},
 		"playbook share":              {"post", "/v1/playbooks/{playbookId}/share"},
 		"playbook alias set":          {"put", "/v1/aliases"},

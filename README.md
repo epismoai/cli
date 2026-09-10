@@ -67,9 +67,10 @@ Use `visibility` and explicit editors instead of a raw ACL:
 ```sh
 epismo playbook access get PLAYBOOK_ID
 epismo playbook access set PLAYBOOK_ID --visibility public --editors USER_ID,TEAM_ID
+epismo playbook owner PLAYBOOK_ID --owner-id WORKSPACE_OR_USER_ID
 ```
 
-`public` permits published reads only. Editors can read and edit Playbook content; the owner is implicit and is not included in `--editors`. Owner managers, including Workspace Owners and Admins for a Workspace-owned Playbook, manage access and archive Playbooks or historical Versions.
+`public` permits published reads only. Editors can read and edit Playbook content; the owner is implicit and is not included in `--editors`. Owner managers, including Workspace Owners and Admins for a Workspace-owned Playbook, manage access and archive Playbooks or historical Versions. `playbook owner` moves ownership from a User to a Workspace, or from a Workspace to that Workspace's Owner or the Playbook creator.
 
 ## Cases and handoffs
 
