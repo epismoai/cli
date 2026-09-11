@@ -70,7 +70,7 @@ epismo playbook access set PLAYBOOK_ID --visibility public --editors USER_ID,TEA
 epismo playbook owner PLAYBOOK_ID --owner-id WORKSPACE_OR_USER_ID
 ```
 
-`public` permits published reads only. Editors can read and edit Playbook content; the owner is implicit and is not included in `--editors`. Owner managers, including Workspace Owners and Admins for a Workspace-owned Playbook, manage access and archive Playbooks or historical Versions. `playbook owner` moves ownership from a User to a Workspace, or from a Workspace to that Workspace's Owner or the Playbook creator.
+`public` permits published reads only. Editors can read and edit Playbook content; the owner, and every member of a Workspace-owned Playbook, are implicit and are not included in `--editors`. Workspace members can read and edit Playbooks owned by a Workspace they belong to. Owner managers, including Workspace Owners and Admins for a Workspace-owned Playbook, manage access, public visibility, and archive Playbooks or historical Versions. Any member may create a Playbook owned by a Workspace they belong to, or move a personally owned private Playbook into it with `playbook owner`.
 
 ## Cases and handoffs
 
