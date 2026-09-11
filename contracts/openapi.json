@@ -4666,6 +4666,7 @@
           "playbooks"
         ],
         "summary": "POST /v1/playbooks",
+        "description": "Any member of the connected Workspace may create a Playbook owned by it. Members can read and edit workspace-owned Playbooks; making them public and other access changes still require an Owner or Admin.",
         "parameters": [
           {
             "name": "workspaceId",
@@ -6548,7 +6549,7 @@
           "playbooks"
         ],
         "summary": "Set Playbook access",
-        "description": "Public grants published read access only. Editors may change content. Owners can always read, edit, manage access, and archive.",
+        "description": "Workspace members can read and edit workspace-owned Playbooks. Only the owner (including Workspace Owners/Admins) can manage access, archive, and make a Playbook public. Public grants published read access only.",
         "parameters": [
           {
             "name": "playbookId",
@@ -6695,7 +6696,7 @@
           "playbooks"
         ],
         "summary": "Set Playbook owner",
-        "description": "Move ownership from a User to a Workspace, or from a Workspace to that Workspace's Owner or the Playbook creator. Workspace-to-Workspace and User-to-User moves are rejected.",
+        "description": "Any member may move a personally owned private Playbook into the Workspace this request is connected to. A Workspace-owned Playbook can only move to that Workspace's Owner or the Playbook creator. Workspace-to-Workspace and User-to-User moves are rejected.",
         "parameters": [
           {
             "name": "playbookId",
@@ -12481,7 +12482,8 @@
           "ownerId": {
             "type": "string",
             "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "User account you manage, or the Workspace this request is connected to. Any member of that Workspace may create a Playbook owned by it; making it public and other access changes still require an Owner or Admin."
           },
           "access": {
             "default": {
@@ -12492,7 +12494,7 @@
             "properties": {
               "visibility": {
                 "default": "private",
-                "description": "Public permits published reads only; private requires ownership or an editor grant.",
+                "description": "Public permits published reads only; it is not workspace-member visibility. Only an Owner or Admin can make a Playbook public.",
                 "type": "string",
                 "enum": [
                   "private",
@@ -12501,7 +12503,7 @@
               },
               "editors": {
                 "default": [],
-                "description": "Account or Team principal IDs that may edit content. Owners are implicit and omitted.",
+                "description": "Account or Team principal IDs that may edit content. Owners, and every member of a workspace-owned Playbook, are implicit and omitted.",
                 "type": "array",
                 "items": {
                   "type": "string",
@@ -13006,7 +13008,7 @@
           },
           "editors": {
             "default": [],
-            "description": "Account or Team principal IDs that may edit content. Owners are implicit and omitted.",
+            "description": "Account or Team principal IDs that may edit content. Owners, and every member of a workspace-owned Playbook, are implicit and omitted.",
             "type": "array",
             "items": {
               "type": "string",
@@ -13033,7 +13035,7 @@
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "description": "User or Workspace account that should own the Playbook. Allowed moves are User to Workspace, or Workspace to that Workspace's Owner or the Playbook creator."
+            "description": "User or Workspace account that should own the Playbook. Any member may move a personally owned private Playbook into the Workspace this request is connected to. A Workspace-owned Playbook can only move to that Workspace's Owner or the Playbook creator."
           },
           "idempotencyKey": {
             "type": "string",
