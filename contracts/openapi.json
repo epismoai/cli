@@ -9702,7 +9702,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RecordResponse"
+                  "$ref": "#/components/schemas/ReviewCaseResponse"
                 }
               }
             }
@@ -11068,7 +11068,18 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "note",
+                  "output",
+                  "review",
+                  "activity",
+                  "result",
+                  "autoreview"
+                ]
+              }
             }
           },
           {
@@ -11076,7 +11087,15 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "user",
+                  "agent",
+                  "system"
+                ]
+              }
             }
           },
           {
@@ -13430,7 +13449,8 @@
                     "note",
                     "output",
                     "result"
-                  ]
+                  ],
+                  "description": "Record kind. note or output. result is accepted as output. review and activity are server-only."
                 },
                 "content": {
                   "type": "string",
@@ -13637,7 +13657,8 @@
                     "note",
                     "output",
                     "result"
-                  ]
+                  ],
+                  "description": "Record kind. note or output. result is accepted as output. review and activity are server-only."
                 },
                 "content": {
                   "type": "string",
@@ -13699,7 +13720,8 @@
               "note",
               "output",
               "result"
-            ]
+            ],
+            "description": "Record kind. note or output. result is accepted as output. review and activity are server-only."
           },
           "content": {
             "type": "string",
@@ -13754,7 +13776,8 @@
               "note",
               "output",
               "result"
-            ]
+            ],
+            "description": "Record kind. note or output. result is accepted as output. review and activity are server-only."
           },
           "content": {
             "type": "string",
@@ -14988,7 +15011,13 @@
             "type": "string"
           },
           "kind": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "note",
+              "output",
+              "review",
+              "activity"
+            ]
           },
           "content": {
             "type": "string"
@@ -15000,6 +15029,14 @@
           "createdBy": {
             "type": "string",
             "format": "uuid"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "user",
+              "agent",
+              "system"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -15042,6 +15079,16 @@
           },
           "nextCursor": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReviewCaseResponse": {
+        "type": "object",
+        "required": [],
+        "properties": {
+          "record": {
+            "$ref": "#/components/schemas/Record"
           }
         },
         "additionalProperties": false
