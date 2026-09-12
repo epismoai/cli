@@ -8026,7 +8026,7 @@
           "cases"
         ],
         "summary": "GET /v1/cases/popular",
-        "description": "Ranks public Cases that have a non-activity Record. Preferred languages rank first, followed by English and other languages. Within each language tier, ranking is currently distinct non-archived handoff destinations; scores stay internal and the weights may change. This is a homepage walk, not a complete catalogue. Pass playbookId to rank public Cases of that Playbook the same way. Works without authentication and is free. Always the public projection (no starter, assignee, input, or collaborator identities).",
+        "description": "Ranks public Cases that have a non-activity Record. Preferred languages rank first, followed by English and other languages. Within each language tier, ranking is currently distinct non-archived handoff destinations; scores stay internal and the weights may change. This is a homepage walk, not a complete catalogue. Pass playbookId to rank public Cases of that Playbook the same way. Works without authentication and is free. Always the public projection (no starter, assignee, or collaborator identities).",
         "parameters": [
           {
             "name": "workspaceId",
@@ -8195,7 +8195,7 @@
           "cases"
         ],
         "summary": "GET /v1/cases/{caseId}",
-        "description": "Work collaborators receive the live Case, Tasks, the latest 5 Records (newest first), and the handoff neighborhood. Public-only readers receive the live title, the latest 5 Records, and readable handoffs. Follow recordsNextCursor with GET /v1/cases/{caseId}/records for older Records.",
+        "description": "Work collaborators receive the live Case, Tasks, the latest 5 Records (newest first), and the handoff neighborhood. Public-only readers receive the live title, input, the latest 5 Records, and readable handoffs. Follow recordsNextCursor with GET /v1/cases/{caseId}/records for older Records.",
         "parameters": [
           {
             "name": "caseId",
@@ -9654,6 +9654,152 @@
         }
       }
     },
+    "/v1/cases/{caseId}/review": {
+      "post": {
+        "operationId": "postV1CasesCaseIdReview",
+        "tags": [
+          "cases"
+        ],
+        "summary": "POST /v1/cases/{caseId}/review",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewCaseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewCaseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/cases/{caseId}/reopen": {
       "post": {
         "operationId": "postV1CasesCaseIdReopen",
@@ -10922,7 +11068,18 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "note",
+                  "output",
+                  "review",
+                  "activity",
+                  "result",
+                  "autoreview"
+                ]
+              }
             }
           },
           {
@@ -10930,7 +11087,15 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "user",
+                  "agent",
+                  "system"
+                ]
+              }
             }
           },
           {
@@ -13142,6 +13307,9 @@
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "autoReview": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -13207,6 +13375,9 @@
             "type": "string",
             "maxLength": 255
           },
+          "autoReview": {
+            "type": "boolean"
+          },
           "expectedLockVersion": {
             "type": "integer",
             "minimum": 0,
@@ -13264,7 +13435,6 @@
             ]
           },
           "records": {
-            "default": [],
             "type": "array",
             "items": {
               "type": "object",
@@ -13275,8 +13445,12 @@
                 },
                 "kind": {
                   "type": "string",
-                  "minLength": 1,
-                  "maxLength": 100
+                  "enum": [
+                    "note",
+                    "output",
+                    "result"
+                  ],
+                  "description": "Record kind. note or output. result is accepted as output. review and activity are server-only."
                 },
                 "content": {
                   "type": "string",
@@ -13325,6 +13499,19 @@
           "outcome"
         ]
       },
+      "ReviewCaseRequest": {
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "idempotencyKey"
+        ]
+      },
       "ReopenCaseRequest": {
         "type": "object",
         "properties": {
@@ -13355,7 +13542,7 @@
             "type": "string",
             "enum": [
               "work",
-              "review"
+              "approval"
             ]
           },
           "title": {
@@ -13456,7 +13643,6 @@
             "maxLength": 64
           },
           "records": {
-            "default": [],
             "type": "array",
             "items": {
               "type": "object",
@@ -13467,8 +13653,12 @@
                 },
                 "kind": {
                   "type": "string",
-                  "minLength": 1,
-                  "maxLength": 100
+                  "enum": [
+                    "note",
+                    "output",
+                    "result"
+                  ],
+                  "description": "Record kind. note or output. result is accepted as output. review and activity are server-only."
                 },
                 "content": {
                   "type": "string",
@@ -13526,8 +13716,12 @@
           },
           "kind": {
             "type": "string",
-            "minLength": 1,
-            "maxLength": 100
+            "enum": [
+              "note",
+              "output",
+              "result"
+            ],
+            "description": "Record kind. note or output. result is accepted as output. review and activity are server-only."
           },
           "content": {
             "type": "string",
@@ -13578,8 +13772,12 @@
         "properties": {
           "kind": {
             "type": "string",
-            "minLength": 1,
-            "maxLength": 100
+            "enum": [
+              "note",
+              "output",
+              "result"
+            ],
+            "description": "Record kind. note or output. result is accepted as output. review and activity are server-only."
           },
           "content": {
             "type": "string",
@@ -14462,6 +14660,13 @@
             "type": "string",
             "format": "uuid"
           },
+          "autoReview": {
+            "type": "boolean"
+          },
+          "billingAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -14704,7 +14909,7 @@
             "type": "string",
             "enum": [
               "work",
-              "review"
+              "approval"
             ]
           },
           "title": {
@@ -14806,7 +15011,13 @@
             "type": "string"
           },
           "kind": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "note",
+              "output",
+              "review",
+              "activity"
+            ]
           },
           "content": {
             "type": "string"
@@ -14818,6 +15029,14 @@
           "createdBy": {
             "type": "string",
             "format": "uuid"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "user",
+              "agent",
+              "system"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -14860,6 +15079,16 @@
           },
           "nextCursor": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReviewCaseResponse": {
+        "type": "object",
+        "required": [],
+        "properties": {
+          "record": {
+            "$ref": "#/components/schemas/Record"
           }
         },
         "additionalProperties": false
