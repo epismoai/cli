@@ -18,16 +18,113 @@ func buildCommands() []*command {
 	commands = append(commands, playbookCommands()...)
 	commands = append(commands, aliasCommands()...)
 	commands = append(commands, caseCommands()...)
+	commands = append(commands, caseHandoffCommands()...)
 	commands = append(commands, caseTaskCommands()...)
 	commands = append(commands, caseRecordCommands()...)
+	commands = append(commands, recordCommands()...)
 	commands = append(commands, taskCommands()...)
 	commands = append(commands, playbookSuggestionCommands()...)
 	commands = append(commands, suggestionCommands()...)
+	commands = append(commands, completionCommand(), doctorCommand(), examplesCommand(), docsCommand())
+	return enrichCommands(commands)
+}
+
+func enrichCommands(commands []*command) []*command {
+	examples := map[string][]string{
+		"playbook search":    {"epismo playbook search --query onboarding", "epismo -w acme playbook search onboarding"},
+		"playbook create":    {`epismo playbook create --definition '{"title":"Onboarding","steps":[]}'`, "epismo playbook create --input @playbook.json"},
+		"playbook owner":     {"epismo playbook owner PLAYBOOK_ID --owner-id WORKSPACE_ID"},
+		"case start":         {"epismo case start --title 'Team invitation design'", "epismo case start --version-id VERSION_ID --title 'Launch review'"},
+		"case list":          {"epismo case list --assigned-to me --status open"},
+		"case get":           {"epismo case get CASE_ID"},
+		"case popular":       {"epismo case popular"},
+		"case handoff":       {"epismo case handoff SALES_CASE_ID --to-case-id ENGINEERING_CASE_ID", "epismo case handoff ENGINEERING_CASE_ID --from-case-id SALES_CASE_ID"},
+		"task set status":    {"epismo task set status TASK_ID --status closed --outcome approved --lock-version LOCK_VERSION"},
+		"case record append": {`epismo case record append CASE_ID --kind handoff --origin agent --content 'Goal: team invitations. Decision: reuse existing email flow. Open: expiry behavior. Next: inspect invitation code.'`, "epismo case record append CASE_ID --input @record.json"},
+		"case record update": {`epismo case record update RECORD_ID --content 'Updated decision'`},
+		"case record delete": {"epismo case record delete RECORD_ID"},
+		"workspace list":     {"epismo workspace list --output table", "epismo --workspace acme workspace member list"},
+	}
+	for _, command := range commands {
+		if values, ok := examples[command.Path]; ok {
+			command.Examples = values
+		}
+		command.Safety.Confirmation = requiresConfirmation(command.Path)
+	}
 	return commands
 }
 
+func requiresConfirmation(path string) bool {
+	for _, token := range []string{" archive", " delete", " revoke", " close", " acl", " access set", " set status", "workspace clear"} {
+		if strings.Contains(" "+path, token) {
+			return true
+		}
+	}
+	return false
+}
+
+func completionCommand() *command {
+	return &command{Path: "completion", Summary: "print shell completion instructions", Args: []string{"shell"}, Output: outputRaw, Run: func(_ *app, inv invocation) (any, error) {
+		shell := inv.positional(0)
+		if !contains([]string{"bash", "zsh", "fish", "powershell"}, shell) {
+			return nil, &Error{Code: "INVALID_ARGUMENT", Message: "Unsupported shell. Use bash, zsh, fish, or powershell.", ExitCode: 1}
+		}
+		return completionScript(shell), nil
+	}}
+}
+
+func completionScript(shell string) string {
+	words := []string{}
+	for _, command := range buildCommandWords() {
+		words = append(words, command)
+	}
+	joined := strings.Join(words, " ")
+	switch shell {
+	case "bash":
+		return "_epismo() { COMPREPLY=( $(compgen -W '" + joined + "' -- \"${COMP_WORDS[COMP_CWORD]}\") ); }\ncomplete -F _epismo epismo\n"
+	case "zsh":
+		return "#compdef epismo\n_arguments '*: :((" + strings.Join(words, " ") + "))'\n"
+	case "fish":
+		return "complete -c epismo -f -a '" + joined + "'\n"
+	default:
+		return "Register-ArgumentCompleter -Native -CommandName epismo -ScriptBlock { param($wordToComplete) '" + strings.Join(words, "','") + "' | Where-Object { $_ -like \"$wordToComplete*\" } }\n"
+	}
+}
+
+func buildCommandWords() []string {
+	return []string{"login", "logout", "whoami", "workspace", "team", "playbook", "case", "task", "record", "suggestion", "token", "credit", "doctor", "examples", "completion", "docs", "update"}
+}
+
+func doctorCommand() *command {
+	return &command{Path: "doctor", Summary: "check CLI configuration, authentication, and workspace context", Run: func(a *app, _ invocation) (any, error) {
+		config, configErr := readConfig()
+		result := map[string]any{"configPath": configPath(), "configReadable": configErr == nil, "apiUrl": a.client.baseURL}
+		if config.DefaultWorkspace != nil {
+			result["savedWorkspace"] = map[string]any{"id": config.DefaultWorkspace.ID, "handle": config.DefaultWorkspace.Handle}
+		}
+		ctx, authErr := a.context()
+		result["authenticated"] = authErr == nil
+		if authErr != nil {
+			result["authenticationError"] = errorPayload(normalizeError(authErr))
+			return result, nil
+		}
+		result["workspaceId"] = ctx.WorkspaceID
+		return result, nil
+	}}
+}
+
+func examplesCommand() *command {
+	return &command{Path: "examples", Summary: "show common Epismo workflows", Run: func(_ *app, _ invocation) (any, error) {
+		return map[string]any{"examples": []any{"epismo login", "epismo case start --title 'Team invitation design'", "epismo case record append CASE_ID --kind handoff --origin agent --input @context.json", "epismo case list --assigned-to me --status open", "epismo case get CASE_ID", "epismo playbook list"}}, nil
+	}}
+}
+
+func docsCommand() *command {
+	return &command{Path: "docs", Summary: "show help or documentation for a command"}
+}
+
 func loginCommand() *command {
-	return &command{Path: "login", Summary: "log in through a browser, or use email with automatic SSO discovery", Input: true, Options: []optionSpec{str("--email", "email", "use company SSO when configured, otherwise enter a code here")}, Run: func(a *app, inv invocation) (any, error) {
+	return &command{Path: "login", Summary: "log in through a browser, or use email with automatic SSO discovery", Input: &inputSpec{}, Safety: commandSafety{DryRun: true}, Options: []optionSpec{str("--email", "email", "use company SSO when configured, otherwise enter a code here")}, Run: func(a *app, inv invocation) (any, error) {
 		payload, err := inv.payload(a)
 		if err != nil {
 			return nil, err
@@ -37,7 +134,7 @@ func loginCommand() *command {
 }
 
 func logoutCommand() *command {
-	return &command{Path: "logout", Summary: "revoke credentials and clear ~/.epismo/credentials", Run: func(a *app, _ invocation) (any, error) { return a.logout() }}
+	return &command{Path: "logout", Summary: "revoke credentials and clear ~/.epismo/credentials", Safety: commandSafety{DryRun: true}, Run: func(a *app, _ invocation) (any, error) { return a.logout() }}
 }
 
 func whoamiCommand() *command {
@@ -130,7 +227,7 @@ func workspaceCurrentCommand() *command {
 		if config.DefaultWorkspace == nil {
 			return map[string]any{"currentWorkspace": nil}, nil
 		}
-		encoded := map[string]any{"id": config.DefaultWorkspace.ID, "isDefault": true, "source": "local-config"}
+		encoded := map[string]any{"id": config.DefaultWorkspace.ID, "isDefault": true, "source": "local_config"}
 		if config.DefaultWorkspace.Handle != "" {
 			encoded["handle"] = config.DefaultWorkspace.Handle
 		}
@@ -145,7 +242,7 @@ func workspaceCurrentCommand() *command {
 }
 
 func workspaceUseCommand() *command {
-	return &command{Path: "workspace use", Summary: "set the default workspace", Args: []string{"workspace-id"}, Run: func(a *app, inv invocation) (any, error) {
+	return &command{Path: "workspace use", Summary: "set the default workspace by ID or handle", Args: []string{"workspace"}, Examples: []string{"epismo workspace use acme", "epismo workspace use ws_01abc"}, Safety: commandSafety{DryRun: true}, Run: func(a *app, inv invocation) (any, error) {
 		auth, err := a.resolveAuthentication()
 		if err != nil {
 			return nil, err
@@ -157,7 +254,7 @@ func workspaceUseCommand() *command {
 		requested := strings.TrimSpace(inv.positional(0))
 		var matched map[string]any
 		for _, item := range items {
-			if stringField(item, "id") == requested {
+			if stringField(item, "id") == requested || strings.EqualFold(stringField(item, "handle"), requested) {
 				matched = item
 				break
 			}
@@ -179,14 +276,24 @@ func workspaceUseCommand() *command {
 }
 
 func workspaceClearCommand() *command {
-	return &command{Path: "workspace clear", Summary: "clear the saved workspace (reverts to personal space)", Run: func(_ *app, _ invocation) (any, error) {
+	return &command{Path: "workspace clear", Summary: "clear the saved workspace (reverts to personal space)", Safety: commandSafety{DryRun: true}, Run: func(_ *app, _ invocation) (any, error) {
 		config, err := readConfig()
 		if err != nil {
 			return nil, err
 		}
 		previous := any(nil)
 		if config.DefaultWorkspace != nil {
-			previous = config.DefaultWorkspace
+			previousWorkspace := map[string]any{"id": config.DefaultWorkspace.ID}
+			if config.DefaultWorkspace.Handle != "" {
+				previousWorkspace["handle"] = config.DefaultWorkspace.Handle
+			}
+			if config.DefaultWorkspace.AccountID != "" {
+				previousWorkspace["accountId"] = config.DefaultWorkspace.AccountID
+			}
+			if config.DefaultWorkspace.Role != "" {
+				previousWorkspace["role"] = config.DefaultWorkspace.Role
+			}
+			previous = previousWorkspace
 		}
 		config.DefaultWorkspace = nil
 		if err := writeConfig(config); err != nil {
@@ -213,15 +320,17 @@ func workspaceCreateCommand() *command {
 		ctx, contextErr := a.context()
 		if contextErr != nil {
 			normalized := normalizeError(contextErr)
-			object["checkoutError"] = map[string]any{"code": normalized.Code, "message": normalized.Message, "retryable": normalized.Retryable}
-			object["hint"] = fmt.Sprintf("Workspace creation succeeded. Retry checkout with `epismo workspace checkout %s`.", id)
+			checkoutError := errorPayload(normalized)
+			checkoutError["hint"] = fmt.Sprintf("Retry with `epismo workspace checkout %s`.", id)
+			object["checkoutError"] = checkoutError
 			return object, nil
 		}
 		checkout, checkoutErr := a.client.request(http.MethodPost, "/v1/workspaces/"+escaped(id)+"/checkout", ctx.Auth.AccessToken, nil)
 		if checkoutErr != nil {
 			normalized := normalizeError(checkoutErr)
-			object["checkoutError"] = map[string]any{"code": normalized.Code, "message": normalized.Message, "retryable": normalized.Retryable}
-			object["hint"] = fmt.Sprintf("Workspace creation succeeded. Retry checkout with `epismo workspace checkout %s`.", id)
+			checkoutError := errorPayload(normalized)
+			checkoutError["hint"] = fmt.Sprintf("Retry with `epismo workspace checkout %s`.", id)
+			object["checkoutError"] = checkoutError
 			return object, nil
 		}
 		for key, value := range checkout {
@@ -233,14 +342,14 @@ func workspaceCreateCommand() *command {
 }
 
 func workspaceCheckoutCommand() *command {
-	return apiOperationUnscoped("workspace checkout", "get the billing URL for a workspace", []string{"workspace-id"}, http.MethodPost, func(i invocation) string { return "/v1/workspaces/" + escaped(i.positional(0)) + "/checkout" }, requestNone, false)
+	return apiOperationUnscoped("workspace checkout", "start or resume a workspace subscription", []string{"workspace-id"}, http.MethodPost, func(i invocation) string { return "/v1/workspaces/" + escaped(i.positional(0)) + "/checkout" }, requestNone, false)
 }
 func workspaceUpdateCommand() *command {
 	return apiOperationUnscoped("workspace update", "update a workspace you own", []string{"workspace-id"}, http.MethodPatch, func(i invocation) string { return "/v1/workspaces/" + escaped(i.positional(0)) }, requestBody, false, str("--handle", "handle", "updated workspace handle"))
 }
 
 func workspaceIDOption() optionSpec {
-	return str("--workspace-id", "workspaceId", "workspace id (defaults to the saved workspace or token scope when supported)")
+	return str("--workspace-id", "workspaceId", "workspace ID (use --workspace for an ID or handle)")
 }
 
 func workspaceMemberListCommand() *command {
@@ -264,7 +373,7 @@ func selectedWorkspaceRequest(a *app, workspaceID, method, suffix string, body a
 }
 
 func workspaceMemberUpsertCommand() *command {
-	return &command{Path: "workspace member upsert", Summary: "add a workspace member or update the member role", Args: []string{"user-ids"}, Options: []optionSpec{workspaceIDOption(), requiredOption(choice("--role", "role", "owner | admin | member", "owner", "admin", "member"))}, Run: func(a *app, inv invocation) (any, error) {
+	return &command{Path: "workspace member upsert", Summary: "add a workspace member or update the member role", Args: []string{"user-ids"}, Options: []optionSpec{workspaceIDOption(), requiredOption(choice("--role", "role", "owner | admin | member", "owner", "admin", "member"))}, Safety: commandSafety{DryRun: true}, Run: func(a *app, inv invocation) (any, error) {
 		users, err := stringArray(inv.positional(0), "<user-ids>")
 		if err != nil {
 			return nil, err
@@ -273,7 +382,7 @@ func workspaceMemberUpsertCommand() *command {
 	}}
 }
 func workspaceMemberDeleteCommand() *command {
-	return &command{Path: "workspace member delete", Summary: "remove a workspace member", Args: []string{"user-ids"}, Options: []optionSpec{workspaceIDOption()}, Run: func(a *app, inv invocation) (any, error) {
+	return &command{Path: "workspace member delete", Summary: "remove a workspace member", Args: []string{"user-ids"}, Options: []optionSpec{workspaceIDOption()}, Safety: commandSafety{DryRun: true}, Run: func(a *app, inv invocation) (any, error) {
 		users, err := stringArray(inv.positional(0), "<user-ids>")
 		if err != nil {
 			return nil, err
@@ -294,6 +403,7 @@ func teamUpdateCommand() *command {
 
 func teamMemberListCommand() *command {
 	cmd := apiOperation("team member list", "list members across one or more teams", nil, http.MethodPost, staticEndpoint("/v1/teams/members/list"), requestBody, false, csv("--team-ids", "teamIds", "JSON array or comma-separated team ids"))
+	cmd.Safety.DryRun = false // This POST is a read-only batch lookup.
 	old := cmd.Run
 	cmd.Run = func(a *app, inv invocation) (any, error) {
 		payload, err := inv.payload(a)
@@ -317,7 +427,7 @@ func teamMemberListCommand() *command {
 func teamMemberAddCommand() *command    { return teamMemberMutation("add", http.MethodPut) }
 func teamMemberDeleteCommand() *command { return teamMemberMutation("delete", http.MethodDelete) }
 func teamMemberMutation(name, method string) *command {
-	return &command{Path: "team member " + name, Summary: name + " member(s) in a team", Args: []string{"user-ids"}, Options: []optionSpec{requiredOption(str("--team-id", "teamId", "team id")), workspaceIDOption()}, Run: func(a *app, inv invocation) (any, error) {
+	return &command{Path: "team member " + name, Summary: name + " member(s) in a team", Args: []string{"user-ids"}, Options: []optionSpec{requiredOption(str("--team-id", "teamId", "team id")), workspaceIDOption()}, Safety: commandSafety{DryRun: true}, Run: func(a *app, inv invocation) (any, error) {
 		users, err := stringArray(inv.positional(0), "<user-ids>")
 		if err != nil {
 			return nil, err

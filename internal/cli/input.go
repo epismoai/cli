@@ -15,6 +15,7 @@ type optionKind int
 const (
 	kindString optionKind = iota
 	kindInteger
+	kindBoolean
 	kindObject
 	kindObjectSource
 	kindArray
@@ -76,6 +77,12 @@ func parseValue(raw, label string, kind optionKind, stdin io.Reader) (any, error
 		value, err := strconv.Atoi(raw)
 		if err != nil {
 			return nil, &Error{Code: "INVALID_ARGUMENT", Message: fmt.Sprintf("Invalid %s: number expected.", label), ExitCode: 1}
+		}
+		return value, nil
+	case kindBoolean:
+		value, err := strconv.ParseBool(raw)
+		if err != nil {
+			return nil, &Error{Code: "INVALID_ARGUMENT", Message: fmt.Sprintf("Invalid %s: boolean expected.", label), ExitCode: 1}
 		}
 		return value, nil
 	case kindObjectSource:

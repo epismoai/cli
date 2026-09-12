@@ -4467,6 +4467,7 @@
           "playbooks"
         ],
         "summary": "GET /v1/playbooks",
+        "description": "Listing Public Playbooks works without authentication and is free. Supplying query runs metered relevance search and requires OAuth.",
         "parameters": [
           {
             "name": "workspaceId",
@@ -4493,19 +4494,6 @@
             }
           },
           {
-            "name": "preferredLangs",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "pattern": "^[a-z]{2}$"
-              },
-              "maxItems": 5
-            }
-          },
-          {
             "name": "pageSize",
             "in": "query",
             "required": false,
@@ -4521,6 +4509,43 @@
             "required": false,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "preferredLangs",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z]{2}$"
+              },
+              "maxItems": 5
+            }
+          },
+          {
+            "name": "resourceKind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "resourceRef",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includePublic",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -4641,6 +4666,7 @@
           "playbooks"
         ],
         "summary": "POST /v1/playbooks",
+        "description": "Any member of the connected Workspace may create a Playbook owned by it. Members can read and edit workspace-owned Playbooks; making them public and other access changes still require an Owner or Admin.",
         "parameters": [
           {
             "name": "workspaceId",
@@ -4772,6 +4798,168 @@
         }
       }
     },
+    "/v1/playbook-resources": {
+      "get": {
+        "operationId": "getV1PlaybookResources",
+        "tags": [
+          "playbook-resources"
+        ],
+        "summary": "GET /v1/playbook-resources",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includePublic",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaybookResourceListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/playbooks/{playbookId}": {
       "get": {
         "operationId": "getV1PlaybooksPlaybookId",
@@ -4779,6 +4967,7 @@
           "playbooks"
         ],
         "summary": "GET /v1/playbooks/{playbookId}",
+        "description": "Returns the Playbook along with its latest 5 Suggestions (open, applied, or declined; newest first), recent Versions, aliases, and up to 6 public Cases that used it, bundled as one billable Playbook read. Follow suggestionsNextCursor with GET /v1/playbooks/{playbookId}/suggestions for older Suggestions, and casesNextCursor with GET /v1/cases/popular?playbookId={playbookId} for more example Cases.",
         "parameters": [
           {
             "name": "playbookId",
@@ -4811,7 +5000,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PlaybookResponse"
+                  "$ref": "#/components/schemas/PlaybookDetailResponse"
                 }
               }
             }
@@ -5101,8 +5290,7 @@
             "OAuth2": [
               "read"
             ]
-          },
-          {}
+          }
         ],
         "responses": {
           "200": {
@@ -5390,8 +5578,7 @@
             "OAuth2": [
               "read"
             ]
-          },
-          {}
+          }
         ],
         "responses": {
           "200": {
@@ -5501,7 +5688,8 @@
         "tags": [
           "playbooks"
         ],
-        "summary": "DELETE /v1/playbooks/{playbookId}/versions/{versionId}",
+        "summary": "Archive a historical Playbook Version",
+        "description": "Only a Playbook owner can archive a Version. The latest Version cannot be archived.",
         "parameters": [
           {
             "name": "playbookId",
@@ -6219,13 +6407,149 @@
         }
       }
     },
-    "/v1/playbooks/{playbookId}/acl": {
-      "patch": {
-        "operationId": "patchV1PlaybooksPlaybookIdAcl",
+    "/v1/playbooks/{playbookId}/access": {
+      "get": {
+        "operationId": "getV1PlaybooksPlaybookIdAccess",
         "tags": [
           "playbooks"
         ],
-        "summary": "PATCH /v1/playbooks/{playbookId}/acl",
+        "summary": "Get Playbook access",
+        "description": "Returns public/private visibility and explicit editors. Owners are implicit and are not editors.",
+        "parameters": [
+          {
+            "name": "playbookId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaybookAccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "putV1PlaybooksPlaybookIdAccess",
+        "tags": [
+          "playbooks"
+        ],
+        "summary": "Set Playbook access",
+        "description": "Workspace members can read and edit workspace-owned Playbooks. Only the owner (including Workspace Owners/Admins) can manage access, archive, and make a Playbook public. Public grants published read access only.",
         "parameters": [
           {
             "name": "playbookId",
@@ -6256,7 +6580,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdatePlaybookAclRequest"
+                "$ref": "#/components/schemas/SetPlaybookAccessRequest"
               }
             }
           }
@@ -6267,7 +6591,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PlaybookResponse"
+                  "$ref": "#/components/schemas/PlaybookAccessResponse"
                 }
               }
             }
@@ -6365,13 +6689,14 @@
         }
       }
     },
-    "/v1/playbooks/{playbookId}/star": {
-      "put": {
-        "operationId": "putV1PlaybooksPlaybookIdStar",
+    "/v1/playbooks/{playbookId}/owner": {
+      "patch": {
+        "operationId": "patchV1PlaybooksPlaybookIdOwner",
         "tags": [
           "playbooks"
         ],
-        "summary": "PUT /v1/playbooks/{playbookId}/star",
+        "summary": "Set Playbook owner",
+        "description": "Any member may move a personally owned private Playbook into the Workspace this request is connected to. A Workspace-owned Playbook can only move to that Workspace's Owner or the Playbook creator. Workspace-to-Workspace and User-to-User moves are rejected.",
         "parameters": [
           {
             "name": "playbookId",
@@ -6402,7 +6727,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlaybookMutationRequest"
+                "$ref": "#/components/schemas/TransferPlaybookOwnerRequest"
               }
             }
           }
@@ -6413,151 +6738,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EmptyResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "402": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "operationId": "deleteV1PlaybooksPlaybookIdStar",
-        "tags": [
-          "playbooks"
-        ],
-        "summary": "DELETE /v1/playbooks/{playbookId}/star",
-        "parameters": [
-          {
-            "name": "playbookId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "workspaceId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "security": [
-          {
-            "OAuth2": [
-              "write"
-            ]
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PlaybookMutationRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EmptyResponse"
+                  "$ref": "#/components/schemas/PlaybookResponse"
                 }
               }
             }
@@ -6801,34 +6982,24 @@
         }
       }
     },
-    "/v1/me/starred-playbooks": {
-      "get": {
-        "operationId": "getV1MeStarredPlaybooks",
+    "/v1/cases/{caseId}/share": {
+      "post": {
+        "operationId": "postV1CasesCaseIdShare",
         "tags": [
-          "me"
+          "cases"
         ],
-        "summary": "GET /v1/me/starred-playbooks",
+        "summary": "POST /v1/cases/{caseId}/share",
         "parameters": [
           {
-            "name": "workspaceId",
-            "in": "query",
-            "required": false,
+            "name": "caseId",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "pageSize",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100
-            }
-          },
-          {
-            "name": "cursor",
+            "name": "workspaceId",
             "in": "query",
             "required": false,
             "schema": {
@@ -6839,17 +7010,27 @@
         "security": [
           {
             "OAuth2": [
-              "read"
+              "write"
             ]
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateShareTokenRequest"
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful JSON response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PlaybookListResponse"
+                  "$ref": "#/components/schemas/ShareResponse"
                 }
               }
             }
@@ -7536,148 +7717,13 @@
       }
     },
     "/v1/cases": {
-      "post": {
-        "operationId": "postV1Cases",
-        "tags": [
-          "cases"
-        ],
-        "summary": "POST /v1/cases",
-        "parameters": [
-          {
-            "name": "workspaceId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "security": [
-          {
-            "OAuth2": [
-              "write"
-            ]
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StartCaseRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CaseResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "402": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
       "get": {
         "operationId": "getV1Cases",
         "tags": [
           "cases"
         ],
         "summary": "GET /v1/cases",
+        "description": "The caller's work inbox. Requires OAuth. Public Cases are not listed here; open them by id or rank them with GET /v1/cases/popular.",
         "parameters": [
           {
             "name": "workspaceId",
@@ -7835,6 +7881,311 @@
             }
           }
         }
+      },
+      "post": {
+        "operationId": "postV1Cases",
+        "tags": [
+          "cases"
+        ],
+        "summary": "POST /v1/cases",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartCaseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/cases/popular": {
+      "get": {
+        "operationId": "getV1CasesPopular",
+        "tags": [
+          "cases"
+        ],
+        "summary": "GET /v1/cases/popular",
+        "description": "Ranks public Cases that have a non-activity Record. Preferred languages rank first, followed by English and other languages. Within each language tier, ranking is currently distinct non-archived handoff destinations; scores stay internal and the weights may change. This is a homepage walk, not a complete catalogue. Pass playbookId to rank public Cases of that Playbook the same way. Works without authentication and is free. Always the public projection (no starter, assignee, input, or collaborator identities).",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "preferredLangs",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z]{2}$"
+              },
+              "maxItems": 5
+            }
+          },
+          {
+            "name": "playbookId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/v1/cases/{caseId}": {
@@ -7844,6 +8195,7 @@
           "cases"
         ],
         "summary": "GET /v1/cases/{caseId}",
+        "description": "Work collaborators receive the live Case, Tasks, the latest 5 Records (newest first), and the handoff neighborhood. Public-only readers receive the live title, the latest 5 Records, and readable handoffs. Follow recordsNextCursor with GET /v1/cases/{caseId}/records for older Records.",
         "parameters": [
           {
             "name": "caseId",
@@ -7867,7 +8219,8 @@
             "OAuth2": [
               "read"
             ]
-          }
+          },
+          {}
         ],
         "responses": {
           "200": {
@@ -7875,7 +8228,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CaseResponse"
+                  "$ref": "#/components/schemas/CaseDetailResponse"
                 }
               }
             }
@@ -8009,6 +8362,286 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateCaseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/access": {
+      "get": {
+        "operationId": "getV1CasesCaseIdAccess",
+        "tags": [
+          "cases"
+        ],
+        "summary": "GET /v1/cases/{caseId}/access",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseAccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "putV1CasesCaseIdAccess",
+        "tags": [
+          "cases"
+        ],
+        "summary": "PUT /v1/cases/{caseId}/access",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCaseAccessRequest"
               }
             }
           }
@@ -8312,6 +8945,472 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CaseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/handoffs": {
+      "post": {
+        "operationId": "postV1CasesCaseIdHandoffs",
+        "tags": [
+          "cases"
+        ],
+        "summary": "POST /v1/cases/{caseId}/handoffs",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCaseHandoffRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseHandoffResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/handoff-graph": {
+      "get": {
+        "operationId": "getV1CasesCaseIdHandoffGraph",
+        "tags": [
+          "cases"
+        ],
+        "summary": "GET /v1/cases/{caseId}/handoff-graph",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "self",
+                "ancestors",
+                "descendants",
+                "neighbors",
+                "connected"
+              ],
+              "default": "connected"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseHandoffGraphResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/handoff-candidates": {
+      "get": {
+        "operationId": "getV1CasesCaseIdHandoffCandidates",
+        "tags": [
+          "cases"
+        ],
+        "summary": "GET /v1/cases/{caseId}/handoff-candidates",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "incoming",
+                "outgoing"
+              ],
+              "default": "outgoing"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseListResponse"
                 }
               }
             }
@@ -9473,159 +10572,13 @@
         }
       }
     },
-    "/v1/tasks/{taskId}/assignee": {
-      "patch": {
-        "operationId": "patchV1TasksTaskIdAssignee",
-        "tags": [
-          "tasks"
-        ],
-        "summary": "PATCH /v1/tasks/{taskId}/assignee",
-        "parameters": [
-          {
-            "name": "taskId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "workspaceId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "security": [
-          {
-            "OAuth2": [
-              "write"
-            ]
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AssignTaskRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TaskResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "402": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/tasks/{taskId}/close": {
+    "/v1/tasks/{taskId}/status": {
       "post": {
-        "operationId": "postV1TasksTaskIdClose",
+        "operationId": "postV1TasksTaskIdStatus",
         "tags": [
           "tasks"
         ],
-        "summary": "POST /v1/tasks/{taskId}/close",
+        "summary": "POST /v1/tasks/{taskId}/status",
         "parameters": [
           {
             "name": "taskId",
@@ -9656,153 +10609,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CloseTaskRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TaskResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "402": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/tasks/{taskId}/reopen": {
-      "post": {
-        "operationId": "postV1TasksTaskIdReopen",
-        "tags": [
-          "tasks"
-        ],
-        "summary": "POST /v1/tasks/{taskId}/reopen",
-        "parameters": [
-          {
-            "name": "taskId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "workspaceId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "security": [
-          {
-            "OAuth2": [
-              "write"
-            ]
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ReopenTaskRequest"
+                "$ref": "#/components/schemas/SetTaskStatusRequest"
               }
             }
           }
@@ -10080,6 +10887,21 @@
             }
           },
           {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "self",
+                "ancestors",
+                "descendants",
+                "neighbors",
+                "connected"
+              ]
+            }
+          },
+          {
             "name": "taskId",
             "in": "query",
             "required": false,
@@ -10156,7 +10978,8 @@
             "OAuth2": [
               "read"
             ]
-          }
+          },
+          {}
         ],
         "responses": {
           "200": {
@@ -10165,6 +10988,296 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RecordListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/records/{recordId}": {
+      "patch": {
+        "operationId": "patchV1RecordsRecordId",
+        "tags": [
+          "records"
+        ],
+        "summary": "PATCH /v1/records/{recordId}",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRecordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteV1RecordsRecordId",
+        "tags": [
+          "records"
+        ],
+        "summary": "DELETE /v1/records/{recordId}",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteRecordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordResponse"
                 }
               }
             }
@@ -10447,6 +11560,18 @@
             }
           },
           {
+            "name": "view",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "inbox",
+                "sent"
+              ]
+            }
+          },
+          {
             "name": "pageSize",
             "in": "query",
             "required": false,
@@ -10614,6 +11739,18 @@
             "required": false,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "inbox",
+                "sent"
+              ]
             }
           },
           {
@@ -11191,6 +12328,41 @@
       }
     },
     "schemas": {
+      "SetCaseAccessRequest": {
+        "type": "object",
+        "properties": {
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "private",
+              "public"
+            ]
+          },
+          "editors": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "expectedLockVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "visibility",
+          "editors",
+          "expectedLockVersion",
+          "idempotencyKey"
+        ]
+      },
       "CreditPurchaseRequest": {
         "type": "object",
         "properties": {
@@ -11310,15 +12482,37 @@
           "ownerId": {
             "type": "string",
             "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "User account you manage, or the Workspace this request is connected to. Any member of that Workspace may create a Playbook owned by it; making it public and other access changes still require an Owner or Admin."
           },
-          "acl": {
-            "default": [],
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1
-            }
+          "access": {
+            "default": {
+              "visibility": "private",
+              "editors": []
+            },
+            "type": "object",
+            "properties": {
+              "visibility": {
+                "default": "private",
+                "description": "Public permits published reads only; it is not workspace-member visibility. Only an Owner or Admin can make a Playbook public.",
+                "type": "string",
+                "enum": [
+                  "private",
+                  "public"
+                ]
+              },
+              "editors": {
+                "default": [],
+                "description": "Account or Team principal IDs that may edit content. Owners, and every member of a workspace-owned Playbook, are implicit and omitted.",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                }
+              }
+            },
+            "additionalProperties": false
           },
           "definition": {
             "type": "object",
@@ -11386,14 +12580,17 @@
                               "document",
                               "agent",
                               "custom"
-                            ]
+                            ],
+                            "description": "Type of resource referenced by this step."
                           },
                           "ref": {
                             "type": "string",
                             "minLength": 1,
-                            "maxLength": 2048
+                            "maxLength": 2048,
+                            "description": "Stable resource or container reference. For a GitHub-backed resource, use github:owner/repo and put any path inside the repository in selector."
                           },
                           "selector": {
+                            "description": "Optional location or pinned version within ref, such as skills/verification-before-completion or ^1. Do not use a default branch name such as main unless that specific branch is intentionally required.",
                             "anyOf": [
                               {
                                 "type": "string",
@@ -11457,7 +12654,8 @@
           "ownerId",
           "definition",
           "idempotencyKey"
-        ]
+        ],
+        "additionalProperties": false
       },
       "PlaybookMutationRequest": {
         "type": "object",
@@ -11546,14 +12744,17 @@
                               "document",
                               "agent",
                               "custom"
-                            ]
+                            ],
+                            "description": "Type of resource referenced by this step."
                           },
                           "ref": {
                             "type": "string",
                             "minLength": 1,
-                            "maxLength": 2048
+                            "maxLength": 2048,
+                            "description": "Stable resource or container reference. For a GitHub-backed resource, use github:owner/repo and put any path inside the repository in selector."
                           },
                           "selector": {
+                            "description": "Optional location or pinned version within ref, such as skills/verification-before-completion or ^1. Do not use a default branch name such as main unless that specific branch is intentionally required.",
                             "anyOf": [
                               {
                                 "type": "string",
@@ -11707,14 +12908,17 @@
                               "document",
                               "agent",
                               "custom"
-                            ]
+                            ],
+                            "description": "Type of resource referenced by this step."
                           },
                           "ref": {
                             "type": "string",
                             "minLength": 1,
-                            "maxLength": 2048
+                            "maxLength": 2048,
+                            "description": "Stable resource or container reference. For a GitHub-backed resource, use github:owner/repo and put any path inside the repository in selector."
                           },
                           "selector": {
+                            "description": "Optional location or pinned version within ref, such as skills/verification-before-completion or ^1. Do not use a default branch name such as main unless that specific branch is intentionally required.",
                             "anyOf": [
                               {
                                 "type": "string",
@@ -11792,14 +12996,24 @@
           "expectedDraftRevision"
         ]
       },
-      "UpdatePlaybookAclRequest": {
+      "SetPlaybookAccessRequest": {
         "type": "object",
         "properties": {
-          "acl": {
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "private",
+              "public"
+            ]
+          },
+          "editors": {
+            "default": [],
+            "description": "Account or Team principal IDs that may edit content. Owners, and every member of a workspace-owned Playbook, are implicit and omitted.",
             "type": "array",
             "items": {
               "type": "string",
-              "minLength": 1
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
             }
           },
           "idempotencyKey": {
@@ -11809,7 +13023,28 @@
           }
         },
         "required": [
-          "acl",
+          "visibility",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "TransferPlaybookOwnerRequest": {
+        "type": "object",
+        "properties": {
+          "ownerId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "User or Workspace account that should own the Playbook. Any member may move a personally owned private Playbook into the Workspace this request is connected to. A Workspace-owned Playbook can only move to that Workspace's Owner or the Playbook creator."
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "ownerId",
           "idempotencyKey"
         ]
       },
@@ -11897,7 +13132,6 @@
             "additionalProperties": {}
           },
           "acl": {
-            "minItems": 1,
             "type": "array",
             "items": {
               "type": "string",
@@ -11943,7 +13177,6 @@
         "type": "object",
         "properties": {
           "acl": {
-            "minItems": 1,
             "type": "array",
             "items": {
               "type": "string",
@@ -11987,6 +13220,25 @@
         },
         "required": [
           "expectedLockVersion",
+          "idempotencyKey"
+        ]
+      },
+      "CreateCaseHandoffRequest": {
+        "type": "object",
+        "properties": {
+          "toCaseId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "toCaseId",
           "idempotencyKey"
         ]
       },
@@ -12138,30 +13390,6 @@
           "idempotencyKey"
         ]
       },
-      "AssignTaskRequest": {
-        "type": "object",
-        "properties": {
-          "assignedTo": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "expectedLockVersion": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "idempotencyKey": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          }
-        },
-        "required": [
-          "expectedLockVersion",
-          "idempotencyKey"
-        ]
-      },
       "UpdateTaskRequest": {
         "type": "object",
         "properties": {
@@ -12183,6 +13411,19 @@
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "assignedTo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "string",
+                "const": ""
+              }
+            ]
           }
         },
         "required": [
@@ -12190,7 +13431,7 @@
           "idempotencyKey"
         ]
       },
-      "CloseTaskRequest": {
+      "SetTaskStatusRequest": {
         "type": "object",
         "properties": {
           "expectedLockVersion": {
@@ -12203,10 +13444,16 @@
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "closed"
+            ]
+          },
           "outcome": {
             "type": "string",
-            "minLength": 1,
-            "maxLength": 100
+            "maxLength": 64
           },
           "records": {
             "default": [],
@@ -12267,26 +13514,7 @@
         "required": [
           "expectedLockVersion",
           "idempotencyKey",
-          "outcome"
-        ]
-      },
-      "ReopenTaskRequest": {
-        "type": "object",
-        "properties": {
-          "expectedLockVersion": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "idempotencyKey": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          }
-        },
-        "required": [
-          "expectedLockVersion",
-          "idempotencyKey"
+          "status"
         ]
       },
       "AppendCaseRecordRequest": {
@@ -12342,6 +13570,48 @@
         },
         "required": [
           "kind",
+          "idempotencyKey"
+        ]
+      },
+      "UpdateRecordRequest": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 65535
+          },
+          "data": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "idempotencyKey"
+        ]
+      },
+      "DeleteRecordRequest": {
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
           "idempotencyKey"
         ]
       },
@@ -12593,10 +13863,6 @@
           "handle": {
             "type": "string"
           },
-          "accountId": {
-            "type": "string",
-            "format": "uuid"
-          },
           "role": {
             "type": "string"
           }
@@ -12734,6 +14000,10 @@
             "type": "string",
             "format": "uuid"
           },
+          "ownerHandle": {
+            "type": "string",
+            "description": "Public owner handle, included in Playbook lists when available."
+          },
           "ownerId": {
             "type": "string",
             "format": "uuid"
@@ -12744,12 +14014,6 @@
           },
           "projectionRevision": {
             "type": "integer"
-          },
-          "acl": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           },
           "createdBy": {
             "type": "string",
@@ -12769,12 +14033,6 @@
           },
           "latestVersion": {
             "$ref": "#/components/schemas/PlaybookVersion"
-          },
-          "starCount": {
-            "type": "integer"
-          },
-          "starred": {
-            "type": "boolean"
           }
         },
         "additionalProperties": true
@@ -12787,6 +14045,143 @@
         "properties": {
           "playbook": {
             "$ref": "#/components/schemas/Playbook"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PlaybookDetailResponse": {
+        "type": "object",
+        "required": [
+          "playbook",
+          "suggestions",
+          "versions",
+          "aliases",
+          "cases"
+        ],
+        "properties": {
+          "playbook": {
+            "$ref": "#/components/schemas/Playbook"
+          },
+          "suggestions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Suggestion"
+            },
+            "maxItems": 5
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlaybookVersion"
+            }
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Alias"
+            }
+          },
+          "cases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Case"
+            },
+            "maxItems": 6
+          },
+          "suggestionsNextCursor": {
+            "type": "string"
+          },
+          "versionsNextCursor": {
+            "type": "string"
+          },
+          "casesNextCursor": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PlaybookAccessResponse": {
+        "type": "object",
+        "required": [
+          "playbookId",
+          "visibility",
+          "editors"
+        ],
+        "properties": {
+          "playbookId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "private",
+              "public"
+            ]
+          },
+          "editors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResourceMention": {
+        "type": "object",
+        "required": [
+          "stepId",
+          "stepIndex",
+          "resourcePosition"
+        ],
+        "properties": {
+          "stepId": {
+            "type": "string"
+          },
+          "stepIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "resourcePosition": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "selector": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResourceBacklink": {
+        "type": "object",
+        "required": [
+          "playbookId",
+          "versionId",
+          "kind",
+          "normalizedRef",
+          "mentions"
+        ],
+        "properties": {
+          "playbookId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "versionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "normalizedRef": {
+            "type": "string"
+          },
+          "mentions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResourceMention"
+            }
           }
         },
         "additionalProperties": false
@@ -12805,6 +14200,48 @@
           },
           "nextCursor": {
             "type": "string"
+          },
+          "resourceBacklinks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResourceBacklink"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "PlaybookResource": {
+        "type": "object",
+        "required": [
+          "kind",
+          "normalizedRef",
+          "playbookCount"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "normalizedRef": {
+            "type": "string"
+          },
+          "playbookCount": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "PlaybookResourceListResponse": {
+        "type": "object",
+        "required": [
+          "resources"
+        ],
+        "properties": {
+          "resources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlaybookResource"
+            }
           }
         },
         "additionalProperties": false
@@ -12983,7 +14420,7 @@
             "type": "string",
             "format": "uuid"
           },
-          "digest": {
+          "sourcePlaybookTitle": {
             "type": "string"
           },
           "title": {
@@ -13040,6 +14477,33 @@
         },
         "additionalProperties": true
       },
+      "CaseAccessResponse": {
+        "type": "object",
+        "required": [
+          "visibility",
+          "editors",
+          "lockVersion"
+        ],
+        "properties": {
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "public",
+              "private"
+            ]
+          },
+          "editors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "lockVersion": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": false
+      },
       "CaseResponse": {
         "type": "object",
         "required": [
@@ -13048,6 +14512,75 @@
         "properties": {
           "case": {
             "$ref": "#/components/schemas/Case"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CaseDetailResponse": {
+        "type": "object",
+        "required": [
+          "tasks",
+          "records",
+          "recordsScope"
+        ],
+        "properties": {
+          "case": {
+            "$ref": "#/components/schemas/Case"
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Task"
+            }
+          },
+          "tasksNextCursor": {
+            "type": "string"
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Record"
+            },
+            "maxItems": 5
+          },
+          "recordsScope": {
+            "type": "string",
+            "enum": [
+              "self",
+              "ancestors"
+            ]
+          },
+          "recordsNextCursor": {
+            "type": "string"
+          },
+          "handoffGraph": {
+            "$ref": "#/components/schemas/CaseHandoffGraph"
+          },
+          "playbook": {
+            "$ref": "#/components/schemas/Playbook"
+          },
+          "playbookVersion": {
+            "$ref": "#/components/schemas/PlaybookVersion"
+          },
+          "sharedUsers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "username"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "username": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
           }
         },
         "additionalProperties": false
@@ -13066,6 +14599,86 @@
           },
           "nextCursor": {
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CaseHandoff": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fromCaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "toCaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdBy": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": true
+      },
+      "CaseHandoffResponse": {
+        "type": "object",
+        "required": [
+          "handoff"
+        ],
+        "properties": {
+          "handoff": {
+            "$ref": "#/components/schemas/CaseHandoff"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CaseHandoffGraph": {
+        "type": "object",
+        "required": [
+          "rootCaseId",
+          "cases",
+          "handoffs"
+        ],
+        "properties": {
+          "rootCaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "cases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Case"
+            }
+          },
+          "handoffs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CaseHandoff"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "CaseHandoffGraphResponse": {
+        "type": "object",
+        "required": [
+          "graph"
+        ],
+        "properties": {
+          "graph": {
+            "$ref": "#/components/schemas/CaseHandoffGraph"
           }
         },
         "additionalProperties": false
@@ -13128,6 +14741,15 @@
           "closedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "subjectRecordState": {
+            "type": "string",
+            "enum": [
+              "SUBJECT_RECORD_STATE_UNSPECIFIED",
+              "UNCHANGED",
+              "CHANGED",
+              "DELETED"
+            ]
           }
         },
         "additionalProperties": true
@@ -13198,6 +14820,14 @@
             "format": "uuid"
           },
           "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deletedAt": {
             "type": "string",
             "format": "date-time"
           }

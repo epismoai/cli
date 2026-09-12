@@ -81,16 +81,17 @@ func TestRefreshRaceAdoptsCredentialsWrittenByAnotherProcess(t *testing.T) {
 
 func TestCommandSurface(t *testing.T) {
 	expected := strings.Fields(`
-		login logout whoami update
+		login logout whoami update completion doctor examples docs
 		workspace/list workspace/current workspace/use workspace/clear workspace/create workspace/checkout workspace/update workspace/member/list workspace/member/upsert workspace/member/delete
 		team/list team/create team/update team/member/list team/member/add team/member/delete
 		credit/balance credit/checkout token/create token/list token/revoke
-		playbook/search playbook/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/acl playbook/archive playbook/star playbook/unstar playbook/starred playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
-		case/start case/get case/list case/assign case/acl case/update case/close case/reopen
-		case/task/create case/task/list case/record/append case/record/list
-		task/list task/get task/assign task/update task/close task/reopen
+		playbook/init playbook/search playbook/list playbook/resource/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/access/get playbook/access/set playbook/owner playbook/archive playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
+		case/start case/get case/list case/popular case/access/get case/access/set case/share case/assign case/acl case/update case/handoff case/handoff/graph case/handoff/candidate/list case/close case/reopen
+		case/task/create case/task/list case/record/append case/record/list case/record/update case/record/delete
+		record/append record/list record/update record/delete
+		task/create task/list task/get task/update task/set/status
 		playbook/suggestion/create playbook/suggestion/list
-		suggestion/get suggestion/list suggestion/update suggestion/resolve
+		suggestion/create suggestion/get suggestion/list suggestion/update suggestion/resolve
 	`)
 	actual := make([]string, 0, len(buildCommands()))
 	for _, command := range buildCommands() {
@@ -113,7 +114,10 @@ func TestPlaybookSearchRequest(t *testing.T) {
 		if got := request.Header.Get("X-Epismo-Source"); got != "cli" {
 			t.Errorf("source = %q", got)
 		}
-		_, _ = io.WriteString(w, `{"playbooks":[]}`)
+		if got := request.Header.Get("X-Epismo-Anonymous-Id"); !uuidPattern.MatchString(got) {
+			t.Errorf("anonymous id = %q", got)
+		}
+		_, _ = io.WriteString(w, `{"playbooks":[{"createdAt":"2026-01-01T00:00:00Z","owner":{"accountId":"account-1"}}],"resourceBacklinks":[{"playbookId":"11111111-1111-4111-8111-111111111111","versionId":"22222222-2222-4222-8222-222222222222","kind":"cli","normalizedRef":"github:epismoai/cli","mentions":[{"stepId":"ABCD","stepIndex":1,"resourcePosition":0}]}]}`)
 	}))
 	defer server.Close()
 	t.Setenv("EPISMO_API_URL", server.URL)
@@ -127,6 +131,67 @@ func TestPlaybookSearchRequest(t *testing.T) {
 	}
 	if requestPath != "/v1/playbooks?category=learning&pageSize=20&preferredLangs=ja&preferredLangs=fr&query=pb%3Ademo" {
 		t.Fatalf("request path = %q", requestPath)
+	}
+	if !strings.Contains(stdout.String(), `"created_at"`) || !strings.Contains(stdout.String(), `"account_id"`) || strings.Contains(stdout.String(), `"createdAt"`) || strings.Contains(stdout.String(), `"accountId"`) {
+		t.Fatalf("stdout does not use snake_case recursively: %s", stdout.String())
+	}
+	if !strings.Contains(stdout.String(), `"resource_backlinks"`) || !strings.Contains(stdout.String(), `"step_index"`) || !strings.Contains(stdout.String(), `"resource_position"`) {
+		t.Fatalf("stdout does not preserve resource backlinks: %s", stdout.String())
+	}
+}
+
+func TestPlaybookResourceCommands(t *testing.T) {
+	var requestPath string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		requestPath = request.URL.RequestURI()
+		_, _ = io.WriteString(w, `{"resources":[]}`)
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_TOKEN", "test-token")
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+
+	var stdout, stderr bytes.Buffer
+	exitCode := Main([]string{"playbook", "resource", "list", "--kind", "cli", "--page-size", "20"}, "test", strings.NewReader(""), &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
+	}
+	if requestPath != "/v1/playbook-resources?kind=cli&pageSize=20" {
+		t.Fatalf("request path = %q", requestPath)
+	}
+}
+
+func TestPlaybookAccessCommandsUsePublicTerminology(t *testing.T) {
+	var method, requestPath string
+	var body map[string]any
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		method = request.Method
+		requestPath = request.URL.Path
+		_ = json.NewDecoder(request.Body).Decode(&body)
+		_, _ = io.WriteString(w, `{"playbookId":"playbook-1","visibility":"public","editors":["team-1"]}`)
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_TOKEN", "test-token")
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+
+	var stdout, stderr bytes.Buffer
+	exitCode := Main([]string{"playbook", "access", "set", "playbook-1", "--visibility", "public", "--editors", "team-1,user-1", "--yes"}, "test", strings.NewReader(""), &stdout, &stderr)
+	if exitCode != 0 {
+		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
+	}
+	if method != http.MethodPut || requestPath != "/v1/playbooks/playbook-1/access" {
+		t.Fatalf("request = %s %s", method, requestPath)
+	}
+	if _, exists := body["acl"]; exists {
+		t.Fatalf("request exposed internal ACL terminology: %#v", body)
+	}
+	if body["visibility"] != "public" {
+		t.Fatalf("visibility = %#v", body["visibility"])
+	}
+	editors, _ := body["editors"].([]any)
+	if len(editors) != 2 || editors[0] != "team-1" || editors[1] != "user-1" {
+		t.Fatalf("editors = %#v", body["editors"])
 	}
 }
 
@@ -225,9 +290,11 @@ func TestPersonalAndParentScopedListsSetImplicitFilters(t *testing.T) {
 	commands := [][]string{
 		{"task", "list"},
 		{"suggestion", "list"},
+		{"suggestion", "list", "--view", "inbox"},
 		{"case", "task", "list", "case-1"},
 		{"case", "record", "list", "case-1"},
 		{"playbook", "suggestion", "list", "playbook-1"},
+		{"playbook", "suggestion", "list", "playbook-1", "--view", "inbox"},
 	}
 	for _, args := range commands {
 		var stdout, stderr bytes.Buffer
@@ -239,9 +306,11 @@ func TestPersonalAndParentScopedListsSetImplicitFilters(t *testing.T) {
 	want := []string{
 		"/v1/tasks?assignedTo=me",
 		"/v1/suggestions?authorId=me",
+		"/v1/suggestions?view=inbox",
 		"/v1/cases/case-1/tasks",
 		"/v1/cases/case-1/records?order=desc",
 		"/v1/playbooks/playbook-1/suggestions",
+		"/v1/playbooks/playbook-1/suggestions?view=inbox",
 	}
 	if !reflect.DeepEqual(requestURIs, want) {
 		t.Fatalf("request URIs = %#v, want %#v", requestURIs, want)
@@ -285,7 +354,7 @@ func TestUnsupportedOperationsDoNotAdvertiseIdempotency(t *testing.T) {
 		tokenCreateCommand(),
 	}
 	for _, cmd := range commands {
-		if cmd.Mutation {
+		if cmd.Safety.IdempotencyKey {
 			t.Errorf("%s unexpectedly marked as an idempotent mutation", cmd.Path)
 		}
 		for _, option := range baseOptions(cmd) {
@@ -364,7 +433,7 @@ func TestRequiredFieldsCanComeFromInputFile(t *testing.T) {
 	t.Setenv("EPISMO_TOKEN", "test-token")
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	inputPath := filepath.Join(t.TempDir(), "request.json")
-	if err := os.WriteFile(inputPath, []byte(`{"expectedLockVersion":2,"outcome":"completed"}`), 0o600); err != nil {
+	if err := os.WriteFile(inputPath, []byte(`{"expected_lock_version":2,"outcome":"completed"}`), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -379,7 +448,7 @@ func TestRequiredFieldsCanComeFromInputFile(t *testing.T) {
 	stdout.Reset()
 	stderr.Reset()
 	exitCode = Main([]string{"case", "close", "case-1", "--input", `{"outcome":"completed"}`}, "test", strings.NewReader(""), &stdout, &stderr)
-	if exitCode != 1 || !strings.Contains(stderr.String(), `"code": "MISSING_OPTION_VALUE"`) {
+	if exitCode != 1 || !strings.Contains(stderr.String(), `"code":"MISSING_OPTION_VALUE"`) {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
 }
@@ -472,6 +541,37 @@ func TestWorkspaceCreateIsNotScoped(t *testing.T) {
 	}
 }
 
+func TestWorkspaceCreateKeepsCheckoutFailureDomainSpecific(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		switch request.URL.Path {
+		case "/v1/workspaces":
+			_, _ = io.WriteString(w, `{"workspace":{"id":"workspace-1","handle":"team"}}`)
+		case "/v1/workspaces/workspace-1/checkout":
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_, _ = io.WriteString(w, `{"error":"checkout_unavailable"}`)
+		default:
+			t.Errorf("unexpected path = %q", request.URL.Path)
+		}
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+	t.Setenv("EPISMO_TOKEN", "test-token")
+
+	var stdout, stderr bytes.Buffer
+	exit := Main([]string{"workspace", "create", "--handle", "team"}, "test", strings.NewReader(""), &stdout, &stderr)
+	var response map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &response); err != nil {
+		t.Fatalf("stdout is not JSON: %s: %v", stdout.String(), err)
+	}
+	checkoutError, _ := response["checkout_error"].(map[string]any)
+	_, hasTopLevelHint := response["hint"]
+	_, hasPartialStatus := response["partial_success"]
+	if exit != 0 || !strings.HasPrefix(stringField(checkoutError, "hint"), "Retry with") || hasTopLevelHint || hasPartialStatus {
+		t.Fatalf("exit = %d, stdout = %s, stderr = %s", exit, stdout.String(), stderr.String())
+	}
+}
+
 func TestWorkspaceSelectionLifecycle(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
 		if request.URL.Path != "/v1/workspaces" {
@@ -498,13 +598,13 @@ func TestWorkspaceSelectionLifecycle(t *testing.T) {
 
 	stdout.Reset()
 	stderr.Reset()
-	if exit := Main([]string{"workspace", "current"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 || !strings.Contains(stdout.String(), `"id": "workspace-1"`) || !strings.Contains(stdout.String(), `"source": "local-config"`) {
+	if exit := Main([]string{"workspace", "current"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 || !strings.Contains(stdout.String(), `"id": "workspace-1"`) || !strings.Contains(stdout.String(), `"source": "local_config"`) {
 		t.Fatalf("current exit = %d, stdout = %s, stderr = %s", exit, stdout.String(), stderr.String())
 	}
 
 	stdout.Reset()
 	stderr.Reset()
-	if exit := Main([]string{"workspace", "clear"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 || !strings.Contains(stdout.String(), `"cleared": true`) {
+	if exit := Main([]string{"workspace", "clear"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 || !strings.Contains(stdout.String(), `"cleared": true`) || !strings.Contains(stdout.String(), `"previous_workspace"`) || !strings.Contains(stdout.String(), `"account_id": "account-1"`) {
 		t.Fatalf("clear exit = %d, stdout = %s, stderr = %s", exit, stdout.String(), stderr.String())
 	}
 	config, err = readConfig()
@@ -523,7 +623,7 @@ func TestWorkspaceUseRejectsInaccessibleWorkspace(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	var stdout, stderr bytes.Buffer
 	exit := Main([]string{"workspace", "use", "missing"}, "test", strings.NewReader(""), &stdout, &stderr)
-	if exit != 1 || !strings.Contains(stderr.String(), `"code": "WORKSPACE_NOT_FOUND"`) {
+	if exit != 1 || !strings.Contains(stderr.String(), `"code":"WORKSPACE_NOT_FOUND"`) {
 		t.Fatalf("exit = %d, stderr = %s", exit, stderr.String())
 	}
 }
@@ -540,7 +640,7 @@ func TestHTTPErrorIsStructured(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	var stdout, stderr bytes.Buffer
 	exit := Main([]string{"credit", "balance"}, "test", strings.NewReader(""), &stdout, &stderr)
-	if exit != 1 || !strings.Contains(stderr.String(), `"code": "RATE_LIMITED"`) || !strings.Contains(stderr.String(), `"retryAfter": "10"`) || !strings.Contains(stderr.String(), `"apiDetails"`) || !strings.Contains(stderr.String(), `"quantity"`) {
+	if exit != 1 || !strings.Contains(stderr.String(), `"code":"RATE_LIMITED"`) || !strings.Contains(stderr.String(), `"retry_after":"10"`) || !strings.Contains(stderr.String(), `"api_details"`) || !strings.Contains(stderr.String(), `"quantity"`) {
 		t.Fatalf("exit = %d, stderr = %s", exit, stderr.String())
 	}
 }
@@ -586,7 +686,7 @@ func TestPaymentRequiredError(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	var stdout, stderr bytes.Buffer
 	exit := Main([]string{"credit", "balance"}, "test", strings.NewReader(""), &stdout, &stderr)
-	if exit != 1 || !strings.Contains(stderr.String(), `"code": "PAYMENT_REQUIRED"`) {
+	if exit != 1 || !strings.Contains(stderr.String(), `"code":"PAYMENT_REQUIRED"`) {
 		t.Fatalf("exit = %d, stderr = %s", exit, stderr.String())
 	}
 }
@@ -624,5 +724,88 @@ func TestParseJSONRejectsTrailingData(t *testing.T) {
 		if _, err := parseJSON([]byte(input), "--input"); err == nil {
 			t.Fatalf("parseJSON(%q) accepted trailing data", input)
 		}
+	}
+}
+
+func TestConvenienceAliases(t *testing.T) {
+	var requestedPath string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		requestedPath = request.URL.Path
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	defer server.Close()
+
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_TOKEN", "test-token")
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+
+	tests := []struct {
+		args     []string
+		wantPath string
+	}{
+		{[]string{"task", "create", "case-123", "--title", "test"}, "/v1/cases/case-123/tasks"},
+		{[]string{"task", "create", "--case-id", "case-123", "--title", "test"}, "/v1/cases/case-123/tasks"},
+		{[]string{"record", "append", "case-123", "--content", "note"}, "/v1/cases/case-123/records"},
+		{[]string{"record", "append", "--case-id", "case-123", "--content", "note"}, "/v1/cases/case-123/records"},
+		{[]string{"record", "list", "case-123"}, "/v1/cases/case-123/records"},
+		{[]string{"record", "list", "--case-id", "case-123"}, "/v1/cases/case-123/records"},
+		{[]string{"record", "update", "record-123", "--content", "edited"}, "/v1/records/record-123"},
+		{[]string{"record", "delete", "record-123"}, "/v1/records/record-123"},
+		{[]string{"case", "record", "update", "record-123", "--content", "edited"}, "/v1/records/record-123"},
+		{[]string{"case", "record", "delete", "record-123"}, "/v1/records/record-123"},
+		{[]string{"suggestion", "create", "pb-123", "--title", "sug"}, "/v1/playbooks/pb-123/suggestions"},
+		{[]string{"suggestion", "create", "--playbook-id", "pb-123", "--title", "sug"}, "/v1/playbooks/pb-123/suggestions"},
+	}
+
+	for _, tt := range tests {
+		requestedPath = ""
+		var stdout, stderr bytes.Buffer
+		exit := Main(tt.args, "test", strings.NewReader(""), &stdout, &stderr)
+		if exit != 0 || requestedPath != tt.wantPath {
+			t.Errorf("args=%v exit=%d path=%q, want %q; stderr=%s", tt.args, exit, requestedPath, tt.wantPath, stderr.String())
+		}
+	}
+}
+
+func TestPublicCaseReadsWithoutLogin(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		args     []string
+		path     string
+		response string
+	}{
+		{"records", []string{"case", "record", "list", "case-1", "--scope", "self", "--cursor", "older"}, "/v1/cases/case-1/records?cursor=older&order=desc&scope=self", `{"records":[]}`},
+		{"handoffs", []string{"case", "handoff", "graph", "case-1", "--scope", "neighbors"}, "/v1/cases/case-1/handoff-graph?scope=neighbors", `{"graph":{"cases":[],"handoffs":[]}}`},
+		{"popular", []string{"case", "popular", "--playbook-id", "playbook-1", "--lang", "ja,en"}, "/v1/cases/popular?playbookId=playbook-1&preferredLangs=ja&preferredLangs=en", `{"cases":[]}`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			calls := 0
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+				calls++
+				if got := request.URL.RequestURI(); got != tc.path {
+					t.Errorf("path = %q, want %q", got, tc.path)
+				}
+				if got := request.Header.Get("Authorization"); got != "" {
+					t.Errorf("authorization = %q", got)
+				}
+				if got := request.Header.Get("X-Epismo-Anonymous-Id"); !uuidPattern.MatchString(got) {
+					t.Errorf("anonymous id = %q", got)
+				}
+				_, _ = io.WriteString(w, tc.response)
+			}))
+			defer server.Close()
+			t.Setenv("EPISMO_API_URL", server.URL)
+			t.Setenv("EPISMO_TOKEN", "")
+			t.Setenv("EPISMO_WORKSPACE", "")
+			t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+			var stdout, stderr bytes.Buffer
+			if code := Main(tc.args, "test", strings.NewReader(""), &stdout, &stderr); code != 0 {
+				t.Fatalf("exit = %d, stderr = %s", code, stderr.String())
+			}
+			if calls != 1 {
+				t.Fatalf("requests = %d, want 1", calls)
+			}
+		})
 	}
 }
