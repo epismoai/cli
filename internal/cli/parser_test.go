@@ -56,7 +56,7 @@ func TestParseInvocationErrors(t *testing.T) {
 		{name: "invalid integer", args: []string{"id", "--count", "many"}, code: "INVALID_ARGUMENT"},
 		{name: "invalid choice", args: []string{"id", "--choice", "c"}, code: "INVALID_ARGUMENT"},
 		{name: "missing positional", args: nil, code: "MISSING_ARGUMENT"},
-		{name: "extra positional", args: []string{"id", "extra"}, code: "COMMAND_ERROR"},
+		{name: "extra positional", args: []string{"id", "extra"}, code: "UNEXPECTED_ARGUMENT"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -120,5 +120,12 @@ func TestHelpFlagIsNotMistakenForOptionValue(t *testing.T) {
 	}
 	if containsHelpFlag(cmd, []string{"--title", "-h"}) {
 		t.Fatal("-h used as an option value was mistaken for help")
+	}
+}
+
+func TestHelpFlagAfterBooleanOption(t *testing.T) {
+	cmd := playbookCommands()[1]
+	if !containsHelpFlag(cmd, []string{"--all", "--help"}) {
+		t.Fatal("--help after a boolean option was not recognized")
 	}
 }
