@@ -40,7 +40,8 @@ func enrichCommands(commands []*command) []*command {
 		"case popular":       {"epismo case popular"},
 		"case handoff":       {"epismo case handoff SALES_CASE_ID --to-case-id ENGINEERING_CASE_ID", "epismo case handoff ENGINEERING_CASE_ID --from-case-id SALES_CASE_ID"},
 		"task set status":    {"epismo task set status TASK_ID --status closed --outcome approved --lock-version LOCK_VERSION"},
-		"case record append": {`epismo case record append CASE_ID --kind handoff --origin agent --content 'Goal: team invitations. Decision: reuse existing email flow. Open: expiry behavior. Next: inspect invitation code.'`, "epismo case record append CASE_ID --input @record.json"},
+		"case record append": {`epismo case record append CASE_ID --kind note --origin agent --content 'Goal: team invitations. Decision: reuse existing email flow. Open: expiry behavior. Next: inspect invitation code.'`, "epismo case record append CASE_ID --input @record.json"},
+		"case review":        {"epismo case review CASE_ID"},
 		"case record update": {`epismo case record update RECORD_ID --content 'Updated decision'`},
 		"case record delete": {"epismo case record delete RECORD_ID"},
 		"workspace list":     {"epismo workspace list --output table", "epismo --workspace acme workspace member list"},
@@ -115,7 +116,7 @@ func doctorCommand() *command {
 
 func examplesCommand() *command {
 	return &command{Path: "examples", Summary: "show common Epismo workflows", Run: func(_ *app, _ invocation) (any, error) {
-		return map[string]any{"examples": []any{"epismo login", "epismo case start --title 'Team invitation design'", "epismo case record append CASE_ID --kind handoff --origin agent --input @context.json", "epismo case list --assigned-to me --status open", "epismo case get CASE_ID", "epismo playbook list"}}, nil
+		return map[string]any{"examples": []any{"epismo login", "epismo case start --title 'Team invitation design'", "epismo case record append CASE_ID --kind note --origin agent --input @context.json", "epismo case list --assigned-to me --status open", "epismo case get CASE_ID", "epismo playbook list"}}, nil
 	}}
 }
 

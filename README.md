@@ -78,7 +78,7 @@ Start a Case, append timeline Records, connect dependent workflows, and explore 
 
 ```sh
 epismo case start --title "Customer Onboarding"
-epismo case record append CASE_ID --kind result --content "Completed setup"
+epismo case record append CASE_ID --kind output --content "Completed setup"
 epismo case record update RECORD_ID --content "Revised setup notes"
 epismo case record delete RECORD_ID
 epismo case handoff FIRST_CASE_ID --to-case-id SECOND_CASE_ID
@@ -153,7 +153,7 @@ Workspace references accept an exact ID or unique handle. The effective workspac
 
 `epismo login` opens a browser-based OAuth login. With `--email`, it automatically uses your organization SSO when available, otherwise it prompts for an email code.
 
-`epismo playbook list`, UUID-based `epismo playbook get`, `epismo case get`, `epismo case popular`, `epismo case record list`, and `epismo case handoff graph` work before login for Public Playbooks and Public Cases. Public Case reads expose the current title, Records, and readable handoffs; Tasks, assignment, input, and collaborator identities remain restricted to work collaborators. `case get` includes the latest five Records; pass its `records_next_cursor` to `case record list --cursor` with `--scope self` for older public Records. Use `case popular --playbook-id <id> --lang ja,en` to filter discovery. The CLI creates a stable random `anonymousId` in its config for analytics and fair-use rate limiting; it is not an authentication credential. Search, aliases, private data, live Case work, and writes still require login.
+`epismo playbook list`, UUID-based `epismo playbook get`, `epismo case get`, `epismo case popular`, `epismo case record list`, and `epismo case handoff graph` work before login for Public Playbooks and Public Cases. Public Case reads expose the current title, input, Records, and readable handoffs; Tasks, assignment, and collaborator identities remain restricted to work collaborators. `case get` includes the latest five Records; pass its `records_next_cursor` to `case record list --cursor` with `--scope self` for older public Records. Use `case popular --playbook-id <id> --lang ja,en` to filter discovery. The CLI creates a stable random `anonymousId` in its config for analytics and fair-use rate limiting; it is not an authentication credential. Search, aliases, private data, live Case work, and writes still require login.
 
 For CI or other non-interactive use, create a workspace-scoped token and pass it with `EPISMO_TOKEN`:
 

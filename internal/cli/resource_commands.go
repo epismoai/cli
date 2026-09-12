@@ -153,7 +153,7 @@ func addAliasOwner(a *app, ctx executionContext, payload map[string]any) error {
 }
 
 func caseCommands() []*command {
-	start := apiOperation("case start", "start a research, implementation, planning, or review effort; omit --version-id without a Playbook. Reuse an existing Case for the same goal, then save context with case record append", nil, http.MethodPost, staticEndpoint("/v1/cases"), requestBody, true, str("--version-id", "versionId", "Playbook Version ID"), str("--title", "title", "Case title"), object("--case-input", "input", "Case input JSON object"), csv("--acl", "acl", "comma-separated ACL principals"))
+	start := apiOperation("case start", "start a research, implementation, planning, or review effort; omit --version-id without a Playbook. Reuse an existing Case for the same goal, then save context with case record append", nil, http.MethodPost, staticEndpoint("/v1/cases"), requestBody, true, str("--version-id", "versionId", "Playbook Version ID"), str("--title", "title", "Case title"), object("--case-input", "input", "Case input JSON object"), csv("--acl", "acl", "comma-separated ACL principals"), boolOption("--auto-review", "autoReview", "when true, appending an OUTPUT Record enqueues a platform review charged to this Case's billing account captured at start"))
 	get := publicApiOperation("case get", "read saved Case context before continuing; pass the UUID from its URL. Check goals, constraints, decisions, artifacts, and next steps. Public Cases return published content without login; this does not restore an agent session", []string{"case-id"}, http.MethodGet, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) }, requestNone)
 	list := apiOperation("case list", "find collaborator-accessible Cases to resume, most recently updated first; match the intended goal before case get, and ask if ambiguous", nil, http.MethodGet, staticEndpoint("/v1/cases"), requestQuery, false, append(pagingOptions(), str("--assigned-to", "assignedTo", "only Cases assigned to this account"), choice("--status", "status", "Case status", "open", "closed"))...)
 	popular := publicApiOperation("case popular", "rank public Cases for discovery", nil, http.MethodGet, staticEndpoint("/v1/cases/popular"), requestQuery, append(pagingOptions(), str("--playbook-id", "playbookId", "only Cases started from this Playbook"), csv("--lang", "preferredLangs", "preferred ISO 639-1 languages, in order"))...)
@@ -162,10 +162,11 @@ func caseCommands() []*command {
 	share := apiOperation("case share", "create a share link that redirects to the Case page; Case ACLs still apply", []string{"case-id"}, http.MethodPost, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/share" }, requestBody, true)
 	assign := lockedMutation("case assign", "change which account is responsible for a Case", "case-id", http.MethodPatch, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/assignee" }, requiredOption(str("--assigned-to", "assignedTo", "account responsible for the Case")))
 	acl := lockedMutation("case acl", "replace a Case ACL", "case-id", http.MethodPatch, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/acl" }, requiredOption(csv("--acl", "acl", "comma-separated ACL principals")))
-	update := lockedMutation("case update", "update editable Case fields", "case-id", http.MethodPatch, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) }, str("--title", "title", "Case title"))
+	update := lockedMutation("case update", "update editable Case fields; any work collaborator can retitle or change autoReview", "case-id", http.MethodPatch, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) }, str("--title", "title", "Case title"), boolOption("--auto-review", "autoReview", "when set, turn OUTPUT reviews on or off; charges still use the Case billing account captured at start"))
+	review := apiOperation("case review", "queue a platform review of this open Case's shared Records and Tasks and return immediately. Poll case record list with kinds=review or wait for case_reviewed; replay the same idempotency key after completion to receive the REVIEW Record. Current assignee only. Distinct from an APPROVAL Task. Uses an AI model; credits are charged to the Case billing account captured at start", []string{"case-id"}, http.MethodPost, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/review" }, requestBody, true)
 	close := lockedMutation("case close", "close a Case", "case-id", http.MethodPost, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/close" }, choice("--outcome", "outcome", "Case outcome", "completed", "cancelled", "abandoned"), array("--records", "records", "JSON array of final Records"))
 	reopen := lockedMutation("case reopen", "reopen a closed Case", "case-id", http.MethodPost, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/reopen" })
-	return []*command{start, get, list, popular, accessGet, accessSet, share, assign, acl, update, close, reopen}
+	return []*command{start, get, list, popular, accessGet, accessSet, share, assign, acl, update, review, close, reopen}
 }
 
 func caseHandoffCommands() []*command {
@@ -224,9 +225,9 @@ func prepareCaseHandoff(inv invocation) (invocation, error) {
 }
 
 func caseTaskCommands() []*command {
-	create := apiOperation("case task create", "create a work or review Task in a Case", []string{"case-id"}, http.MethodPost, func(i invocation) string {
+	create := apiOperation("case task create", "create a work or approval Task in a Case", []string{"case-id"}, http.MethodPost, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/tasks"
-	}, requestBody, true, choice("--kind", "kind", "Task kind", "work", "review"), str("--title", "title", "Task title"), str("--instructions", "instructions", "Task instructions"), str("--source-step-id", "sourceStepId", "four-character Step ID"), str("--assigned-to", "assignedTo", "Task assignee"), str("--subject-record-id", "subjectRecordId", "Record under review"))
+	}, requestBody, true, choice("--kind", "kind", "Task kind", "work", "approval"), str("--title", "title", "Task title"), str("--instructions", "instructions", "Task instructions"), str("--source-step-id", "sourceStepId", "four-character Step ID"), str("--assigned-to", "assignedTo", "Task assignee"), str("--subject-record-id", "subjectRecordId", "Record this APPROVAL Task is checking"))
 	listOptions := append(pagingOptions(), choice("--status", "status", "Task status", "open", "closed"))
 	list := apiOperation("case task list", "list Tasks in a Case", []string{"case-id"}, http.MethodGet, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/tasks"
@@ -235,16 +236,16 @@ func caseTaskCommands() []*command {
 }
 
 func caseRecordCommands() []*command {
-	appendRecord := apiOperation("case record append", "save decisions, findings, feedback, or continuation context in an open Case. Include goal, constraints, agreed decisions versus proposals, open questions, artifact references, and next step as relevant; identify superseded decisions. Do not save secrets or raw transcripts", []string{"case-id"}, http.MethodPost, func(i invocation) string {
+	appendRecord := apiOperation("case record append", "save decisions, findings, feedback, or continuation context in an open Case. kind is closed: note (commentary, a decision, or a handoff) or output (a durable deliverable; appending one can trigger a review). review and activity are server-only. Include goal, constraints, agreed decisions versus proposals, open questions, artifact references, and next step as relevant. Do not save secrets or raw transcripts", []string{"case-id"}, http.MethodPost, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/records"
-	}, requestBody, true, str("--task-id", "taskId", "Task this Record belongs to"), str("--source-step-id", "sourceStepId", "four-character Step ID"), str("--kind", "kind", "Record kind"), str("--content", "content", "Record content"), object("--data", "data", "Record data JSON object"), choice("--origin", "origin", "Record origin", "user", "agent"), str("--client-name", "clientName", "client name"), str("--client-version", "clientVersion", "client version"))
-	listOptions := append(pagingOptions(), choice("--scope", "scope", "handoff scope", "self", "ancestors", "descendants", "neighbors", "connected"), str("--task-id", "taskId", "Task ID"), str("--created-by", "createdBy", "creator Account ID or me"), csv("--kinds", "kinds", "comma-separated Record kinds"), csv("--origins", "origins", "comma-separated origins"), csv("--acl", "acl", "ACL principals"), defaultOption(choice("--order", "order", "sort order", "asc", "desc"), "desc"))
+	}, requestBody, true, str("--task-id", "taskId", "Task this Record belongs to"), str("--source-step-id", "sourceStepId", "four-character Step ID"), choice("--kind", "kind", "Record kind; result is accepted as output", "note", "output", "result"), str("--content", "content", "Record content"), object("--data", "data", "Record data JSON object"), choice("--origin", "origin", "Record origin", "user", "agent"), str("--client-name", "clientName", "client name"), str("--client-version", "clientVersion", "client version"))
+	listOptions := append(pagingOptions(), choice("--scope", "scope", "handoff scope", "self", "ancestors", "descendants", "neighbors", "connected"), str("--task-id", "taskId", "Task ID"), str("--created-by", "createdBy", "creator Account ID or me"), csv("--kinds", "kinds", "comma-separated Record kinds (note, output, review, activity; result and autoreview are accepted aliases)"), csv("--origins", "origins", "comma-separated origins"), csv("--acl", "acl", "ACL principals"), defaultOption(choice("--order", "order", "sort order", "asc", "desc"), "desc"))
 	list := publicApiOperation("case record list", "read saved decisions and progress in a Case; follow pagination for additional context and distinguish current decisions from superseded proposals", []string{"case-id"}, http.MethodGet, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/records"
 	}, requestQuery, listOptions...)
 	update := apiOperation("case record update", "edit a Record you created. Kind, content, and structured data may change; task and provenance stay fixed", []string{"record-id"}, http.MethodPatch, func(i invocation) string {
 		return "/v1/records/" + escaped(i.positional(0))
-	}, requestBody, true, str("--kind", "kind", "Record kind"), str("--content", "content", "Record content"), object("--data", "data", "Record data JSON object"))
+	}, requestBody, true, choice("--kind", "kind", "Record kind; result is accepted as output", "note", "output", "result"), str("--content", "content", "Record content"), object("--data", "data", "Record data JSON object"))
 	deleteRecord := apiOperation("case record delete", "redact a Record you created. The id remains as a tombstone for references", []string{"record-id"}, http.MethodDelete, func(i invocation) string {
 		return "/v1/records/" + escaped(i.positional(0))
 	}, requestBody, true)
@@ -257,10 +258,10 @@ func lockedMutation(path, summary, arg, method string, endpoint func(invocation)
 }
 
 func taskCommands() []*command {
-	create := apiOperation("task create", "create a work or review Task in a Case", nil, http.MethodPost, func(i invocation) string {
+	create := apiOperation("task create", "create a work or approval Task in a Case", nil, http.MethodPost, func(i invocation) string {
 		caseID := strings.TrimSpace(i.text("caseId"))
 		return "/v1/cases/" + escaped(caseID) + "/tasks"
-	}, requestBody, true, str("--case-id", "caseId", "Case ID"), choice("--kind", "kind", "Task kind", "work", "review"), str("--title", "title", "Task title"), str("--instructions", "instructions", "Task instructions"), str("--source-step-id", "sourceStepId", "four-character Step ID"), str("--assigned-to", "assignedTo", "Task assignee"), str("--subject-record-id", "subjectRecordId", "Record under review"))
+	}, requestBody, true, str("--case-id", "caseId", "Case ID"), choice("--kind", "kind", "Task kind", "work", "approval"), str("--title", "title", "Task title"), str("--instructions", "instructions", "Task instructions"), str("--source-step-id", "sourceStepId", "four-character Step ID"), str("--assigned-to", "assignedTo", "Task assignee"), str("--subject-record-id", "subjectRecordId", "Record this APPROVAL Task is checking"))
 	create.Prepare = requireField("caseId", "Pass --case-id <case-id> or use `epismo case task create <case-id>`.")
 	listOptions := append(pagingOptions(), str("--case-id", "caseId", "Case ID"), str("--assigned-to", "assignedTo", "assignee Account ID or me"), choice("--status", "status", "Task status", "open", "closed"))
 	list := &command{Path: "task list", Summary: "list your assigned Tasks across Cases", Options: listOptions, Input: &inputSpec{Help: "query-parameters JSON object, @file, or - for stdin"}, Run: func(a *app, inv invocation) (any, error) {
@@ -287,9 +288,9 @@ func recordCommands() []*command {
 	appendRecord := apiOperation("record append", "append a Record to a Case", nil, http.MethodPost, func(i invocation) string {
 		caseID := strings.TrimSpace(i.text("caseId"))
 		return "/v1/cases/" + escaped(caseID) + "/records"
-	}, requestBody, true, str("--case-id", "caseId", "Case ID"), str("--task-id", "taskId", "Task this Record belongs to"), str("--source-step-id", "sourceStepId", "four-character Step ID"), str("--kind", "kind", "Record kind"), str("--content", "content", "Record content"), object("--data", "data", "Record data JSON object"), choice("--origin", "origin", "Record origin", "user", "agent"), str("--client-name", "clientName", "client name"), str("--client-version", "clientVersion", "client version"))
+	}, requestBody, true, str("--case-id", "caseId", "Case ID"), str("--task-id", "taskId", "Task this Record belongs to"), str("--source-step-id", "sourceStepId", "four-character Step ID"), choice("--kind", "kind", "Record kind; result is accepted as output", "note", "output", "result"), str("--content", "content", "Record content"), object("--data", "data", "Record data JSON object"), choice("--origin", "origin", "Record origin", "user", "agent"), str("--client-name", "clientName", "client name"), str("--client-version", "clientVersion", "client version"))
 	appendRecord.Prepare = requireField("caseId", "Pass --case-id <case-id> or use `epismo case record append <case-id>`.")
-	listOptions := append(pagingOptions(), str("--case-id", "caseId", "Case ID"), choice("--scope", "scope", "handoff scope", "self", "ancestors", "descendants", "neighbors", "connected"), str("--task-id", "taskId", "Task ID"), str("--created-by", "createdBy", "creator Account ID or me"), csv("--kinds", "kinds", "comma-separated Record kinds"), csv("--origins", "origins", "comma-separated origins"), csv("--acl", "acl", "ACL principals"), defaultOption(choice("--order", "order", "sort order", "asc", "desc"), "desc"))
+	listOptions := append(pagingOptions(), str("--case-id", "caseId", "Case ID"), choice("--scope", "scope", "handoff scope", "self", "ancestors", "descendants", "neighbors", "connected"), str("--task-id", "taskId", "Task ID"), str("--created-by", "createdBy", "creator Account ID or me"), csv("--kinds", "kinds", "comma-separated Record kinds (note, output, review, activity; result and autoreview are accepted aliases)"), csv("--origins", "origins", "comma-separated origins"), csv("--acl", "acl", "ACL principals"), defaultOption(choice("--order", "order", "sort order", "asc", "desc"), "desc"))
 	list := apiOperation("record list", "list Records in a Case", nil, http.MethodGet, func(i invocation) string {
 		caseID := strings.TrimSpace(i.text("caseId"))
 		return "/v1/cases/" + escaped(caseID) + "/records"
@@ -297,7 +298,7 @@ func recordCommands() []*command {
 	list.Prepare = requireField("caseId", "Pass --case-id <case-id> or use `epismo case record list <case-id>`.")
 	update := apiOperation("record update", "edit a Record you created. Kind, content, and structured data may change; task and provenance stay fixed", []string{"record-id"}, http.MethodPatch, func(i invocation) string {
 		return "/v1/records/" + escaped(i.positional(0))
-	}, requestBody, true, str("--kind", "kind", "Record kind"), str("--content", "content", "Record content"), object("--data", "data", "Record data JSON object"))
+	}, requestBody, true, choice("--kind", "kind", "Record kind; result is accepted as output", "note", "output", "result"), str("--content", "content", "Record content"), object("--data", "data", "Record data JSON object"))
 	deleteRecord := apiOperation("record delete", "redact a Record you created. The id remains as a tombstone for references", []string{"record-id"}, http.MethodDelete, func(i invocation) string {
 		return "/v1/records/" + escaped(i.positional(0))
 	}, requestBody, true)
