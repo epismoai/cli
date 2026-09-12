@@ -8,22 +8,43 @@ import (
 )
 
 type optionSpec struct {
-	Name     string
-	Field    string
-	Help     string
-	Kind     optionKind
-	Required bool
-	Choices  []string
-	Default  any
+	Name                string
+	Field               string
+	Help                string
+	Kind                optionKind
+	Required            bool
+	RequiredAlternative string
+	Choices             []string
+	Default             any
 }
+
+type inputSpec struct {
+	Help string
+}
+
+type commandSafety struct {
+	DryRun         bool
+	IdempotencyKey bool
+	Confirmation   bool
+}
+
+type outputMode uint8
+
+const (
+	outputStructured outputMode = iota
+	outputRaw
+)
 
 type command struct {
 	Path     string
 	Summary  string
+	Examples []string
 	Args     []string
 	Options  []optionSpec
-	Input    bool
-	Mutation bool
+	Input    *inputSpec
+	Safety   commandSafety
+	Output   outputMode
+	Prepare  func(invocation) (invocation, error)
 	Run      func(*app, invocation) (any, error)
 }
 
@@ -48,10 +69,14 @@ func (i invocation) positional(index int) string {
 
 func baseOptions(cmd *command) []optionSpec {
 	options := append([]optionSpec{}, cmd.Options...)
-	if cmd.Input || cmd.Mutation {
-		options = append([]optionSpec{{Name: "--input", Field: "_input", Help: "JSON object, @file, or - for stdin", Kind: kindString}}, options...)
+	if cmd.Input != nil {
+		help := cmd.Input.Help
+		if help == "" {
+			help = "JSON object, @file, or - for stdin"
+		}
+		options = append([]optionSpec{{Name: "--input", Field: "_input", Help: help, Kind: kindString}}, options...)
 	}
-	if cmd.Mutation {
+	if cmd.Safety.IdempotencyKey {
 		options = append(options, optionSpec{Name: "--idempotency-key", Field: "idempotencyKey", Help: "retry key; generated automatically when omitted", Kind: kindString})
 	}
 	return options
@@ -82,9 +107,14 @@ func parseInvocation(cmd *command, args []string, stdin io.Reader) (invocation, 
 		name, raw, hasEquals := strings.Cut(argument, "=")
 		option, ok := byName[name]
 		if !ok {
-			return invocation{}, &Error{Code: "UNKNOWN_OPTION", Message: fmt.Sprintf("unknown option %q", name), Hint: "Run the command again with --help to see available options.", ExitCode: 1}
+			return invocation{}, &Error{Code: "UNKNOWN_OPTION", Message: fmt.Sprintf("Unknown option %q.", name), Hint: "Run the command again with --help to see available options.", ExitCode: 1}
 		}
 		if !hasEquals {
+			if option.Kind == kindBoolean {
+				values[option.Field] = true
+				present[option.Field] = true
+				continue
+			}
 			index++
 			if index >= len(args) || strings.HasPrefix(args[index], "--") {
 				return invocation{}, required(name)
@@ -96,20 +126,24 @@ func parseInvocation(cmd *command, args []string, stdin io.Reader) (invocation, 
 			return invocation{}, err
 		}
 		if len(option.Choices) > 0 && !contains(option.Choices, fmt.Sprint(value)) {
-			return invocation{}, &Error{Code: "INVALID_ARGUMENT", Message: fmt.Sprintf("option %s argument %q is invalid. Allowed choices are %s.", name, raw, strings.Join(option.Choices, ", ")), ExitCode: 1}
+			return invocation{}, &Error{Code: "INVALID_ARGUMENT", Message: fmt.Sprintf("Option %s argument %q is invalid. Allowed choices are %s.", name, raw, strings.Join(option.Choices, ", ")), ExitCode: 1}
 		}
 		values[option.Field] = value
 		present[option.Field] = true
 	}
 	if len(positionals) < len(cmd.Args) {
-		return invocation{}, &Error{Code: "MISSING_ARGUMENT", Message: fmt.Sprintf("missing required argument %q", cmd.Args[len(positionals)]), Hint: "Run the command again with --help to see required arguments.", ExitCode: 1}
+		return invocation{}, &Error{Code: "MISSING_ARGUMENT", Message: fmt.Sprintf("Missing required argument %q.", cmd.Args[len(positionals)]), Hint: "Run the command again with --help to see required arguments.", ExitCode: 1}
 	}
 	if len(positionals) > len(cmd.Args) {
-		return invocation{}, &Error{Code: "COMMAND_ERROR", Message: fmt.Sprintf("too many arguments for %s", cmd.Path), Hint: "Run the command again with --help to inspect the expected arguments.", ExitCode: 1}
+		return invocation{}, &Error{Code: "UNEXPECTED_ARGUMENT", Message: fmt.Sprintf("Too many arguments for %s.", cmd.Path), Hint: "Run the command again with --help to inspect the expected arguments.", ExitCode: 1}
 	}
-	if !cmd.Input && !cmd.Mutation {
+	if cmd.Input == nil {
 		for _, option := range options {
-			if option.Required && !present[option.Field] {
+			alternativePresent := false
+			if alternative, ok := byName[option.RequiredAlternative]; ok {
+				alternativePresent = present[alternative.Field]
+			}
+			if option.Required && !present[option.Field] && !alternativePresent {
 				return invocation{}, required(option.Name)
 			}
 		}
@@ -141,15 +175,38 @@ func printCommandHelp(w io.Writer, cmd *command) {
 			required := ""
 			if option.Required {
 				required = " (required)"
+				if option.RequiredAlternative != "" {
+					required = " (required unless " + option.RequiredAlternative + ")"
+				}
 			}
-			fmt.Fprintf(w, "  %-28s %s%s\n", option.Name+" <value>", option.Help, required)
+			name := option.Name + " <value>"
+			if option.Kind == kindBoolean {
+				name = option.Name
+			}
+			details := option.Help
+			if len(option.Choices) > 0 {
+				details += " (values: " + strings.Join(option.Choices, ", ") + ")"
+			}
+			if option.Default != nil {
+				details += fmt.Sprintf(" (default: %v)", option.Default)
+			}
+			fmt.Fprintf(w, "  %-28s %s%s\n", name, details, required)
 		}
 	}
+	if len(cmd.Examples) > 0 {
+		fmt.Fprintln(w, "\nExamples:")
+		for _, example := range cmd.Examples {
+			fmt.Fprintf(w, "  %s\n", example)
+		}
+	}
+	fmt.Fprintln(w, "\nGlobal options: --workspace/-w <id-or-handle>, --output/-o <json|table|yaml|jsonl|value>, --diagnostic-format <json|human>, --field <path>, --jq <projection>, --dry-run, --yes/-y, --schema")
 }
 
 func printGroupHelp(w io.Writer, prefix string, commands []*command) {
 	if prefix == "" {
-		fmt.Fprintln(w, "Epismo — agent-first CLI for discovering, authoring, and coordinating reusable AI Playbooks.")
+		fmt.Fprintln(w, "Epismo — save research, decisions, and progress; continue across people, AI agents, and conversations.")
+		fmt.Fprintln(w, "\nSave: case start (or reuse a Case), then case record append. Continue: case get CASE_ID.")
+		fmt.Fprintln(w, "A Case is one ongoing effort. Keep it when switching agents. Playbooks are optional reusable methods.")
 		fmt.Fprintln(w, "\nUsage: epismo <command> [options]")
 	} else {
 		fmt.Fprintf(w, "Usage: epismo %s <command> [options]\n", prefix)
@@ -166,9 +223,10 @@ func printGroupHelp(w io.Writer, prefix string, commands []*command) {
 		"playbook version": "read and publish immutable Versions",
 		"playbook draft":   "edit a mutable Draft before publishing",
 		"playbook alias":   "manage Playbook aliases in the active namespace",
-		"case":             "start, assign, and close Cases",
+		"case":             "save and resume research, plans, implementations, and reviews",
+		"case handoff":     "connect distinct Cases and inspect their context links",
 		"task":             "manage materialized Case Tasks",
-		"record":           "append Records and browse the ACL-scoped activity feed",
+		"record":           "append, update, or redact Records and browse the ACL-scoped activity feed",
 		"suggestion":       "manage Playbook Suggestions",
 	}
 	needle := strings.TrimSpace(prefix)

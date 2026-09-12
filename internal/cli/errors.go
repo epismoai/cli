@@ -36,14 +36,27 @@ func normalizeError(err error) *Error {
 }
 
 func printJSON(w io.Writer, value any) error {
+	converted, err := cliJSON(value)
+	if err != nil {
+		return err
+	}
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", "  ")
 	encoder.SetEscapeHTML(false)
-	return encoder.Encode(value)
+	return encoder.Encode(converted)
 }
 
-func printError(w io.Writer, err error) int {
-	normalized := normalizeError(err)
+func printDiagnosticJSON(w io.Writer, value any) error {
+	converted, err := cliJSON(value)
+	if err != nil {
+		return err
+	}
+	encoder := json.NewEncoder(w)
+	encoder.SetEscapeHTML(false)
+	return encoder.Encode(converted)
+}
+
+func errorPayload(normalized *Error) map[string]any {
 	payload := map[string]any{
 		"code":      normalized.Code,
 		"message":   normalized.Message,
@@ -55,18 +68,43 @@ func printError(w io.Writer, err error) int {
 	if len(normalized.Details) > 0 {
 		payload["details"] = normalized.Details
 	}
-	_ = printJSON(w, map[string]any{"error": payload})
+	return payload
+}
+
+func printError(w io.Writer, err error) int {
+	normalized := normalizeError(err)
+	_ = printDiagnosticJSON(w, map[string]any{"error": errorPayload(normalized)})
+	return normalized.ExitCode
+}
+
+func printAppError(a *app, err error) int {
+	if a.options.DiagnosticFormat != "human" {
+		return printError(a.stderr, err)
+	}
+	normalized := normalizeError(err)
+	_, _ = fmt.Fprintf(a.stderr, "error: %s\n", normalized.Message)
+	if normalized.Hint != "" {
+		_, _ = fmt.Fprintf(a.stderr, "hint: %s\n", normalized.Hint)
+	}
 	return normalized.ExitCode
 }
 
 func printWarning(w io.Writer, code, message string) {
-	_ = printJSON(w, map[string]any{"warning": map[string]any{"code": code, "message": message}})
+	printEvent(w, "warning", code, message, nil)
+}
+
+func printEvent(w io.Writer, level, code, message string, details map[string]any) {
+	payload := map[string]any{"level": level, "code": code, "message": message}
+	if len(details) > 0 {
+		payload["details"] = details
+	}
+	_ = printDiagnosticJSON(w, map[string]any{"event": payload})
 }
 
 func required(name string) *Error {
 	return &Error{
 		Code:     "MISSING_OPTION_VALUE",
-		Message:  fmt.Sprintf("required option '%s <value>' not specified", name),
+		Message:  fmt.Sprintf("Required option %q was not specified.", name+" <value>"),
 		Hint:     "Run the command again with --help to see option usage.",
 		ExitCode: 1,
 	}
