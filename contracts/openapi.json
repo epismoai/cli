@@ -13446,9 +13446,10 @@
                   "type": "string",
                   "enum": [
                     "note",
-                    "output"
+                    "output",
+                    "review"
                   ],
-                  "description": "Record kind. note or output. review and activity are server-only."
+                  "description": "Record kind. note, output, or review. activity is server-only. review requires data.verdict of pass, changes_requested, or insufficient."
                 },
                 "content": {
                   "type": "string",
@@ -13654,9 +13655,10 @@
                   "type": "string",
                   "enum": [
                     "note",
-                    "output"
+                    "output",
+                    "review"
                   ],
-                  "description": "Record kind. note or output. review and activity are server-only."
+                  "description": "Record kind. note, output, or review. activity is server-only. review requires data.verdict of pass, changes_requested, or insufficient."
                 },
                 "content": {
                   "type": "string",
@@ -13716,9 +13718,10 @@
             "type": "string",
             "enum": [
               "note",
-              "output"
+              "output",
+              "review"
             ],
-            "description": "Record kind. note or output. review and activity are server-only."
+            "description": "Record kind. note, output, or review. activity is server-only. review requires data.verdict of pass, changes_requested, or insufficient."
           },
           "content": {
             "type": "string",
@@ -13771,9 +13774,10 @@
             "type": "string",
             "enum": [
               "note",
-              "output"
+              "output",
+              "review"
             ],
-            "description": "Record kind. note or output. review and activity are server-only."
+            "description": "Record kind. note, output, or review. activity is server-only. review requires data.verdict of pass, changes_requested, or insufficient."
           },
           "content": {
             "type": "string",
