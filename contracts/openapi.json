@@ -11075,9 +11075,7 @@
                   "note",
                   "output",
                   "review",
-                  "activity",
-                  "result",
-                  "autoreview"
+                  "activity"
                 ]
               }
             }
@@ -13435,6 +13433,7 @@
             ]
           },
           "records": {
+            "default": [],
             "type": "array",
             "items": {
               "type": "object",
@@ -13448,9 +13447,9 @@
                   "enum": [
                     "note",
                     "output",
-                    "result"
+                    "review"
                   ],
-                  "description": "Record kind. note or output. result is accepted as output. review and activity are server-only."
+                  "description": "Record kind. note, output, or review. activity is server-only. review requires data.verdict of pass, changes_requested, or insufficient."
                 },
                 "content": {
                   "type": "string",
@@ -13643,6 +13642,7 @@
             "maxLength": 64
           },
           "records": {
+            "default": [],
             "type": "array",
             "items": {
               "type": "object",
@@ -13656,9 +13656,9 @@
                   "enum": [
                     "note",
                     "output",
-                    "result"
+                    "review"
                   ],
-                  "description": "Record kind. note or output. result is accepted as output. review and activity are server-only."
+                  "description": "Record kind. note, output, or review. activity is server-only. review requires data.verdict of pass, changes_requested, or insufficient."
                 },
                 "content": {
                   "type": "string",
@@ -13719,9 +13719,9 @@
             "enum": [
               "note",
               "output",
-              "result"
+              "review"
             ],
-            "description": "Record kind. note or output. result is accepted as output. review and activity are server-only."
+            "description": "Record kind. note, output, or review. activity is server-only. review requires data.verdict of pass, changes_requested, or insufficient."
           },
           "content": {
             "type": "string",
@@ -13775,9 +13775,9 @@
             "enum": [
               "note",
               "output",
-              "result"
+              "review"
             ],
-            "description": "Record kind. note or output. result is accepted as output. review and activity are server-only."
+            "description": "Record kind. note, output, or review. activity is server-only. review requires data.verdict of pass, changes_requested, or insufficient."
           },
           "content": {
             "type": "string",
