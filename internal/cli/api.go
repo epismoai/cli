@@ -25,8 +25,10 @@ type apiClient struct {
 	anonymousIDErr  error
 }
 
+const defaultHTTPTimeout = 90 * time.Second
+
 func newAPIClient(version string) *apiClient {
-	return &apiClient{baseURL: apiURL(), version: version, http: &http.Client{Timeout: 30 * time.Second}}
+	return &apiClient{baseURL: apiURL(), version: version, http: &http.Client{Timeout: defaultHTTPTimeout}}
 }
 
 // getAnonymousID returns the persisted anonymous ID, reading (and, on first
