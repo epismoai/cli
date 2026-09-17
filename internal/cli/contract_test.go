@@ -92,6 +92,7 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 		"case acl":                    {"patch", "/v1/cases/{caseId}/acl"},
 		"case update":                 {"patch", "/v1/cases/{caseId}"},
 		"case review":                 {"post", "/v1/cases/{caseId}/review"},
+		"case overview":               {"post", "/v1/cases/{caseId}/overview"},
 		"case handoff":                {"post", "/v1/cases/{caseId}/handoffs"},
 		"case handoff graph":          {"get", "/v1/cases/{caseId}/handoff-graph"},
 		"case handoff candidate list": {"get", "/v1/cases/{caseId}/handoff-candidates"},
