@@ -8195,7 +8195,7 @@
           "cases"
         ],
         "summary": "GET /v1/cases/{caseId}",
-        "description": "Work collaborators receive the live Case, Tasks, the latest 5 Records (newest first), and the handoff neighborhood. Public-only readers receive the live title, input, the latest 5 Records, and readable handoffs. Follow recordsNextCursor with GET /v1/cases/{caseId}/records for older Records.",
+        "description": "Work collaborators receive the live Case, tasks, the latest 5 records (newest first), and the handoff neighborhood. Public-only readers receive the live title, input, the latest 5 records, and readable handoffs. Follow recordsNextCursor with GET /v1/cases/{caseId}/records for older records.",
         "parameters": [
           {
             "name": "caseId",
