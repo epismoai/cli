@@ -16,6 +16,31 @@ func TestCommandHelpIncludesChoicesAndExamples(t *testing.T) {
 	}
 }
 
+func TestTopLevelHelpListsCaseBeforePlaybook(t *testing.T) {
+	words := buildCommandWords()
+	caseIdx, playbookIdx := -1, -1
+	for index, word := range words {
+		if word == "case" {
+			caseIdx = index
+		}
+		if word == "playbook" {
+			playbookIdx = index
+		}
+	}
+	if caseIdx < 0 || playbookIdx < 0 || caseIdx > playbookIdx {
+		t.Fatalf("buildCommandWords case=%d playbook=%d in %v", caseIdx, playbookIdx, words)
+	}
+
+	var output bytes.Buffer
+	printGroupHelp(&output, "", buildCommands())
+	help := output.String()
+	casePos := strings.Index(help, "\n  case ")
+	playbookPos := strings.Index(help, "\n  playbook ")
+	if casePos < 0 || playbookPos < 0 || casePos > playbookPos {
+		t.Fatalf("help order case=%d playbook=%d\n%s", casePos, playbookPos, help)
+	}
+}
+
 func TestInputAndIdempotencyKeyAreIndependent(t *testing.T) {
 	inputOnly := &command{Input: &inputSpec{}}
 	idempotencyOnly := &command{Safety: commandSafety{IdempotencyKey: true}}

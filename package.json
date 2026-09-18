@@ -1,7 +1,7 @@
 {
   "name": "epismo",
   "version": "0.0.0-development",
-  "description": "Dependency-free CLI for discovering, authoring, and coordinating reusable AI Playbooks.",
+  "description": "Native CLI for Epismo. Continue work across people and AI agents; JSON for terminals, scripts, and workflows.",
   "type": "module",
   "license": "Apache-2.0",
   "homepage": "https://epismo.ai",
@@ -12,6 +12,7 @@
   "bugs": "https://github.com/epismoai/cli/issues",
   "keywords": [
     "epismo",
+    "case",
     "playbook",
     "workflow",
     "agent",

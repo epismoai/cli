@@ -324,7 +324,7 @@ func resolvePlaybookID(a *app, ctx executionContext, value string) (string, erro
 	} else if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		payload["handle"], payload["alias"] = parts[0], parts[1]
 	} else {
-		return "", &Error{Code: "INVALID_INPUT", Message: "Invalid Playbook alias reference: " + trimmed, Hint: "Use pb:<alias> in your own namespace, or pb:<handle>/<alias> for another owner's.", ExitCode: 1}
+		return "", &Error{Code: "INVALID_INPUT", Message: "Invalid playbook alias reference: " + trimmed, Hint: "Use pb:<alias> in your own namespace, or pb:<handle>/<alias> for another owner's.", ExitCode: 1}
 	}
 	response, err := a.client.request(http.MethodGet, withWorkspace(queryString("/v1/aliases/resolve", payload), ctx.WorkspaceID), ctx.Auth.AccessToken, nil)
 	if err != nil {
@@ -332,7 +332,7 @@ func resolvePlaybookID(a *app, ctx executionContext, value string) (string, erro
 	}
 	id := stringField(response, "playbookId")
 	if id == "" {
-		return "", &Error{Code: "ALIAS_NOT_FOUND", Message: "Alias reference did not resolve to a Playbook: " + trimmed, Hint: "Check the Playbook and its aliases with `epismo playbook alias list <playbook-id>`.", ExitCode: 1}
+		return "", &Error{Code: "ALIAS_NOT_FOUND", Message: "Alias reference did not resolve to a playbook: " + trimmed, Hint: "Check the playbook and its aliases with `epismo playbook alias list <playbook-id>`.", ExitCode: 1}
 	}
 	return id, nil
 }

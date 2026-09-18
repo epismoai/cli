@@ -205,8 +205,8 @@ func printCommandHelp(w io.Writer, cmd *command) {
 func printGroupHelp(w io.Writer, prefix string, commands []*command) {
 	if prefix == "" {
 		fmt.Fprintln(w, "Epismo — save research, decisions, and progress; continue across people, AI agents, and conversations.")
-		fmt.Fprintln(w, "\nSave: case start (or reuse a Case), then case record append. Continue: case get CASE_ID.")
-		fmt.Fprintln(w, "A Case is one ongoing effort. Keep it when switching agents. Playbooks are optional reusable methods.")
+		fmt.Fprintln(w, "\nSave: case start (or reuse a case), then case record append. Continue: case get CASE_ID.")
+		fmt.Fprintln(w, "A case is one ongoing effort. Keep it when switching agents. A playbook is an optional reusable method.")
 		fmt.Fprintln(w, "\nUsage: epismo <command> [options]")
 	} else {
 		fmt.Fprintf(w, "Usage: epismo %s <command> [options]\n", prefix)
@@ -219,15 +219,15 @@ func printGroupHelp(w io.Writer, prefix string, commands []*command) {
 		"team member":      "manage team members",
 		"credit":           "view balance and purchase credits",
 		"token":            "manage CLI tokens for CI/CD",
-		"playbook":         "manage reusable Playbooks",
-		"playbook version": "read and publish immutable Versions",
-		"playbook draft":   "edit a mutable Draft before publishing",
-		"playbook alias":   "manage Playbook aliases in the active namespace",
 		"case":             "save and resume research, plans, implementations, and reviews",
-		"case handoff":     "connect distinct Cases and inspect their context links",
-		"task":             "manage materialized Case Tasks",
-		"record":           "append, update, or redact Records and browse the ACL-scoped activity feed",
-		"suggestion":       "manage Playbook Suggestions",
+		"case handoff":     "connect distinct cases and inspect their context links",
+		"playbook":         "manage reusable playbooks",
+		"playbook version": "read and publish immutable versions",
+		"playbook draft":   "edit a mutable draft before publishing",
+		"playbook alias":   "manage playbook aliases in the active namespace",
+		"task":             "manage materialized case tasks",
+		"record":           "append, update, or redact records and browse the ACL-scoped activity feed",
+		"suggestion":       "manage playbook suggestions",
 	}
 	needle := strings.TrimSpace(prefix)
 	for _, cmd := range commands {
@@ -259,9 +259,31 @@ func printGroupHelp(w io.Writer, prefix string, commands []*command) {
 	for name := range children {
 		names = append(names, name)
 	}
-	sort.Strings(names)
+	sortCommandNames(names, prefix)
 	fmt.Fprintln(w, "\nCommands:")
 	for _, name := range names {
 		fmt.Fprintf(w, "  %-16s %s\n", name, children[name])
 	}
+}
+
+func sortCommandNames(names []string, prefix string) {
+	if prefix != "" {
+		sort.Strings(names)
+		return
+	}
+	order := make(map[string]int, len(buildCommandWords()))
+	for index, word := range buildCommandWords() {
+		order[word] = index
+	}
+	sort.SliceStable(names, func(i, j int) bool {
+		oi, oki := order[names[i]]
+		oj, okj := order[names[j]]
+		if oki && okj {
+			return oi < oj
+		}
+		if oki != okj {
+			return oki
+		}
+		return names[i] < names[j]
+	})
 }

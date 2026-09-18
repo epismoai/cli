@@ -435,11 +435,11 @@ func (a *app) context() (executionContext, error) {
 }
 
 // publicReadContext uses saved authentication when available, but permits the
-// Public Playbook Explore surface to work before login. Any local-state
+// public case and playbook explore surface to work before login. Any local-state
 // problem that amounts to "not logged in" (no credentials, or a credentials
 // file that can't be read) falls back to anonymous access instead of failing
-// the command, since Public Playbooks are documented to work without an
-// account regardless of local CLI state.
+// the command, since public cases and playbooks are documented to work without
+// an account regardless of local CLI state.
 func (a *app) publicReadContext() (executionContext, error) {
 	if strings.TrimSpace(os.Getenv("EPISMO_TOKEN")) != "" || strings.TrimSpace(a.options.Workspace) != "" || strings.TrimSpace(os.Getenv("EPISMO_WORKSPACE")) != "" {
 		return a.context()

@@ -39,7 +39,14 @@ The npm package contains a dependency-free JavaScript launcher and all supported
 
 ## Quick start
 
-Browse Public Playbooks without an account:
+Browse public cases without an account:
+
+```sh
+epismo case popular
+epismo case get CASE_ID
+```
+
+Public playbooks work the same way:
 
 ```sh
 epismo playbook list
@@ -52,6 +59,7 @@ Log in for search, private data, and writes:
 epismo login
 epismo workspace list
 epismo workspace use acme # optional: save a default workspace by ID or handle
+epismo case start --title "Customer Onboarding"
 epismo --workspace acme playbook search onboarding
 epismo playbook resource list --kind cli
 epismo playbook init --title Onboarding > playbook.json
@@ -59,6 +67,20 @@ epismo playbook create --definition @playbook.json
 ```
 
 `epismo workspace checkout <workspace-id>` starts a hosted subscription checkout. If the workspace has a cancellation scheduled for the end of its current billing period, it resumes that subscription instead of creating a second one.
+
+## Cases and handoffs
+
+Start a case, append timeline records, connect dependent workflows, and explore the DAG:
+
+```sh
+epismo case start --title "Customer Onboarding"
+epismo case record append CASE_ID --kind output --content "Completed setup"
+epismo case record update RECORD_ID --content "Revised setup notes"
+epismo case record delete RECORD_ID
+epismo case handoff FIRST_CASE_ID --to-case-id SECOND_CASE_ID
+epismo case handoff graph CASE_ID --scope connected
+epismo case record list CASE_ID --scope ancestors
+```
 
 ## Playbook access
 
@@ -70,21 +92,7 @@ epismo playbook access set PLAYBOOK_ID --visibility public --editors USER_ID,TEA
 epismo playbook owner PLAYBOOK_ID --owner-id WORKSPACE_OR_USER_ID
 ```
 
-`public` permits published reads only. Editors can read and edit Playbook content; the owner, and every member of a Workspace-owned Playbook, are implicit and are not included in `--editors`. Workspace members can read and edit Playbooks owned by a Workspace they belong to. Owner managers, including Workspace Owners and Admins for a Workspace-owned Playbook, manage access, public visibility, and archive Playbooks or historical versions. Any member may create a Playbook owned by a Workspace they belong to, or move a personally owned private Playbook into it with `playbook owner`.
-
-## Cases and handoffs
-
-Start a Case, append timeline records, connect dependent workflows, and explore the DAG:
-
-```sh
-epismo case start --title "Customer Onboarding"
-epismo case record append CASE_ID --kind output --content "Completed setup"
-epismo case record update RECORD_ID --content "Revised setup notes"
-epismo case record delete RECORD_ID
-epismo case handoff FIRST_CASE_ID --to-case-id SECOND_CASE_ID
-epismo case handoff graph CASE_ID --scope connected
-epismo case record list CASE_ID --scope ancestors
-```
+`public` permits published reads only. Editors can read and edit playbook content; the owner, and every member of a Workspace-owned playbook, are implicit and are not included in `--editors`. Workspace members can read and edit playbooks owned by a Workspace they belong to. Only the owner (including Workspace Owners and Admins for a Workspace-owned playbook) can manage access, public visibility, and archive playbooks or historical versions. Any member may create a playbook owned by a Workspace they belong to, or move a personally owned private playbook into it with `playbook owner`.
 
 Run `epismo --help` for command groups, or append `--help` to any group or command for its options.
 
@@ -118,8 +126,8 @@ Progress and warnings use a common event envelope:
 Commands that accept a request body support inline JSON, a file, or stdin:
 
 ```sh
-epismo playbook create --input @playbook.json
 epismo case record append CASE_ID --input - < record.json
+epismo playbook create --input @playbook.json
 ```
 
 Explicit flags override fields supplied through `--input`. Mutations create an idempotency key automatically unless you provide `--idempotency-key` or `idempotency_key` in the input.
@@ -130,17 +138,17 @@ The default output is JSON for scripts and agents. Choose a human-friendly outpu
 
 ```sh
 epismo workspace list --output table
+epismo case list --output jsonl
 epismo credit checkout --quantity 500 --output value --field checkout_url
-epismo task list --all --output jsonl
 epismo playbook search --query onboarding --jq '.playbooks[] | .id'
 ```
 
 Global options may appear before or after the command:
 
 ```sh
+EPISMO_WORKSPACE=acme epismo case list
 epismo --workspace acme playbook list
 epismo -w acme task list --all
-EPISMO_WORKSPACE=acme epismo case list
 ```
 
 Workspace references accept an exact ID or unique handle. The effective workspace is chosen in this order: `--workspace`, `EPISMO_WORKSPACE`, a workspace-scoped token, then the saved default workspace. A scoped token cannot grant access outside its scope.
@@ -153,7 +161,7 @@ Workspace references accept an exact ID or unique handle. The effective workspac
 
 `epismo login` opens a browser-based OAuth login. With `--email`, it automatically uses your organization SSO when available, otherwise it prompts for an email code.
 
-`epismo playbook list`, UUID-based `epismo playbook get`, `epismo case get`, `epismo case popular`, `epismo case record list`, and `epismo case handoff graph` work before login for Public Playbooks and Public Cases. Public Case reads expose the current title, input, records, and readable handoffs; tasks, assignment, and collaborator identities remain restricted to work collaborators. `case get` includes the latest five records; pass its `records_next_cursor` to `case record list --cursor` with `--scope self` for older public records. Use `case popular --playbook-id <id> --lang ja,en` to filter discovery. The CLI creates a stable random `anonymousId` in its config for analytics and fair-use rate limiting; it is not an authentication credential. Search, aliases, private data, live Case work, and writes still require login.
+`epismo case get`, `epismo case popular`, `epismo case record list`, `epismo case handoff graph`, `epismo playbook list`, and UUID-based `epismo playbook get` work before login for public cases and public playbooks. Public case reads expose the current title, input, records, and readable handoffs; tasks, assignment, and collaborator identities remain restricted to work collaborators. `case get` includes the latest five records; pass its `records_next_cursor` to `case record list --cursor` with `--scope self` for older public records. Use `case popular --playbook-id <id> --lang ja,en` to filter discovery. The CLI creates a stable random `anonymousId` in its config for analytics and fair-use rate limiting; it is not an authentication credential. Search, aliases, private data, live case work, and writes still require login.
 
 For CI or other non-interactive use, create a workspace-scoped token and pass it with `EPISMO_TOKEN`:
 

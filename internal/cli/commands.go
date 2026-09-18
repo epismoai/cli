@@ -15,14 +15,14 @@ func buildCommands() []*command {
 		teamListCommand(), teamCreateCommand(), teamUpdateCommand(), teamMemberListCommand(), teamMemberAddCommand(), teamMemberDeleteCommand(),
 		creditBalanceCommand(), creditCheckoutCommand(), tokenCreateCommand(), tokenListCommand(), tokenRevokeCommand(),
 	}
-	commands = append(commands, playbookCommands()...)
-	commands = append(commands, aliasCommands()...)
 	commands = append(commands, caseCommands()...)
 	commands = append(commands, caseHandoffCommands()...)
 	commands = append(commands, caseTaskCommands()...)
 	commands = append(commands, caseRecordCommands()...)
 	commands = append(commands, recordCommands()...)
 	commands = append(commands, taskCommands()...)
+	commands = append(commands, playbookCommands()...)
+	commands = append(commands, aliasCommands()...)
 	commands = append(commands, playbookSuggestionCommands()...)
 	commands = append(commands, suggestionCommands()...)
 	commands = append(commands, completionCommand(), doctorCommand(), examplesCommand(), docsCommand())
@@ -94,7 +94,7 @@ func completionScript(shell string) string {
 }
 
 func buildCommandWords() []string {
-	return []string{"login", "logout", "whoami", "workspace", "team", "playbook", "case", "task", "record", "suggestion", "token", "credit", "doctor", "examples", "completion", "docs", "update"}
+	return []string{"login", "logout", "whoami", "workspace", "team", "case", "playbook", "task", "record", "suggestion", "token", "credit", "doctor", "examples", "completion", "docs", "update"}
 }
 
 func doctorCommand() *command {
