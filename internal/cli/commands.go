@@ -11,18 +11,18 @@ import (
 func buildCommands() []*command {
 	commands := []*command{
 		loginCommand(), logoutCommand(), whoamiCommand(), updateCommand(),
-		workspaceListCommand(), workspaceCurrentCommand(), workspaceUseCommand(), workspaceClearCommand(), workspaceCreateCommand(), workspaceCheckoutCommand(), workspaceUpdateCommand(), workspaceMemberListCommand(), workspaceMemberUpsertCommand(), workspaceMemberDeleteCommand(),
+		workspaceListCommand(), workspaceCurrentCommand(), workspaceUseCommand(), workspaceClearCommand(), workspaceCreateCommand(), workspaceCheckoutCommand(), workspaceUpdateCommand(), workspaceMemberListCommand(), workspaceMemberUpsertCommand(), workspaceMemberInviteCommand(), workspaceMemberDeleteCommand(), workspaceInvitationRevokeCommand(),
 		teamListCommand(), teamCreateCommand(), teamUpdateCommand(), teamMemberListCommand(), teamMemberAddCommand(), teamMemberDeleteCommand(),
 		creditBalanceCommand(), creditCheckoutCommand(), tokenCreateCommand(), tokenListCommand(), tokenRevokeCommand(),
 	}
-	commands = append(commands, playbookCommands()...)
-	commands = append(commands, aliasCommands()...)
 	commands = append(commands, caseCommands()...)
 	commands = append(commands, caseHandoffCommands()...)
 	commands = append(commands, caseTaskCommands()...)
 	commands = append(commands, caseRecordCommands()...)
 	commands = append(commands, recordCommands()...)
 	commands = append(commands, taskCommands()...)
+	commands = append(commands, playbookCommands()...)
+	commands = append(commands, aliasCommands()...)
 	commands = append(commands, playbookSuggestionCommands()...)
 	commands = append(commands, suggestionCommands()...)
 	commands = append(commands, completionCommand(), doctorCommand(), examplesCommand(), docsCommand())
@@ -94,7 +94,7 @@ func completionScript(shell string) string {
 }
 
 func buildCommandWords() []string {
-	return []string{"login", "logout", "whoami", "workspace", "team", "playbook", "case", "task", "record", "suggestion", "token", "credit", "doctor", "examples", "completion", "docs", "update"}
+	return []string{"login", "logout", "whoami", "workspace", "team", "case", "playbook", "task", "record", "suggestion", "token", "credit", "doctor", "examples", "completion", "docs", "update"}
 }
 
 func doctorCommand() *command {
@@ -383,6 +383,15 @@ func workspaceMemberUpsertCommand() *command {
 		return selectedWorkspaceRequest(a, inv.text("workspaceId"), http.MethodPut, "/members", map[string]any{"userIds": users, "role": inv.text("role")})
 	}}
 }
+func workspaceMemberInviteCommand() *command {
+	return &command{Path: "workspace member invite", Summary: "invite email addresses to a workspace", Args: []string{"emails"}, Options: []optionSpec{workspaceIDOption()}, Safety: commandSafety{DryRun: true}, Run: func(a *app, inv invocation) (any, error) {
+		emails, err := stringArray(inv.positional(0), "<emails>")
+		if err != nil {
+			return nil, err
+		}
+		return selectedWorkspaceRequest(a, inv.text("workspaceId"), http.MethodPut, "/members", map[string]any{"emails": emails})
+	}}
+}
 func workspaceMemberDeleteCommand() *command {
 	return &command{Path: "workspace member delete", Summary: "remove a workspace member", Args: []string{"user-ids"}, Options: []optionSpec{workspaceIDOption()}, Safety: commandSafety{DryRun: true}, Run: func(a *app, inv invocation) (any, error) {
 		users, err := stringArray(inv.positional(0), "<user-ids>")
@@ -390,6 +399,11 @@ func workspaceMemberDeleteCommand() *command {
 			return nil, err
 		}
 		return selectedWorkspaceRequest(a, inv.text("workspaceId"), http.MethodDelete, "/members?userIds="+url.QueryEscape(strings.Join(users, ",")), nil)
+	}}
+}
+func workspaceInvitationRevokeCommand() *command {
+	return &command{Path: "workspace invitation revoke", Summary: "revoke a pending workspace invitation", Args: []string{"invitation-id"}, Options: []optionSpec{workspaceIDOption()}, Safety: commandSafety{DryRun: true}, Run: func(a *app, inv invocation) (any, error) {
+		return selectedWorkspaceRequest(a, inv.text("workspaceId"), http.MethodDelete, "/invitations/"+escaped(inv.positional(0)), nil)
 	}}
 }
 

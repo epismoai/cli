@@ -34,9 +34,9 @@ Skip an interactive confirmation prompt.
 .SH EXAMPLES
 .nf
 epismo workspace use acme
+epismo case start --title "Customer Onboarding"
+epismo case record append CASE_ID --kind note --content "Completed setup"
 epismo -w acme playbook search onboarding --output table
-epismo playbook init --title Onboarding > playbook.json
-epismo playbook create --definition @playbook.json
 .fi
 .SH SEE ALSO
 .B epismo --help

@@ -91,7 +91,7 @@ func TestEveryCommandHasExpectedDryRunSupport(t *testing.T) {
 	want := map[string]bool{
 		"login": true, "logout": true,
 		"workspace use": true, "workspace clear": true, "workspace create": true, "workspace checkout": true, "workspace update": true,
-		"workspace member upsert": true, "workspace member delete": true,
+		"workspace member upsert": true, "workspace member invite": true, "workspace member delete": true, "workspace invitation revoke": true,
 		"team create": true, "team update": true, "team member add": true, "team member delete": true,
 		"credit checkout": true, "token create": true, "token revoke": true,
 		"playbook create": true, "playbook version archive": true, "playbook version publish": true,
