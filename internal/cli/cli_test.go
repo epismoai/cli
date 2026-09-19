@@ -82,7 +82,7 @@ func TestRefreshRaceAdoptsCredentialsWrittenByAnotherProcess(t *testing.T) {
 func TestCommandSurface(t *testing.T) {
 	expected := strings.Fields(`
 		login logout whoami update completion doctor examples docs
-		workspace/list workspace/current workspace/use workspace/clear workspace/create workspace/checkout workspace/update workspace/member/list workspace/member/upsert workspace/member/delete
+		workspace/list workspace/current workspace/use workspace/clear workspace/create workspace/checkout workspace/update workspace/member/list workspace/member/upsert workspace/member/invite workspace/member/delete workspace/invitation/revoke
 		team/list team/create team/update team/member/list team/member/add team/member/delete
 		credit/balance credit/checkout token/create token/list token/revoke
 		case/start case/get case/list case/popular case/access/get case/access/set case/share case/assign case/acl case/update case/review case/overview case/handoff case/handoff/graph case/handoff/candidate/list case/close case/reopen

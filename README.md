@@ -59,6 +59,8 @@ Log in for search, private data, and writes:
 epismo login
 epismo workspace list
 epismo workspace use acme # optional: save a default workspace by ID or handle
+epismo workspace member invite teammate@example.com
+epismo workspace invitation revoke INVITATION_ID
 epismo case start --title "Customer Onboarding"
 epismo --workspace acme playbook search onboarding
 epismo playbook resource list --kind cli

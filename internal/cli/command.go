@@ -213,21 +213,22 @@ func printGroupHelp(w io.Writer, prefix string, commands []*command) {
 	}
 	children := map[string]string{}
 	groupDescriptions := map[string]string{
-		"workspace":        "manage workspaces and the saved default workspace",
-		"workspace member": "manage workspace members",
-		"team":             "manage workspace teams",
-		"team member":      "manage team members",
-		"credit":           "view balance and purchase credits",
-		"token":            "manage CLI tokens for CI/CD",
-		"case":             "save and resume research, plans, implementations, and reviews",
-		"case handoff":     "connect distinct cases and inspect their context links",
-		"playbook":         "manage reusable playbooks",
-		"playbook version": "read and publish immutable versions",
-		"playbook draft":   "edit a mutable draft before publishing",
-		"playbook alias":   "manage playbook aliases in the active namespace",
-		"task":             "manage materialized case tasks",
-		"record":           "append, update, or redact records and browse the ACL-scoped activity feed",
-		"suggestion":       "manage playbook suggestions",
+		"workspace":            "manage workspaces and the saved default workspace",
+		"workspace member":     "manage workspace members",
+		"workspace invitation": "manage pending workspace invitations",
+		"team":                 "manage workspace teams",
+		"team member":          "manage team members",
+		"credit":               "view balance and purchase credits",
+		"token":                "manage CLI tokens for CI/CD",
+		"case":                 "save and resume research, plans, implementations, and reviews",
+		"case handoff":         "connect distinct cases and inspect their context links",
+		"playbook":             "manage reusable playbooks",
+		"playbook version":     "read and publish immutable versions",
+		"playbook draft":       "edit a mutable draft before publishing",
+		"playbook alias":       "manage playbook aliases in the active namespace",
+		"task":                 "manage materialized case tasks",
+		"record":               "append, update, or redact records and browse the ACL-scoped activity feed",
+		"suggestion":           "manage playbook suggestions",
 	}
 	needle := strings.TrimSpace(prefix)
 	for _, cmd := range commands {
