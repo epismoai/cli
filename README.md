@@ -79,9 +79,9 @@ epismo case start --title "Customer Onboarding"
 epismo case record append CASE_ID --kind output --content "Completed setup"
 epismo case record update RECORD_ID --content "Revised setup notes"
 epismo case record delete RECORD_ID
-epismo case handoff FIRST_CASE_ID --to-case-id SECOND_CASE_ID
-epismo case handoff delete CASE_ID HANDOFF_ID
-epismo case handoff graph CASE_ID --scope connected
+epismo case handoff create FIRST_CASE_ID --to-case-id SECOND_CASE_ID
+epismo case handoff remove CASE_ID HANDOFF_ID
+epismo case handoff graph get CASE_ID --scope connected
 epismo case record list CASE_ID --scope ancestors
 ```
 
@@ -92,10 +92,10 @@ Use `visibility` and explicit editors instead of a raw ACL:
 ```sh
 epismo playbook access get PLAYBOOK_ID
 epismo playbook access set PLAYBOOK_ID --visibility public --editors USER_ID,TEAM_ID
-epismo playbook owner PLAYBOOK_ID --owner-id WORKSPACE_OR_USER_ID
+epismo playbook owner transfer PLAYBOOK_ID --owner-id WORKSPACE_OR_USER_ID
 ```
 
-`public` permits published reads only. Editors can read and edit playbook content; the owner, and every member of a Workspace-owned playbook, are implicit and are not included in `--editors`. Workspace members can read and edit playbooks owned by a Workspace they belong to. Only the owner (including Workspace Owners and Admins for a Workspace-owned playbook) can manage access, public visibility, and archive playbooks or historical versions. Any member may create a playbook owned by a Workspace they belong to, or move a personally owned private playbook into it with `playbook owner`.
+`public` permits published reads only. Editors can read and edit playbook content; the owner, and every member of a Workspace-owned playbook, are implicit and are not included in `--editors`. Workspace members can read and edit playbooks owned by a Workspace they belong to. Only the owner (including Workspace Owners and Admins for a Workspace-owned playbook) can manage access, public visibility, and archive playbooks or historical versions. Any member may create a playbook owned by a Workspace they belong to, or move a personally owned private playbook into it with `playbook owner transfer`.
 
 Run `epismo --help` for command groups, or append `--help` to any group or command for its options.
 
@@ -164,7 +164,7 @@ Workspace references accept an exact ID or unique handle. The effective workspac
 
 `epismo login` opens a browser-based OAuth login. With `--email`, it automatically uses your organization SSO when available, otherwise it prompts for an email code.
 
-`epismo case get`, `epismo case popular`, `epismo case record list`, `epismo case handoff graph`, `epismo playbook list`, and UUID-based `epismo playbook get` work before login for public cases and public playbooks. Public case reads expose the current title, input, records, and readable handoffs; tasks, assignment, and collaborator identities remain restricted to work collaborators. `case get` includes the latest five records; pass its `records_next_cursor` to `case record list --cursor` with `--scope self` for older public records. Use `case popular --playbook-id <id> --lang ja,en` to filter discovery. The CLI creates a stable random `anonymousId` in its config for analytics and fair-use rate limiting; it is not an authentication credential. Search, aliases, private data, live case work, and writes still require login.
+`epismo case get`, `epismo case popular`, `epismo case record list`, `epismo case handoff graph get`, `epismo playbook list`, and UUID-based `epismo playbook get` work before login for public cases and public playbooks. Public case reads expose the current title, input, records, and readable handoffs; tasks, assignment, and collaborator identities remain restricted to work collaborators. `case get` includes the latest five records; pass its `records_next_cursor` to `case record list --cursor` with `--scope self` for older public records. Use `case popular --playbook-id <id> --lang ja,en` to filter discovery. The CLI creates a stable random `anonymousId` in its config for analytics and fair-use rate limiting; it is not an authentication credential. Search, aliases, private data, live case work, and writes still require login.
 
 For CI or other non-interactive use, create a workspace-scoped token and pass it with `EPISMO_TOKEN`:
 

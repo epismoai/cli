@@ -81,10 +81,10 @@ func playbookCommands() []*command {
 	draftPublish := apiOperation("playbook draft publish", "publish the draft as a new version", []string{"playbook-id"}, http.MethodPost, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/draft/publish" }, requestBody, true, requiredOption(integer("--expected-draft-revision", "expectedDraftRevision", "draft revision last read and reviewed")))
 	accessGet := apiOperation("playbook access get", "get public/private visibility and explicit editors", []string{"playbook-id"}, http.MethodGet, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/access" }, requestNone, false)
 	accessSet := apiOperation("playbook access set", "set public/private visibility and explicit editors", []string{"playbook-id"}, http.MethodPut, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/access" }, requestBody, true, requiredOption(choice("--visibility", "visibility", "published visibility", "private", "public")), csv("--editors", "editors", "comma-separated editor Account or Team IDs"))
-	owner := apiOperation("playbook owner", "change which account owns a playbook", []string{"playbook-id"}, http.MethodPatch, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/owner" }, requestBody, true, requiredOption(str("--owner-id", "ownerId", "User or Workspace account that should own the playbook")))
+	owner := apiOperation("playbook owner transfer", "transfer a playbook to another account", []string{"playbook-id"}, http.MethodPatch, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/owner" }, requestBody, true, requiredOption(str("--owner-id", "ownerId", "User or Workspace account that should own the playbook")))
 	archive := apiOperation("playbook archive", "archive a playbook", []string{"playbook-id"}, http.MethodDelete, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) }, requestBody, true)
 	share := apiOperation("playbook share", "create a share link", []string{"playbook-id"}, http.MethodPost, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/share" }, requestBody, true)
-	return []*command{init, search, list, resourceList, create, get, versionList, versionGet, versionArchive, versionPublish, draftGet, draftSave, draftDiscard, draftPublish, accessGet, accessSet, owner, archive, share}
+	return []*command{init, search, list, resourceList, create, get, versionList, versionGet, versionArchive, versionPublish, draftGet, draftSave, draftDiscard, draftPublish, accessGet, accessSet, owner, commandAlias(owner, "playbook owner"), archive, share}
 }
 
 func aliasCommands() []*command {
@@ -161,33 +161,39 @@ func caseCommands() []*command {
 	accessSet := lockedMutation("case access set", "set public/private visibility and work collaborators", "case-id", http.MethodPut, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/access" }, requiredOption(choice("--visibility", "visibility", "case visibility", "private", "public")), csv("--editors", "editors", "comma-separated work collaborator principals"))
 	share := apiOperation("case share", "create a share link that redirects to the case page; case ACLs still apply", []string{"case-id"}, http.MethodPost, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/share" }, requestBody, true)
 	assign := lockedMutation("case assign", "change which account is responsible for a case", "case-id", http.MethodPatch, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/assignee" }, requiredOption(str("--assigned-to", "assignedTo", "account responsible for the case")))
-	acl := lockedMutation("case acl", "replace a case ACL", "case-id", http.MethodPatch, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/acl" }, requiredOption(csv("--acl", "acl", "comma-separated ACL principals")))
+	acl := lockedMutation("case acl set", "replace a case ACL", "case-id", http.MethodPatch, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/acl" }, requiredOption(csv("--acl", "acl", "comma-separated ACL principals")))
 	update := lockedMutation("case update", "update editable case fields; any work collaborator can retitle or change autoReview", "case-id", http.MethodPatch, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) }, str("--title", "title", "case title"), boolOption("--auto-review", "autoReview", "when set, turn OUTPUT reviews on or off; charges still use the case billing account captured at start"))
 	review := apiOperation("case review", "queue an Epismo AI review of this open case's shared records and tasks and return immediately. Any case editor may request it. Optional --prompt adds caller guidance after the fixed review rules. Poll case record list with kinds=review and origins=system; replay the same idempotency key after completion to receive the REVIEW record. Distinct from a human- or agent-authored review record and from an APPROVAL task. Credits are charged to the case billing account captured at start", []string{"case-id"}, http.MethodPost, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/review" }, requestBody, true, str("--prompt", "prompt", "optional caller guidance appended to the Epismo AI review instructions"))
 	overview := apiOperation("case overview", "ask Epismo AI for a one-shot situational overview of this case (status, progress, blockers, next focus). Any case editor may request it. Runs synchronously and returns the brief in the response. Replay the same idempotency key to receive the prior brief without regenerating. Distinct from case review. Credits are charged to the case billing account captured at start", []string{"case-id"}, http.MethodPost, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/overview" }, requestBody, true)
 	close := lockedMutation("case close", "close a case", "case-id", http.MethodPost, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/close" }, choice("--outcome", "outcome", "case outcome", "completed", "cancelled", "abandoned"), array("--records", "records", "JSON array of final records"))
 	reopen := lockedMutation("case reopen", "reopen a closed case", "case-id", http.MethodPost, func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) + "/reopen" })
-	return []*command{start, get, list, popular, accessGet, accessSet, share, assign, acl, update, review, overview, close, reopen}
+	return []*command{start, get, list, popular, accessGet, accessSet, share, assign, acl, commandAlias(acl, "case acl"), update, review, overview, close, reopen}
 }
 
 func caseHandoffCommands() []*command {
-	handoff := apiOperation("case handoff", "connect two distinct efforts so one case supplies context to another; switching agents on the same effort only needs case get", []string{"case-id"}, http.MethodPost, func(i invocation) string {
+	handoff := apiOperation("case handoff create", "connect two distinct efforts so one case supplies context to another; switching agents on the same effort only needs case get", []string{"case-id"}, http.MethodPost, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/handoffs"
 	}, requestBody, true,
 		requiredOptionUnless(str("--to-case-id", "toCaseId", "case receiving work from case-id"), "--from-case-id"),
 		str("--from-case-id", "_fromCaseId", "case handing work off to case-id; mutually exclusive with --to-case-id"),
 	)
 	handoff.Prepare = prepareCaseHandoff
-	deleteHandoff := apiOperation("case handoff delete", "remove a directed handoff from a receiving case", []string{"case-id", "handoff-id"}, http.MethodDelete, func(i invocation) string {
+	remove := apiOperation("case handoff remove", "remove a directed handoff from a receiving case", []string{"case-id", "handoff-id"}, http.MethodDelete, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/handoffs/" + escaped(i.positional(1))
 	}, requestBody, true)
-	graph := publicApiOperation("case handoff graph", "get a case handoff graph, or only the directly connected cases", []string{"case-id"}, http.MethodGet, func(i invocation) string {
+	graph := publicApiOperation("case handoff graph get", "get a case handoff graph, or only the directly connected cases", []string{"case-id"}, http.MethodGet, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/handoff-graph"
 	}, requestQuery, choice("--scope", "scope", "handoff scope", "self", "ancestors", "descendants", "neighbors", "connected"))
-	candidates := apiOperation("case handoff candidate list", "list open cases this case may still be connected to", []string{"case-id"}, http.MethodGet, func(i invocation) string {
+	candidates := apiOperation("case handoff candidates list", "list open cases this case may still be connected to", []string{"case-id"}, http.MethodGet, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/handoff-candidates"
 	}, requestQuery, false, append(pagingOptions(), choice("--direction", "direction", "outgoing hands this case off; incoming receives a handoff", "outgoing", "incoming"))...)
-	return []*command{handoff, deleteHandoff, graph, candidates}
+	return []*command{handoff, commandAlias(handoff, "case handoff"), remove, commandAlias(remove, "case handoff delete"), graph, commandAlias(graph, "case handoff graph"), candidates, commandAlias(candidates, "case handoff candidate list")}
+}
+
+func commandAlias(canonical *command, path string) *command {
+	alias := *canonical
+	alias.Path = path
+	return &alias
 }
 
 func prepareCaseHandoff(inv invocation) (invocation, error) {
@@ -236,7 +242,14 @@ func caseTaskCommands() []*command {
 	list := apiOperation("case task list", "list tasks in a case", []string{"case-id"}, http.MethodGet, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/tasks"
 	}, requestQuery, false, listOptions...)
-	return []*command{create, list}
+	return append([]*command{create, list}, caseTaskDetailCommands()...)
+}
+
+func caseTaskDetailCommands() []*command {
+	get := apiOperation("case task get", "get a task", []string{"task-id"}, http.MethodGet, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) }, requestNone, false)
+	update := lockedMutation("case task update", "update editable task fields, including the assignee", "task-id", http.MethodPatch, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) }, str("--title", "title", "task title"), str("--instructions", "instructions", "task instructions"), str("--assigned-to", "assignedTo", "account responsible for the task; empty string unassigns"))
+	setStatus := lockedMutation("case task set status", "close a task with an outcome, or reopen a closed one", "task-id", http.MethodPost, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) + "/status" }, requiredOption(choice("--status", "status", "task status", "open", "closed")), str("--outcome", "outcome", "required when closing"), array("--records", "records", "JSON array of records to append with the transition"))
+	return []*command{get, update, setStatus}
 }
 
 func caseRecordCommands() []*command {
@@ -282,10 +295,8 @@ func taskCommands() []*command {
 		}
 		return pagedRequest(a, http.MethodGet, "/v1/tasks", ctx, payload)
 	}}
-	get := apiOperation("task get", "get a task", []string{"task-id"}, http.MethodGet, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) }, requestNone, false)
-	update := lockedMutation("task update", "update editable task fields, including the assignee", "task-id", http.MethodPatch, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) }, str("--title", "title", "task title"), str("--instructions", "instructions", "task instructions"), str("--assigned-to", "assignedTo", "account responsible for the task; empty string unassigns"))
-	setStatus := lockedMutation("task set status", "close a task with an outcome, or reopen a closed one", "task-id", http.MethodPost, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) + "/status" }, requiredOption(choice("--status", "status", "task status", "open", "closed")), str("--outcome", "outcome", "required when closing"), array("--records", "records", "JSON array of records to append with the transition"))
-	return []*command{create, list, get, update, setStatus}
+	details := caseTaskDetailCommands()
+	return []*command{create, list, commandAlias(details[0], "task get"), commandAlias(details[1], "task update"), commandAlias(details[2], "task set status")}
 }
 
 func recordCommands() []*command {
@@ -334,7 +345,6 @@ func suggestionCommands() []*command {
 		return "/v1/playbooks/" + escaped(playbookID) + "/suggestions"
 	}, requestBody, true, str("--playbook-id", "playbookId", "playbook ID"), str("--base-version-id", "baseVersionId", "base version ID"), str("--target-step-id", "targetStepId", "target step ID"), str("--title", "title", "suggestion title"), str("--content", "content", "suggestion content"))
 	create.Prepare = requireField("playbookId", "Pass --playbook-id <playbook-id> or use `epismo playbook suggestion create <playbook-id>`.")
-	get := apiOperation("suggestion get", "get a suggestion and its resolution state", []string{"suggestion-id"}, http.MethodGet, func(i invocation) string { return "/v1/suggestions/" + escaped(i.positional(0)) }, requestNone, false)
 	listOptions := append(pagingOptions(), str("--playbook-id", "playbookId", "playbook ID"), str("--author-id", "authorId", "author Account ID or me"), choice("--view", "view", "suggestion view (inbox or sent)", "inbox", "sent"), csv("--statuses", "statuses", "comma-separated statuses"))
 	list := apiOperation("suggestion list", "list suggestions across playbooks", nil, http.MethodGet, staticEndpoint("/v1/suggestions"), requestQuery, false, listOptions...)
 	listRun := list.Run
@@ -344,9 +354,8 @@ func suggestionCommands() []*command {
 		}
 		return listRun(a, inv)
 	}
-	update := apiOperation("suggestion update", "edit your own open suggestion", []string{"suggestion-id"}, http.MethodPatch, func(i invocation) string { return "/v1/suggestions/" + escaped(i.positional(0)) }, requestBody, true, str("--title", "title", "suggestion title"), str("--content", "content", "suggestion content"))
-	resolve := apiOperation("suggestion resolve", "apply, decline, archive, or reopen a suggestion", []string{"suggestion-id"}, http.MethodPost, func(i invocation) string { return "/v1/suggestions/" + escaped(i.positional(0)) + "/resolve" }, requestBody, true, choice("--status", "status", "resolution status", "open", "applied", "declined", "archived"), str("--result-version-id", "resultVersionId", "version published from it"))
-	return []*command{create, get, list, update, resolve}
+	details := playbookSuggestionDetailCommands()
+	return []*command{create, commandAlias(details[0], "suggestion get"), list, commandAlias(details[1], "suggestion update"), commandAlias(details[2], "suggestion resolve")}
 }
 
 func playbookSuggestionCommands() []*command {
@@ -357,5 +366,12 @@ func playbookSuggestionCommands() []*command {
 	list := apiOperation("playbook suggestion list", "list suggestions for a playbook", []string{"playbook-id"}, http.MethodGet, func(i invocation) string {
 		return "/v1/playbooks/" + escaped(i.positional(0)) + "/suggestions"
 	}, requestQuery, false, listOptions...)
-	return []*command{create, list}
+	return append([]*command{create, list}, playbookSuggestionDetailCommands()...)
+}
+
+func playbookSuggestionDetailCommands() []*command {
+	get := apiOperation("playbook suggestion get", "get a suggestion and its resolution state", []string{"suggestion-id"}, http.MethodGet, func(i invocation) string { return "/v1/suggestions/" + escaped(i.positional(0)) }, requestNone, false)
+	update := apiOperation("playbook suggestion update", "edit your own open suggestion", []string{"suggestion-id"}, http.MethodPatch, func(i invocation) string { return "/v1/suggestions/" + escaped(i.positional(0)) }, requestBody, true, str("--title", "title", "suggestion title"), str("--content", "content", "suggestion content"))
+	resolve := apiOperation("playbook suggestion resolve", "apply, decline, archive, or reopen a suggestion", []string{"suggestion-id"}, http.MethodPost, func(i invocation) string { return "/v1/suggestions/" + escaped(i.positional(0)) + "/resolve" }, requestBody, true, choice("--status", "status", "resolution status", "open", "applied", "declined", "archived"), str("--result-version-id", "resultVersionId", "version published from it"))
+	return []*command{get, update, resolve}
 }
