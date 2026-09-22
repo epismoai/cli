@@ -178,13 +178,16 @@ func caseHandoffCommands() []*command {
 		str("--from-case-id", "_fromCaseId", "case handing work off to case-id; mutually exclusive with --to-case-id"),
 	)
 	handoff.Prepare = prepareCaseHandoff
+	deleteHandoff := apiOperation("case handoff delete", "remove a directed handoff from a receiving case", []string{"case-id", "handoff-id"}, http.MethodDelete, func(i invocation) string {
+		return "/v1/cases/" + escaped(i.positional(0)) + "/handoffs/" + escaped(i.positional(1))
+	}, requestBody, true)
 	graph := publicApiOperation("case handoff graph", "get a case handoff graph, or only the directly connected cases", []string{"case-id"}, http.MethodGet, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/handoff-graph"
 	}, requestQuery, choice("--scope", "scope", "handoff scope", "self", "ancestors", "descendants", "neighbors", "connected"))
 	candidates := apiOperation("case handoff candidate list", "list open cases this case may still be connected to", []string{"case-id"}, http.MethodGet, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/handoff-candidates"
 	}, requestQuery, false, append(pagingOptions(), choice("--direction", "direction", "outgoing hands this case off; incoming receives a handoff", "outgoing", "incoming"))...)
-	return []*command{handoff, graph, candidates}
+	return []*command{handoff, deleteHandoff, graph, candidates}
 }
 
 func prepareCaseHandoff(inv invocation) (invocation, error) {

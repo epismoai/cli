@@ -80,6 +80,7 @@ epismo case record append CASE_ID --kind output --content "Completed setup"
 epismo case record update RECORD_ID --content "Revised setup notes"
 epismo case record delete RECORD_ID
 epismo case handoff FIRST_CASE_ID --to-case-id SECOND_CASE_ID
+epismo case handoff delete CASE_ID HANDOFF_ID
 epismo case handoff graph CASE_ID --scope connected
 epismo case record list CASE_ID --scope ancestors
 ```
