@@ -72,3 +72,22 @@ func TestCaseHandoffReverseDirectionDryRunUsesNormalizedRequest(t *testing.T) {
 		t.Fatalf("stdout=%s", stdout.String())
 	}
 }
+
+func TestCaseHandoffDelete(t *testing.T) {
+	var method, path string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		method, path = request.Method, request.URL.Path
+		_, _ = io.WriteString(w, `{}`)
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_TOKEN", "test-token")
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+	var stdout, stderr bytes.Buffer
+	if exit := Main([]string{"case", "handoff", "delete", "case-1", "handoff-1"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+		t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
+	}
+	if method != http.MethodDelete || path != "/v1/cases/case-1/handoffs/handoff-1" {
+		t.Fatalf("request %s %s", method, path)
+	}
+}
