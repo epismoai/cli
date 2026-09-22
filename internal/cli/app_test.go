@@ -96,14 +96,14 @@ func TestEveryCommandHasExpectedDryRunSupport(t *testing.T) {
 		"credit checkout": true, "token create": true, "token revoke": true,
 		"playbook create": true, "playbook version archive": true, "playbook version publish": true,
 		"playbook draft save": true, "playbook draft discard": true, "playbook draft publish": true,
-		"playbook access set": true, "playbook owner": true, "playbook archive": true, "playbook share": true,
+		"playbook access set": true, "playbook owner transfer": true, "playbook owner": true, "playbook archive": true, "playbook share": true,
 		"playbook alias set": true, "playbook alias delete": true,
-		"case start": true, "case access set": true, "case share": true, "case assign": true, "case acl": true, "case update": true, "case review": true, "case overview": true, "case handoff": true, "case handoff delete": true, "case close": true, "case reopen": true,
-		"case task create": true, "case record append": true, "case record update": true, "case record delete": true,
+		"case start": true, "case access set": true, "case share": true, "case assign": true, "case acl set": true, "case acl": true, "case update": true, "case review": true, "case overview": true, "case handoff create": true, "case handoff": true, "case handoff remove": true, "case handoff delete": true, "case close": true, "case reopen": true,
+		"case task create": true, "case task update": true, "case task set status": true, "case record append": true, "case record update": true, "case record delete": true,
 		"record append": true, "record update": true, "record delete": true, "task create": true,
 		"task update": true, "task set status": true,
-		"playbook suggestion create": true,
-		"suggestion create":          true, "suggestion update": true, "suggestion resolve": true,
+		"playbook suggestion create": true, "playbook suggestion update": true, "playbook suggestion resolve": true,
+		"suggestion create": true, "suggestion update": true, "suggestion resolve": true,
 	}
 	for _, cmd := range buildCommands() {
 		if cmd.Safety.DryRun != want[cmd.Path] {
