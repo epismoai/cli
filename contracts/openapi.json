@@ -6577,7 +6577,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CaseListResponse"
+                  "$ref": "#/components/schemas/CaseHandoffCandidateListResponse"
                 }
               }
             }
@@ -15379,6 +15379,87 @@
         },
         "additionalProperties": false
       },
+      "CaseHandoffNode": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^[A-Z]{3,5}-[1-9][0-9]*$"
+          },
+          "playbookId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "versionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "completed",
+              "cancelled"
+            ]
+          },
+          "acl": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "lockVersion": {
+            "type": "integer"
+          },
+          "startedBy": {
+            "type": "string"
+          },
+          "assignedTo": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": true
+      },
+      "CaseHandoffCandidateListResponse": {
+        "type": "object",
+        "required": [
+          "cases"
+        ],
+        "properties": {
+          "cases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CaseHandoffNode"
+            }
+          },
+          "nextCursor": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "CaseHandoff": {
         "type": "object",
         "required": [
@@ -15435,7 +15516,7 @@
           "cases": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Case"
+              "$ref": "#/components/schemas/CaseHandoffNode"
             }
           },
           "handoffs": {
