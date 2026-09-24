@@ -4628,7 +4628,8 @@
               "type": "string",
               "enum": [
                 "open",
-                "closed"
+                "completed",
+                "cancelled"
               ]
             }
           },
@@ -4905,7 +4906,7 @@
           "cases"
         ],
         "summary": "GET /v1/cases/popular",
-        "description": "Ranks public cases that have a non-activity record. Preferred languages rank first, followed by English and other languages. Within each language tier, ranking is currently distinct non-archived handoff destinations; scores stay internal and the weights may change. This is a homepage walk, not a complete catalogue. Pass playbookId to rank public cases of that playbook the same way. Works without authentication and is free. Always the public projection (no starter, assignee, or collaborator identities).",
+        "description": "Ranks public cases that have a non-activity record. Ranking is currently distinct non-archived handoff destinations; scores stay internal and the weights may change. This is a homepage walk, not a complete catalogue. Pass playbookId to rank public cases of that playbook the same way. Works without authentication and is free. Always the public projection (no starter, assignee, or collaborator identities).",
         "parameters": [
           {
             "name": "workspaceId",
@@ -4931,19 +4932,6 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "name": "preferredLangs",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "pattern": "^[a-z]{2}$"
-              },
-              "maxItems": 5
             }
           },
           {
@@ -5220,7 +5208,7 @@
           "cases"
         ],
         "summary": "GET /v1/cases/{caseId}",
-        "description": "Work collaborators receive the live case, tasks, the latest 5 records (newest first), and the handoff neighborhood. Public-only readers receive the live title, input, the latest 5 records, and readable handoffs. Follow recordsNextCursor with GET /v1/cases/{caseId}/records for older records.",
+        "description": "Pass the Case UUID or Case code (e.g. PANDA-317). Work collaborators receive the live case, tasks, the latest 5 records (newest first), and the handoff neighborhood. Public-only readers receive the live title, input, the latest 5 records, and readable handoffs. Follow recordsNextCursor with GET /v1/cases/{caseId}/records for older records.",
         "parameters": [
           {
             "name": "caseId",
@@ -13872,12 +13860,11 @@
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
-          "outcome": {
+          "status": {
             "type": "string",
             "enum": [
               "completed",
-              "cancelled",
-              "abandoned"
+              "cancelled"
             ]
           },
           "records": {
@@ -13943,7 +13930,7 @@
         "required": [
           "expectedLockVersion",
           "idempotencyKey",
-          "outcome"
+          "status"
         ]
       },
       "ReviewCaseRequest": {
@@ -15197,6 +15184,10 @@
             "type": "string",
             "format": "uuid"
           },
+          "code": {
+            "type": "string",
+            "pattern": "^[A-Z]{3,5}-[1-9][0-9]*$"
+          },
           "playbookId": {
             "type": "string",
             "format": "uuid"
@@ -15215,15 +15206,8 @@
             "type": "string",
             "enum": [
               "open",
-              "closed"
-            ]
-          },
-          "outcome": {
-            "type": "string",
-            "enum": [
               "completed",
-              "cancelled",
-              "abandoned"
+              "cancelled"
             ]
           },
           "input": {

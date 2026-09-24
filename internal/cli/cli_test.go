@@ -334,11 +334,11 @@ func TestMutationMergesInputAndExplicitFlags(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 
 	var stdout, stderr bytes.Buffer
-	exitCode := Main([]string{"case", "close", "case-1", "--input", `{"outcome":"cancelled","expectedLockVersion":2,"extra":"kept"}`, "--outcome", "completed", "--lock-version", "3"}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode := Main([]string{"case", "close", "case-1", "--input", `{"status":"cancelled","expectedLockVersion":2,"extra":"kept"}`, "--status", "completed", "--lock-version", "3"}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 0 {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
-	if body["outcome"] != "completed" || body["extra"] != "kept" || body["expectedLockVersion"] != float64(3) {
+	if body["status"] != "completed" || body["extra"] != "kept" || body["expectedLockVersion"] != float64(3) {
 		t.Fatalf("body = %#v", body)
 	}
 	if key, _ := body["idempotencyKey"].(string); key == "" {
@@ -433,7 +433,7 @@ func TestRequiredFieldsCanComeFromInputFile(t *testing.T) {
 	t.Setenv("EPISMO_TOKEN", "test-token")
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	inputPath := filepath.Join(t.TempDir(), "request.json")
-	if err := os.WriteFile(inputPath, []byte(`{"expected_lock_version":2,"outcome":"completed"}`), 0o600); err != nil {
+	if err := os.WriteFile(inputPath, []byte(`{"expected_lock_version":2,"status":"completed"}`), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -442,12 +442,12 @@ func TestRequiredFieldsCanComeFromInputFile(t *testing.T) {
 	if exitCode != 0 {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
-	if body["expectedLockVersion"] != float64(2) || body["outcome"] != "completed" {
+	if body["expectedLockVersion"] != float64(2) || body["status"] != "completed" {
 		t.Fatalf("body = %#v", body)
 	}
 	stdout.Reset()
 	stderr.Reset()
-	exitCode = Main([]string{"case", "close", "case-1", "--input", `{"outcome":"completed"}`}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode = Main([]string{"case", "close", "case-1", "--input", `{"status":"completed"}`}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 1 || !strings.Contains(stderr.String(), `"code":"MISSING_OPTION_VALUE"`) {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
@@ -777,7 +777,7 @@ func TestPublicCaseReadsWithoutLogin(t *testing.T) {
 	}{
 		{"records", []string{"case", "record", "list", "case-1", "--scope", "self", "--cursor", "older"}, "/v1/cases/case-1/records?cursor=older&order=desc&scope=self", `{"records":[]}`},
 		{"handoffs", []string{"case", "handoff", "graph", "case-1", "--scope", "neighbors"}, "/v1/cases/case-1/handoff-graph?scope=neighbors", `{"graph":{"cases":[],"handoffs":[]}}`},
-		{"popular", []string{"case", "popular", "--playbook-id", "playbook-1", "--lang", "ja,en"}, "/v1/cases/popular?playbookId=playbook-1&preferredLangs=ja&preferredLangs=en", `{"cases":[]}`},
+		{"popular", []string{"case", "popular", "--playbook-id", "playbook-1"}, "/v1/cases/popular?playbookId=playbook-1", `{"cases":[]}`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			calls := 0
