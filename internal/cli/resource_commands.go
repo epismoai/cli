@@ -88,7 +88,7 @@ func playbookCommands() []*command {
 }
 
 func aliasCommands() []*command {
-	set := &command{Path: "playbook alias set", Summary: "set or rename a playbook alias in the active namespace", Args: []string{"playbook-id", "alias"}, Options: []optionSpec{str("--owner-id", "ownerId", "alias owner Account ID")}, Input: &inputSpec{}, Safety: commandSafety{DryRun: true, IdempotencyKey: true}, Run: func(a *app, inv invocation) (any, error) {
+	set := &command{Path: "playbook alias set", Summary: "set or rename the current owner's playbook alias; a public handle is required", Args: []string{"playbook-id", "alias"}, Options: []optionSpec{str("--owner-id", "ownerId", "alias owner Account ID")}, Input: &inputSpec{}, Safety: commandSafety{DryRun: true, IdempotencyKey: true}, Run: func(a *app, inv invocation) (any, error) {
 		payload, err := inv.payload(a)
 		if err != nil {
 			return nil, err
