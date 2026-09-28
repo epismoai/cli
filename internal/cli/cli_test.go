@@ -89,7 +89,7 @@ func TestCommandSurface(t *testing.T) {
 		case/task/create case/task/list case/task/get case/task/update case/task/set/status case/record/append case/record/list case/record/update case/record/delete
 		record/append record/list record/update record/delete
 		task/create task/list task/get task/update task/set/status
-		playbook/init playbook/search playbook/list playbook/resource/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/access/get playbook/access/set playbook/owner/transfer playbook/owner playbook/archive playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
+		playbook/search playbook/list playbook/resource/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/access/get playbook/access/set playbook/owner/transfer playbook/owner playbook/archive playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
 		playbook/suggestion/create playbook/suggestion/get playbook/suggestion/list playbook/suggestion/update playbook/suggestion/resolve
 		suggestion/create suggestion/get suggestion/list suggestion/update suggestion/resolve
 	`)

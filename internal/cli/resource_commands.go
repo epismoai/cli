@@ -8,16 +8,6 @@ import (
 
 func playbookCommands() []*command {
 	page := pagingOptions()
-	init := &command{Path: "playbook init", Summary: "print a minimal playbook definition template", Options: []optionSpec{str("--title", "title", "initial playbook title"), choice("--category", "category", "initial category", "productivity", "programming", "design", "sales", "marketing", "operations", "learning")}, Examples: []string{"epismo playbook init --title Onboarding > playbook.json", "epismo playbook create --definition @playbook.json"}, Run: func(_ *app, inv invocation) (any, error) {
-		definition := map[string]any{"title": inv.text("title"), "steps": []any{}}
-		if definition["title"] == "" {
-			definition["title"] = "Untitled Playbook"
-		}
-		if category := inv.text("category"); category != "" {
-			definition["category"] = category
-		}
-		return definition, nil
-	}}
 	search := apiOperation("playbook search", "search readable playbooks, including pb: alias references; text results omit full steps, so use playbook get before following one", nil, http.MethodGet, staticEndpoint("/v1/playbooks"), requestQuery, false, append(page, str("--query", "query", "full-text query or pb: alias reference"), choice("--category", "category", "playbook category", "productivity", "programming", "design", "sales", "marketing", "operations", "learning"), csv("--lang", "preferredLangs", "comma-separated two-letter content languages in priority order"))...)
 	list := publicApiOperation("playbook list", "list readable playbooks, most recently updated first; public playbooks work without login", nil, http.MethodGet, staticEndpoint("/v1/playbooks"), requestQuery, append(page, choice("--resource-kind", "resourceKind", "resource kind", "skill", "mcp", "cli", "api", "plugin", "graph", "document", "agent", "custom"), str("--resource-ref", "resourceRef", "normalized or provider-specific resource reference"))...)
 	resourceList := apiOperation("playbook resource list", "list resource references used by readable playbooks", nil, http.MethodGet, staticEndpoint("/v1/playbook-resources"), requestQuery, false, choice("--kind", "kind", "resource kind", "skill", "mcp", "cli", "api", "plugin", "graph", "document", "agent", "custom"), integer("--page-size", "pageSize", "results per page (1-200)"))
@@ -84,7 +74,7 @@ func playbookCommands() []*command {
 	owner := apiOperation("playbook owner transfer", "transfer a playbook to another account", []string{"playbook-id"}, http.MethodPatch, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/owner" }, requestBody, true, requiredOption(str("--owner-id", "ownerId", "User or Workspace account that should own the playbook")))
 	archive := apiOperation("playbook archive", "archive a playbook", []string{"playbook-id"}, http.MethodDelete, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) }, requestBody, true)
 	share := apiOperation("playbook share", "create a share link that redirects to the playbook page; playbook ACLs still apply", []string{"playbook-id"}, http.MethodPost, func(i invocation) string { return "/v1/playbooks/" + escaped(i.positional(0)) + "/share" }, requestBody, true)
-	return []*command{init, search, list, resourceList, create, get, versionList, versionGet, versionArchive, versionPublish, draftGet, draftSave, draftDiscard, draftPublish, accessGet, accessSet, owner, commandAlias(owner, "playbook owner"), archive, share}
+	return []*command{search, list, resourceList, create, get, versionList, versionGet, versionArchive, versionPublish, draftGet, draftSave, draftDiscard, draftPublish, accessGet, accessSet, owner, commandAlias(owner, "playbook owner"), archive, share}
 }
 
 func aliasCommands() []*command {

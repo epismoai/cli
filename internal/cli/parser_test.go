@@ -124,7 +124,7 @@ func TestHelpFlagIsNotMistakenForOptionValue(t *testing.T) {
 }
 
 func TestHelpFlagAfterBooleanOption(t *testing.T) {
-	cmd := playbookCommands()[1]
+	cmd := playbookCommands()[0]
 	if !containsHelpFlag(cmd, []string{"--all", "--help"}) {
 		t.Fatal("--help after a boolean option was not recognized")
 	}
