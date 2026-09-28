@@ -64,8 +64,7 @@ epismo workspace invitation revoke INVITATION_ID
 epismo case start --title "Customer Onboarding"
 epismo --workspace acme playbook search onboarding
 epismo playbook resource list --kind cli
-epismo playbook init --title Onboarding > playbook.json
-epismo playbook create --definition @playbook.json
+epismo playbook create --definition '{"title":"Onboarding","steps":[]}'
 ```
 
 `epismo workspace checkout <workspace-id>` starts a hosted subscription checkout. If the workspace has a cancellation scheduled for the end of its current billing period, it resumes that subscription instead of creating a second one.

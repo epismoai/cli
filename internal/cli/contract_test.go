@@ -137,7 +137,7 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 		"suggestion resolve":           {"post", "/v1/suggestions/{suggestionId}/resolve"},
 	}
 	localOrAuth := map[string]bool{
-		"login": true, "logout": true, "whoami": true, "update": true, "completion": true, "doctor": true, "examples": true, "docs": true, "playbook init": true,
+		"login": true, "logout": true, "whoami": true, "update": true, "completion": true, "doctor": true, "examples": true, "docs": true,
 		"workspace current": true, "workspace clear": true,
 	}
 	for _, cmd := range buildCommands() {

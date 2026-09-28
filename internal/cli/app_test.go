@@ -33,7 +33,7 @@ func TestWorkspaceHandleGlobalOptionResolvesBeforeRequest(t *testing.T) {
 }
 
 func TestSearchConvenienceArgumentPreservesOptionValues(t *testing.T) {
-	cmd := playbookCommands()[1]
+	cmd := playbookCommands()[0]
 	for _, args := range [][]string{
 		{"--category", "learning"},
 		{"--lang", "ja,fr", "onboarding"},
