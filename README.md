@@ -87,7 +87,7 @@ epismo case brief refresh CASE_ID
 epismo case brief set CASE_ID --content "Waiting for launch approval."
 ```
 
-A Brief is one current sentence for a Case. Case reads include it when present. Read it through `case get`, set or clear it with `case brief set`, or refresh it from current case evidence with `case brief refresh`. Refresh runs synchronously and charges token-priced credits to the case billing account; set costs 1 credit to the caller. Reviews do not update the Brief. Pass `--content ''` to clear it.
+A Brief is one current sentence for a Case. Case reads include it when present. Read it through `case get`, set or clear it with `case brief set`, or refresh it from current case evidence with `case brief refresh`. Refresh runs synchronously and charges token-priced credits to the case billing account; set is an update operation costing 2 credits to the editor. Reviews do not update the Brief. Pass `--content ''` to clear it.
 
 ## Playbook access
 
