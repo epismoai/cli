@@ -221,6 +221,7 @@ func printGroupHelp(w io.Writer, prefix string, commands []*command) {
 		"credit":               "view balance and purchase credits",
 		"token":                "manage CLI tokens for CI/CD",
 		"case":                 "save and resume research, plans, implementations, and reviews",
+		"case brief":           "read or edit the current one-line state of a case",
 		"case handoff":         "connect distinct cases and inspect their context links",
 		"playbook":             "manage reusable playbooks",
 		"playbook version":     "read and publish immutable versions",

@@ -16,6 +16,7 @@ func buildCommands() []*command {
 		creditBalanceCommand(), creditCheckoutCommand(), tokenCreateCommand(), tokenListCommand(), tokenRevokeCommand(),
 	}
 	commands = append(commands, caseCommands()...)
+	commands = append(commands, briefCommands()...)
 	commands = append(commands, caseHandoffCommands()...)
 	commands = append(commands, caseTaskCommands()...)
 	commands = append(commands, caseRecordCommands()...)
@@ -37,12 +38,14 @@ func enrichCommands(commands []*command) []*command {
 		"case start":              {"epismo case start --title 'Team invitation design'", "epismo case start --version-id VERSION_ID --title 'Launch review'"},
 		"case list":               {"epismo case list --assigned-to me --status open"},
 		"case get":                {"epismo case get CASE_ID"},
+		"case brief delete":       {"epismo case brief delete CASE_ID"},
+		"case brief refresh":      {"epismo case brief refresh CASE_ID"},
+		"case brief set":          {"epismo case brief set CASE_ID --content 'Waiting for approval.'"},
 		"case popular":            {"epismo case popular"},
 		"case handoff create":     {"epismo case handoff create SALES_CASE_ID --to-case-id ENGINEERING_CASE_ID", "epismo case handoff create ENGINEERING_CASE_ID --from-case-id SALES_CASE_ID"},
 		"case task set status":    {"epismo case task set status TASK_ID --status closed --outcome approved --lock-version LOCK_VERSION"},
 		"case record append":      {`epismo case record append CASE_ID --kind note --origin agent --content 'Goal: team invitations. Decision: reuse existing email flow. Open: expiry behavior. Next: inspect invitation code.'`, `epismo case record append CASE_ID --kind review --origin agent --data '{"verdict":"pass"}' --content 'Shared evidence is sufficient.'`, "epismo case record append CASE_ID --input @record.json"},
 		"case review":             {"epismo case review CASE_ID", "epismo case review CASE_ID --prompt 'Flag missing citations as blockers.'"},
-		"case overview":           {"epismo case overview CASE_ID"},
 		"case record update":      {`epismo case record update RECORD_ID --content 'Updated decision'`},
 		"case record delete":      {"epismo case record delete RECORD_ID"},
 		"workspace list":          {"epismo workspace list --output table", "epismo --workspace acme workspace member list"},
