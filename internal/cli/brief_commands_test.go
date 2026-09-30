@@ -27,6 +27,8 @@ func TestCaseBriefMutationsAndCaseRead(t *testing.T) {
 		requests = append(requests, request{r.Method, r.URL.Path, body})
 		if r.Method == http.MethodGet {
 			_, _ = io.WriteString(w, `{"case":{"id":"case-1","brief":{"updatedAt":"2026-09-30T00:00:00Z","content":"Waiting"}},"tasks":[],"records":[]}`)
+		} else if r.Method == http.MethodDelete {
+			_, _ = io.WriteString(w, `{}`)
 		} else {
 			_, _ = io.WriteString(w, `{"brief":{"updatedAt":"2026-09-30T00:00:00Z","content":"Waiting"}}`)
 		}
@@ -38,14 +40,14 @@ func TestCaseBriefMutationsAndCaseRead(t *testing.T) {
 	for _, args := range [][]string{
 		{"case", "get", "case-1"},
 		{"case", "brief", "set", "case-1", "--content", "Waiting", "--idempotency-key", "33333333-3333-4333-8333-333333333333"},
-		{"case", "brief", "set", "case-1", "--content", "", "--idempotency-key", "44444444-4444-4444-8444-444444444444"},
+		{"case", "brief", "delete", "case-1", "--idempotency-key", "44444444-4444-4444-8444-444444444444"},
 		{"case", "brief", "refresh", "case-1", "--idempotency-key", "55555555-5555-4555-8555-555555555555"},
 	} {
 		var stdout, stderr bytes.Buffer
 		if exit := Main(args, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
 			t.Fatalf("args=%v exit=%d stderr=%s", args, exit, stderr.String())
 		}
-		if !strings.Contains(stdout.String(), `"content": "Waiting"`) {
+		if args[2] != "delete" && !strings.Contains(stdout.String(), `"content": "Waiting"`) {
 			t.Fatalf("Brief missing from output: %s", stdout.String())
 		}
 	}
@@ -57,6 +59,9 @@ func TestCaseBriefMutationsAndCaseRead(t *testing.T) {
 	}
 	for i, request := range requests[1:] {
 		method := http.MethodPut
+		if i == 1 {
+			method = http.MethodDelete
+		}
 		if i == 2 {
 			method = http.MethodPost
 		}
@@ -67,8 +72,11 @@ func TestCaseBriefMutationsAndCaseRead(t *testing.T) {
 	if requests[1].body["content"] != "Waiting" || requests[1].body["idempotencyKey"] != "33333333-3333-4333-8333-333333333333" {
 		t.Fatalf("set body = %+v", requests[1].body)
 	}
-	if requests[2].body["content"] != "" {
-		t.Fatalf("clear body = %+v", requests[2].body)
+	if _, exists := requests[2].body["content"]; exists {
+		t.Fatalf("delete must not send content: %+v", requests[2].body)
+	}
+	if requests[2].body["idempotencyKey"] != "44444444-4444-4444-8444-444444444444" {
+		t.Fatalf("delete body = %+v", requests[2].body)
 	}
 	if requests[3].body["idempotencyKey"] != "55555555-5555-4555-8555-555555555555" {
 		t.Fatalf("refresh body = %+v", requests[3].body)

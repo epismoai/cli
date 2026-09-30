@@ -38,6 +38,7 @@ func enrichCommands(commands []*command) []*command {
 		"case start":              {"epismo case start --title 'Team invitation design'", "epismo case start --version-id VERSION_ID --title 'Launch review'"},
 		"case list":               {"epismo case list --assigned-to me --status open"},
 		"case get":                {"epismo case get CASE_ID"},
+		"case brief delete":       {"epismo case brief delete CASE_ID"},
 		"case brief refresh":      {"epismo case brief refresh CASE_ID"},
 		"case brief set":          {"epismo case brief set CASE_ID --content 'Waiting for approval.'"},
 		"case popular":            {"epismo case popular"},
