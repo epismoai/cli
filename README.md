@@ -82,7 +82,12 @@ epismo case handoff create FIRST_CASE_ID --to-case-id SECOND_CASE_ID
 epismo case handoff remove CASE_ID HANDOFF_ID
 epismo case handoff graph get CASE_ID --scope connected
 epismo case record list CASE_ID --scope ancestors
+epismo case get CASE_ID
+epismo case brief refresh CASE_ID
+epismo case brief set CASE_ID --content "Waiting for launch approval."
 ```
+
+A Brief is one current sentence for a Case. Case reads include it when present. Read it through `case get`, set or clear it with `case brief set`, or refresh it from current case evidence with `case brief refresh`. Refresh runs synchronously and charges token-priced credits to the case billing account; set costs 1 credit to the caller. Reviews do not update the Brief. Pass `--content ''` to clear it.
 
 ## Playbook access
 
