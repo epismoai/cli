@@ -99,7 +99,7 @@ func TestEveryCommandHasExpectedDryRunSupport(t *testing.T) {
 		"playbook access set": true, "playbook owner transfer": true, "playbook owner": true, "playbook archive": true, "playbook share": true,
 		"playbook alias set": true, "playbook alias delete": true,
 		"case start": true, "case access set": true, "case share": true, "case assign": true, "case acl set": true, "case acl": true, "case update": true, "case review": true, "case handoff create": true, "case handoff": true, "case handoff remove": true, "case handoff delete": true, "case close": true, "case reopen": true,
-		"case brief set": true, "case brief delete": true, "case brief refresh": true,
+		"case brief set": true, "case brief delete": true, "case brief generate": true,
 		"case task create": true, "case task update": true, "case task set status": true, "case record append": true, "case record update": true, "case record delete": true,
 		"record append": true, "record update": true, "record delete": true, "task create": true,
 		"task update": true, "task set status": true,
