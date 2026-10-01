@@ -5808,7 +5808,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RefreshBriefRequest"
+                "$ref": "#/components/schemas/GenerateBriefRequest"
               }
             }
           }
@@ -13357,7 +13357,7 @@
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "description": "User account you manage, or the Workspace this request is connected to. Any member of that Workspace may create a playbook owned by it; making it public and other access changes still require an Owner or Admin."
+            "description": "User account you manage, or the workspace this request is connected to. Any member of that workspace may create a playbook owned by it; making it public and other access changes still require an owner or admin."
           },
           "access": {
             "default": {
@@ -13368,7 +13368,7 @@
             "properties": {
               "visibility": {
                 "default": "private",
-                "description": "Public permits published reads only; it is not workspace-member visibility. Only an Owner or Admin can make a playbook public.",
+                "description": "Public permits published reads only; it is not workspace-member visibility. Only an owner or admin can make a playbook public.",
                 "type": "string",
                 "enum": [
                   "private",
@@ -13377,7 +13377,7 @@
               },
               "editors": {
                 "default": [],
-                "description": "Account or Team principal IDs that may edit content. Owners, and every member of a workspace-owned playbook, are implicit and omitted.",
+                "description": "Account or team principal IDs that may edit content. Owners, and every member of a workspace-owned playbook, are implicit and omitted.",
                 "type": "array",
                 "items": {
                   "type": "string",
@@ -13882,7 +13882,7 @@
           },
           "editors": {
             "default": [],
-            "description": "Account or Team principal IDs that may edit content. Owners, and every member of a workspace-owned playbook, are implicit and omitted.",
+            "description": "Account or team principal IDs that may edit content. Owners, and every member of a workspace-owned playbook, are implicit and omitted.",
             "type": "array",
             "items": {
               "type": "string",
@@ -13909,7 +13909,7 @@
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "description": "User or Workspace account that should own the playbook. Any member may move a personally owned private playbook into the Workspace this request is connected to. A Workspace-owned playbook can only move to that Workspace's Owner or the playbook creator."
+            "description": "User or workspace account that should own the playbook. Any member may move a personally owned private playbook into the workspace this request is connected to. A workspace-owned playbook can only move to that workspace's owner or the playbook creator."
           },
           "idempotencyKey": {
             "type": "string",
@@ -14270,7 +14270,7 @@
           "idempotencyKey"
         ]
       },
-      "RefreshBriefRequest": {
+      "GenerateBriefRequest": {
         "type": "object",
         "properties": {
           "idempotencyKey": {

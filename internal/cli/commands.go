@@ -39,7 +39,7 @@ func enrichCommands(commands []*command) []*command {
 		"case list":               {"epismo case list --assigned-to me --status open"},
 		"case get":                {"epismo case get CASE_ID"},
 		"case brief delete":       {"epismo case brief delete CASE_ID"},
-		"case brief refresh":      {"epismo case brief refresh CASE_ID"},
+		"case brief generate":     {"epismo case brief generate CASE_ID"},
 		"case brief set":          {"epismo case brief set CASE_ID --content 'Waiting for approval.'"},
 		"case popular":            {"epismo case popular"},
 		"case handoff create":     {"epismo case handoff create SALES_CASE_ID --to-case-id ENGINEERING_CASE_ID", "epismo case handoff create ENGINEERING_CASE_ID --from-case-id SALES_CASE_ID"},

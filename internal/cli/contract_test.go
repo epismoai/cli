@@ -88,7 +88,7 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 		"case get":                     {"get", "/v1/cases/{caseId}"},
 		"case brief delete":            {"delete", "/v1/cases/{caseId}/brief"},
 		"case brief set":               {"put", "/v1/cases/{caseId}/brief"},
-		"case brief refresh":           {"post", "/v1/cases/{caseId}/brief"},
+		"case brief generate":          {"post", "/v1/cases/{caseId}/brief"},
 		"case list":                    {"get", "/v1/cases"},
 		"case popular":                 {"get", "/v1/cases/popular"},
 		"case access get":              {"get", "/v1/cases/{caseId}/access"},

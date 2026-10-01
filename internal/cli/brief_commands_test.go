@@ -41,7 +41,7 @@ func TestCaseBriefMutationsAndCaseRead(t *testing.T) {
 		{"case", "get", "case-1"},
 		{"case", "brief", "set", "case-1", "--content", "Waiting", "--idempotency-key", "33333333-3333-4333-8333-333333333333"},
 		{"case", "brief", "delete", "case-1", "--idempotency-key", "44444444-4444-4444-8444-444444444444"},
-		{"case", "brief", "refresh", "case-1", "--idempotency-key", "55555555-5555-4555-8555-555555555555"},
+		{"case", "brief", "generate", "case-1", "--idempotency-key", "55555555-5555-4555-8555-555555555555"},
 	} {
 		var stdout, stderr bytes.Buffer
 		if exit := Main(args, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
@@ -79,9 +79,9 @@ func TestCaseBriefMutationsAndCaseRead(t *testing.T) {
 		t.Fatalf("delete body = %+v", requests[2].body)
 	}
 	if requests[3].body["idempotencyKey"] != "55555555-5555-4555-8555-555555555555" {
-		t.Fatalf("refresh body = %+v", requests[3].body)
+		t.Fatalf("generate body = %+v", requests[3].body)
 	}
 	if _, exists := requests[3].body["content"]; exists {
-		t.Fatalf("refresh must not send manually authored content: %+v", requests[3].body)
+		t.Fatalf("generate must not send manually authored content: %+v", requests[3].body)
 	}
 }
