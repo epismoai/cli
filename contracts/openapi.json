@@ -14226,14 +14226,6 @@
                     "agent"
                   ]
                 },
-                "clientName": {
-                  "type": "string",
-                  "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
-                },
-                "clientVersion": {
-                  "type": "string",
-                  "maxLength": 255
-                },
                 "idempotencyKey": {
                   "type": "string",
                   "format": "uuid",
@@ -14452,14 +14444,6 @@
                     "agent"
                   ]
                 },
-                "clientName": {
-                  "type": "string",
-                  "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
-                },
-                "clientVersion": {
-                  "type": "string",
-                  "maxLength": 255
-                },
                 "idempotencyKey": {
                   "type": "string",
                   "format": "uuid",
@@ -14514,14 +14498,6 @@
               "user",
               "agent"
             ]
-          },
-          "clientName": {
-            "type": "string",
-            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
-          },
-          "clientVersion": {
-            "type": "string",
-            "maxLength": 255
           },
           "idempotencyKey": {
             "type": "string",
