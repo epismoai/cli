@@ -13368,7 +13368,7 @@
             "properties": {
               "visibility": {
                 "default": "private",
-                "description": "Public permits published reads only; it is not workspace-member visibility. Only an owner or admin can make a playbook public.",
+                "description": "Public permits published reads only; it is not workspace-member visibility. Editors can update sharing while retaining at least one team or another user as an editor; only an owner or admin can remove all additional sharing.",
                 "type": "string",
                 "enum": [
                   "private",
@@ -13377,7 +13377,7 @@
               },
               "editors": {
                 "default": [],
-                "description": "Account or team principal IDs that may edit content. Owners, and every member of a workspace-owned playbook, are implicit and omitted.",
+                "description": "Active user account or team principal IDs that may edit content. Owners and workspace owners/admins retain implicit edit access and are omitted. Other workspace members have implicit published read access only.",
                 "type": "array",
                 "items": {
                   "type": "string",
@@ -13882,7 +13882,7 @@
           },
           "editors": {
             "default": [],
-            "description": "Account or team principal IDs that may edit content. Owners, and every member of a workspace-owned playbook, are implicit and omitted.",
+            "description": "Active user account or team principal IDs that may edit content. Owners and workspace owners/admins retain implicit edit access and are omitted. Other workspace members have implicit published read access only.",
             "type": "array",
             "items": {
               "type": "string",
