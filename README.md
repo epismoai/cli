@@ -100,7 +100,9 @@ epismo playbook access set PLAYBOOK_ID --visibility public --editors USER_ID,TEA
 epismo playbook owner transfer PLAYBOOK_ID --owner-id WORKSPACE_OR_USER_ID
 ```
 
-`public` permits published reads only. Editors can read and edit playbook content; the owner, and every member of a workspace-owned playbook, are implicit and are not included in `--editors`. Workspace members can read and edit playbooks owned by a workspace they belong to. Only the owner (including workspace owners and admins for a workspace-owned playbook) can manage access, public visibility, and archive playbooks or historical versions. Any member may create a playbook owned by a workspace they belong to, or move a personally owned private playbook into it with `playbook owner transfer`.
+`public` permits published reads only. The Playbook owner and workspace owners/admins retain implicit edit access and need no explicit `--editors` grant. Every workspace member can read published workspace-owned Playbooks; other members need an explicit user or team editor grant to edit them. Editors can change visibility and collaborators while retaining at least one team or another user as an explicit editor. Only owner managers can remove all additional sharing, archive a Playbook, or archive a historical version. Any member may create a Playbook owned by their workspace, or move a personally owned private Playbook into it with `playbook owner transfer`.
+
+Case editors can change public/private visibility and collaborators while retaining at least one team or another user as an explicit editor. Only the current Case assignee can remove all additional sharing or archive the Case. Access changes must preserve every task assignee's edit access. The dedicated `playbook access get` remains owner-manager-only, and `case access get` remains current-assignee-only; editors can inspect collaborators with the normal `playbook get` or `case get` before replacing sharing.
 
 Run `epismo --help` for command groups, or append `--help` to any group or command for its options.
 
