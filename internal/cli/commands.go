@@ -16,6 +16,7 @@ func buildCommands() []*command {
 		creditBalanceCommand(), creditCheckoutCommand(), tokenCreateCommand(), tokenListCommand(), tokenRevokeCommand(),
 	}
 	commands = append(commands, caseCommands()...)
+	commands = append(commands, caseSourceCommands()...)
 	commands = append(commands, briefCommands()...)
 	commands = append(commands, caseHandoffCommands()...)
 	commands = append(commands, caseTaskCommands()...)
@@ -38,6 +39,10 @@ func enrichCommands(commands []*command) []*command {
 		"case start":              {"epismo case start --title 'Team invitation design'", "epismo case start --version-id VERSION_ID --title 'Launch review'"},
 		"case list":               {"epismo case list --assigned-to me --status open"},
 		"case get":                {"epismo case get CASE_ID"},
+		"case source link":        {"epismo case source link CASE_ID --url https://acme.slack.com/archives/C123/p1234567890123456"},
+		"case source unlink":      {"epismo case source unlink CASE_ID SOURCE_ID"},
+		"case source refresh":     {"epismo case source refresh CASE_ID SOURCE_ID"},
+		"case source get":         {"epismo case source get CASE_ID SOURCE_ID"},
 		"case brief delete":       {"epismo case brief delete CASE_ID"},
 		"case brief generate":     {"epismo case brief generate CASE_ID"},
 		"case brief set":          {"epismo case brief set CASE_ID --content 'Waiting for approval.'"},
@@ -60,7 +65,7 @@ func enrichCommands(commands []*command) []*command {
 }
 
 func requiresConfirmation(path string) bool {
-	for _, token := range []string{" archive", " delete", " remove", " revoke", " close", " acl", " access set", " set status", "workspace clear"} {
+	for _, token := range []string{" unlink", " archive", " delete", " remove", " revoke", " close", " acl", " access set", " set status", "workspace clear"} {
 		if strings.Contains(" "+path, token) {
 			return true
 		}

@@ -90,6 +90,19 @@ epismo case brief set CASE_ID --content "Waiting for launch approval."
 
 A Brief is one current sentence for a case. Closing the case does not remove it, and an archived case cannot be changed. Case reads include it when present. Read it through `case get`, set it with `case brief set`, delete it with `case brief delete`, or generate it from current case evidence with `case brief generate`. Generation runs synchronously and charges token-priced credits to the case billing account; set and delete are update operations costing 2 credits each to the acting user's active workspace, or personal account when no workspace is selected. Reviews do not update the Brief. Set requires non-empty content.
 
+## Case sources
+
+Link external evidence to a case and read its saved content with `case get`.
+Slack threads require a connected Slack account in the selected workspace.
+
+```sh
+epismo case source link CASE_ID --url 'https://acme.slack.com/archives/C123/p1234567890123456'
+epismo case get CASE_ID
+```
+
+Run `epismo source --help` for get, refresh, and unlink commands, and use
+command-level help for access requirements and credit costs.
+
 ## Playbook access
 
 Use `visibility` and explicit editors instead of a raw ACL:
