@@ -5653,15 +5653,13 @@
             }
           }
         }
-      }
-    },
-    "/v1/cases/{caseId}/source-snapshots/{revision}": {
+      },
       "get": {
-        "operationId": "getV1CasesCaseIdSourceSnapshotsRevision",
+        "operationId": "getV1CasesCaseIdSourcesSourceId",
         "tags": [
           "cases"
         ],
-        "summary": "GET /v1/cases/{caseId}/source-snapshots/{revision}",
+        "summary": "GET /v1/cases/{caseId}/sources/{sourceId}",
         "parameters": [
           {
             "name": "caseId",
@@ -5672,7 +5670,7 @@
             }
           },
           {
-            "name": "revision",
+            "name": "sourceId",
             "in": "path",
             "required": true,
             "schema": {
@@ -5701,7 +5699,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SourceSnapshotResponse"
+                  "$ref": "#/components/schemas/SourceResponse"
                 }
               }
             }
@@ -16287,18 +16285,6 @@
         },
         "additionalProperties": false
       },
-      "SourceSnapshotResponse": {
-        "type": "object",
-        "required": [
-          "snapshot"
-        ],
-        "properties": {
-          "snapshot": {
-            "$ref": "#/components/schemas/SourceSnapshot"
-          }
-        },
-        "additionalProperties": false
-      },
       "Source": {
         "type": "object",
         "required": [
@@ -16364,7 +16350,7 @@
           },
           "snapshotOmitted": {
             "type": "boolean",
-            "description": "Payload omitted from the Case response budget. Retrieve the complete snapshot by revision."
+            "description": "Payload omitted from the Case response budget. Retrieve the latest complete content with GET /v1/cases/{caseId}/sources/{sourceId}."
           }
         },
         "additionalProperties": false

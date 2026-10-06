@@ -100,7 +100,7 @@ epismo source link CASE_ID --url 'https://acme.slack.com/archives/C123/p12345678
 epismo case get CASE_ID
 ```
 
-Run `epismo source --help` for refresh, snapshot, and unlink commands, and use
+Run `epismo source --help` for get, refresh, and unlink commands, and use
 command-level help for access requirements and credit costs.
 
 ## Playbook access

@@ -117,7 +117,7 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 		"source link":                  {"post", "/v1/cases/{caseId}/sources"},
 		"source unlink":                {"delete", "/v1/cases/{caseId}/sources/{sourceId}"},
 		"source refresh":               {"post", "/v1/cases/{caseId}/sources/{sourceId}/refresh"},
-		"source snapshot get":          {"get", "/v1/cases/{caseId}/source-snapshots/{revision}"},
+		"source get":                   {"get", "/v1/cases/{caseId}/sources/{sourceId}"},
 		"case record append":           {"post", "/v1/cases/{caseId}/records"},
 		"case record list":             {"get", "/v1/cases/{caseId}/records"},
 		"case record update":           {"patch", "/v1/records/{recordId}"},

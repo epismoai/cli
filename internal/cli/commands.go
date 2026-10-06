@@ -42,7 +42,7 @@ func enrichCommands(commands []*command) []*command {
 		"source link":             {"epismo source link CASE_ID --url https://acme.slack.com/archives/C123/p1234567890123456"},
 		"source unlink":           {"epismo source unlink CASE_ID SOURCE_ID"},
 		"source refresh":          {"epismo source refresh CASE_ID SOURCE_ID"},
-		"source snapshot get":     {"epismo source snapshot get CASE_ID REVISION"},
+		"source get":              {"epismo source get CASE_ID SOURCE_ID"},
 		"case brief delete":       {"epismo case brief delete CASE_ID"},
 		"case brief generate":     {"epismo case brief generate CASE_ID"},
 		"case brief set":          {"epismo case brief set CASE_ID --content 'Waiting for approval.'"},
