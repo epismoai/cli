@@ -16,7 +16,7 @@ func buildCommands() []*command {
 		creditBalanceCommand(), creditCheckoutCommand(), tokenCreateCommand(), tokenListCommand(), tokenRevokeCommand(),
 	}
 	commands = append(commands, caseCommands()...)
-	commands = append(commands, sourceCommands()...)
+	commands = append(commands, caseSourceCommands()...)
 	commands = append(commands, briefCommands()...)
 	commands = append(commands, caseHandoffCommands()...)
 	commands = append(commands, caseTaskCommands()...)
@@ -39,10 +39,10 @@ func enrichCommands(commands []*command) []*command {
 		"case start":              {"epismo case start --title 'Team invitation design'", "epismo case start --version-id VERSION_ID --title 'Launch review'"},
 		"case list":               {"epismo case list --assigned-to me --status open"},
 		"case get":                {"epismo case get CASE_ID"},
-		"source link":             {"epismo source link CASE_ID --url https://acme.slack.com/archives/C123/p1234567890123456"},
-		"source unlink":           {"epismo source unlink CASE_ID SOURCE_ID"},
-		"source refresh":          {"epismo source refresh CASE_ID SOURCE_ID"},
-		"source get":              {"epismo source get CASE_ID SOURCE_ID"},
+		"case source link":        {"epismo case source link CASE_ID --url https://acme.slack.com/archives/C123/p1234567890123456"},
+		"case source unlink":      {"epismo case source unlink CASE_ID SOURCE_ID"},
+		"case source refresh":     {"epismo case source refresh CASE_ID SOURCE_ID"},
+		"case source get":         {"epismo case source get CASE_ID SOURCE_ID"},
 		"case brief delete":       {"epismo case brief delete CASE_ID"},
 		"case brief generate":     {"epismo case brief generate CASE_ID"},
 		"case brief set":          {"epismo case brief set CASE_ID --content 'Waiting for approval.'"},
@@ -102,7 +102,7 @@ func completionScript(shell string) string {
 }
 
 func buildCommandWords() []string {
-	return []string{"login", "logout", "whoami", "workspace", "team", "case", "playbook", "source", "task", "record", "suggestion", "token", "credit", "doctor", "examples", "completion", "docs", "update"}
+	return []string{"login", "logout", "whoami", "workspace", "team", "case", "playbook", "task", "record", "suggestion", "token", "credit", "doctor", "examples", "completion", "docs", "update"}
 }
 
 func doctorCommand() *command {

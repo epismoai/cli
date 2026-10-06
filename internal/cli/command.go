@@ -227,7 +227,7 @@ func printGroupHelp(w io.Writer, prefix string, commands []*command) {
 		"playbook version":     "read and publish immutable versions",
 		"playbook draft":       "edit a mutable draft before publishing",
 		"playbook alias":       "manage playbook aliases in the active namespace",
-		"source":               "link, refresh, and unlink external evidence shared with case collaborators",
+		"case source":          "link, refresh, and unlink external evidence shared with case collaborators",
 		"task":                 "manage materialized case tasks",
 		"record":               "append, update, or redact records and browse the ACL-scoped activity feed",
 		"suggestion":           "manage playbook suggestions",

@@ -88,7 +88,7 @@ func TestCommandSurface(t *testing.T) {
 		case/start case/get case/list case/popular case/access/get case/access/set case/share case/assign case/acl/set case/acl case/update case/review case/handoff/create case/handoff case/handoff/remove case/handoff/delete case/handoff/graph/get case/handoff/graph case/handoff/candidates/list case/handoff/candidate/list case/close case/reopen
 		case/task/create case/task/list case/task/get case/task/update case/task/set/status case/record/append case/record/list case/record/update case/record/delete
 		case/brief/set case/brief/delete case/brief/generate
-		source/link source/unlink source/refresh source/get
+		case/source/link case/source/unlink case/source/refresh case/source/get
 		record/append record/list record/update record/delete
 		task/create task/list task/get task/update task/set/status
 		playbook/search playbook/list playbook/resource/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/access/get playbook/access/set playbook/owner/transfer playbook/owner playbook/archive playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
@@ -820,10 +820,10 @@ func TestSourceCommandsSendAuthenticatedRequests(t *testing.T) {
 		path   string
 		body   map[string]any
 	}{
-		{"link", []string{"source", "link", "case-id", "--url", "https://acme.slack.com/archives/C1/p1234567890123456", "--idempotency-key", "retry-key"}, http.MethodPost, "/v1/cases/case-id/sources", map[string]any{"url": "https://acme.slack.com/archives/C1/p1234567890123456", "idempotencyKey": "retry-key"}},
-		{"unlink", []string{"source", "unlink", "case-id", "source-id", "--idempotency-key", "retry-key"}, http.MethodDelete, "/v1/cases/case-id/sources/source-id", map[string]any{"idempotencyKey": "retry-key"}},
-		{"refresh", []string{"source", "refresh", "case-id", "source-id", "--idempotency-key", "retry-key"}, http.MethodPost, "/v1/cases/case-id/sources/source-id/refresh", map[string]any{"idempotencyKey": "retry-key"}},
-		{"get", []string{"source", "get", "case-id", "source-id"}, http.MethodGet, "/v1/cases/case-id/sources/source-id", nil},
+		{"link", []string{"case", "source", "link", "case-id", "--url", "https://acme.slack.com/archives/C1/p1234567890123456", "--idempotency-key", "retry-key"}, http.MethodPost, "/v1/cases/case-id/sources", map[string]any{"url": "https://acme.slack.com/archives/C1/p1234567890123456", "idempotencyKey": "retry-key"}},
+		{"unlink", []string{"case", "source", "unlink", "case-id", "source-id", "--idempotency-key", "retry-key"}, http.MethodDelete, "/v1/cases/case-id/sources/source-id", map[string]any{"idempotencyKey": "retry-key"}},
+		{"refresh", []string{"case", "source", "refresh", "case-id", "source-id", "--idempotency-key", "retry-key"}, http.MethodPost, "/v1/cases/case-id/sources/source-id/refresh", map[string]any{"idempotencyKey": "retry-key"}},
+		{"get", []string{"case", "source", "get", "case-id", "source-id"}, http.MethodGet, "/v1/cases/case-id/sources/source-id", nil},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

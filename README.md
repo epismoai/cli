@@ -96,7 +96,7 @@ Link external evidence to a case and read its saved content with `case get`.
 Slack threads require a connected Slack account in the selected workspace.
 
 ```sh
-epismo source link CASE_ID --url 'https://acme.slack.com/archives/C123/p1234567890123456'
+epismo case source link CASE_ID --url 'https://acme.slack.com/archives/C123/p1234567890123456'
 epismo case get CASE_ID
 ```
 
