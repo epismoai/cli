@@ -53,6 +53,9 @@ func TestDryRunDoesNotCallAPIForAnyMutationClass(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 
 	tests := [][]string{
+		{"source", "link", "case-1", "--url", "https://acme.slack.com/archives/C1/p1234567890123456", "--dry-run"},
+		{"source", "unlink", "case-1", "source-1", "--dry-run"},
+		{"source", "refresh", "case-1", "source-1", "--dry-run"},
 		{"playbook", "archive", "playbook-1", "--dry-run"},                                    // dangerous API mutation
 		{"playbook", "create", "--definition", `{"title":"Preview","steps":[]}`, "--dry-run"}, // non-dangerous idempotent API mutation
 		{"playbook", "draft", "save", "playbook-1", "--definition", `{"title":"Draft","steps":[]}`, "--dry-run"},
@@ -99,6 +102,7 @@ func TestEveryCommandHasExpectedDryRunSupport(t *testing.T) {
 		"playbook access set": true, "playbook owner transfer": true, "playbook owner": true, "playbook archive": true, "playbook share": true,
 		"playbook alias set": true, "playbook alias delete": true,
 		"case start": true, "case access set": true, "case share": true, "case assign": true, "case acl set": true, "case acl": true, "case update": true, "case review": true, "case handoff create": true, "case handoff": true, "case handoff remove": true, "case handoff delete": true, "case close": true, "case reopen": true,
+		"source link": true, "source unlink": true, "source refresh": true,
 		"case brief set": true, "case brief delete": true, "case brief generate": true,
 		"case task create": true, "case task update": true, "case task set status": true, "case record append": true, "case record update": true, "case record delete": true,
 		"record append": true, "record update": true, "record delete": true, "task create": true,

@@ -88,6 +88,7 @@ func TestCommandSurface(t *testing.T) {
 		case/start case/get case/list case/popular case/access/get case/access/set case/share case/assign case/acl/set case/acl case/update case/review case/handoff/create case/handoff case/handoff/remove case/handoff/delete case/handoff/graph/get case/handoff/graph case/handoff/candidates/list case/handoff/candidate/list case/close case/reopen
 		case/task/create case/task/list case/task/get case/task/update case/task/set/status case/record/append case/record/list case/record/update case/record/delete
 		case/brief/set case/brief/delete case/brief/generate
+		source/link source/unlink source/refresh source/snapshot/get
 		record/append record/list record/update record/delete
 		task/create task/list task/get task/update task/set/status
 		playbook/search playbook/list playbook/resource/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/access/get playbook/access/set playbook/owner/transfer playbook/owner playbook/archive playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
@@ -806,6 +807,67 @@ func TestPublicCaseReadsWithoutLogin(t *testing.T) {
 			}
 			if calls != 1 {
 				t.Fatalf("requests = %d, want 1", calls)
+			}
+		})
+	}
+}
+
+func TestSourceCommandsSendAuthenticatedRequests(t *testing.T) {
+	cases := []struct {
+		name   string
+		args   []string
+		method string
+		path   string
+		body   map[string]any
+	}{
+		{"link", []string{"source", "link", "case-id", "--url", "https://acme.slack.com/archives/C1/p1234567890123456", "--idempotency-key", "retry-key"}, http.MethodPost, "/v1/cases/case-id/sources", map[string]any{"url": "https://acme.slack.com/archives/C1/p1234567890123456", "idempotencyKey": "retry-key"}},
+		{"unlink", []string{"source", "unlink", "case-id", "source-id", "--idempotency-key", "retry-key"}, http.MethodDelete, "/v1/cases/case-id/sources/source-id", map[string]any{"idempotencyKey": "retry-key"}},
+		{"refresh", []string{"source", "refresh", "case-id", "source-id", "--idempotency-key", "retry-key"}, http.MethodPost, "/v1/cases/case-id/sources/source-id/refresh", map[string]any{"idempotencyKey": "retry-key"}},
+		{"snapshot", []string{"source", "snapshot", "get", "case-id", "revision-id"}, http.MethodGet, "/v1/cases/case-id/source-snapshots/revision-id", nil},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			called := false
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodGet && r.URL.Path == "/v1/workspaces" {
+					_, _ = io.WriteString(w, `{"workspaces":[{"id":"11111111-1111-4111-8111-111111111111","handle":"acme"}]}`)
+					return
+				}
+				called = true
+				if r.Method != tc.method || r.URL.Path != tc.path {
+					t.Errorf("request = %s %s, want %s %s", r.Method, r.URL.Path, tc.method, tc.path)
+				}
+				if got := r.Header.Get("Authorization"); got != "Bearer test-token" {
+					t.Errorf("authorization = %q", got)
+				}
+				if got := r.URL.Query().Get("workspaceId"); got != "11111111-1111-4111-8111-111111111111" {
+					t.Errorf("workspace = %q", got)
+				}
+				if tc.body != nil {
+					var body map[string]any
+					if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+						t.Error(err)
+						return
+					}
+					if !reflect.DeepEqual(body, tc.body) {
+						t.Errorf("body = %#v, want %#v", body, tc.body)
+					}
+				} else if body, _ := io.ReadAll(r.Body); len(body) != 0 {
+					t.Errorf("unexpected GET body: %s", body)
+				}
+				_, _ = io.WriteString(w, `{"snapshot":{"capturedAt":"2026-10-05T00:00:00Z"}}`)
+			}))
+			defer server.Close()
+			t.Setenv("EPISMO_API_URL", server.URL)
+			t.Setenv("EPISMO_TOKEN", "test-token")
+			t.Setenv("EPISMO_WORKSPACE", "11111111-1111-4111-8111-111111111111")
+			t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+			var stdout, stderr bytes.Buffer
+			if code := Main(tc.args, "test", strings.NewReader(""), &stdout, &stderr); code != 0 {
+				t.Fatalf("exit = %d, stderr = %s", code, stderr.String())
+			}
+			if !called || !strings.Contains(stdout.String(), `"captured_at"`) {
+				t.Fatalf("request sent = %v, stdout = %s", called, stdout.String())
 			}
 		})
 	}
