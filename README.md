@@ -90,23 +90,18 @@ epismo case brief set CASE_ID --content "Waiting for launch approval."
 
 A Brief is one current sentence for a case. Closing the case does not remove it, and an archived case cannot be changed. Case reads include it when present. Read it through `case get`, set it with `case brief set`, delete it with `case brief delete`, or generate it from current case evidence with `case brief generate`. Generation runs synchronously and charges token-priced credits to the case billing account; set and delete are update operations costing 2 credits each to the acting user's active workspace, or personal account when no workspace is selected. Reviews do not update the Brief. Set requires non-empty content.
 
-## Slack sources
+## Case sources
 
-Connect your Slack account with `/epismo connect` after a workspace Owner or Admin installs the Slack app. Select that workspace in the CLI before linking a thread you can read:
+Link external evidence to a case and read its saved content with `case get`.
+Slack threads require a connected Slack account in the selected workspace.
 
 ```sh
 epismo source link CASE_ID --url 'https://acme.slack.com/archives/C123/p1234567890123456'
 epismo case get CASE_ID
-epismo source refresh CASE_ID SOURCE_ID
-epismo source snapshot get CASE_ID REVISION
-epismo source unlink CASE_ID SOURCE_ID
 ```
 
-Sources are separate from timeline records. `case get` includes saved sources for work collaborators; inspect their status, `checked_at`, and snapshot `captured_at` before relying on the content. Reads use saved captures and never fetch Slack. Fetching runs asynchronously; no partial capture is published. When `snapshot_omitted` is true, retrieve the saved revision with `source snapshot get`.
-
-Link and unlink cost 2 credits each; linking includes the first completed capture, even when updates queue before it starts. Each subsequent completed manual or automatic capture costs 1 credit per open, non-archived case sharing the source, plus each closed case whose explicit refresh request it fulfills, billed to each case’s billing account. Queuing, failures, pagination, and retries are free; requests coalesced into one capture incur one charge per participating case. Use the same idempotency key for an uncertain retry. Unlink removes that case’s capture history; disconnecting or losing Slack authorization removes affected captures. Text already copied into records, reviews, or a Brief remains.
-
-Linked content is readable by all case work collaborators, including those without access to the original Slack thread. Public readers cannot see sources. Review the case audience before linking or expanding sharing. The Web app displays, links, refreshes, and unlinks sources. In an open case you can edit, choose **Add source** under **External sources** and paste a Slack thread URL. The picker offers **Integration settings** when authorization is needed or no source connections are available. New links can also come from Slack's **Link thread to Epismo** shortcut or CLI/API/MCP.
+Run `epismo source --help` for refresh, snapshot, and unlink commands, and use
+command-level help for access requirements and credit costs.
 
 ## Playbook access
 
