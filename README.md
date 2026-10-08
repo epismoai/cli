@@ -103,19 +103,29 @@ epismo case get CASE_ID
 Run `epismo source --help` for get, refresh, and unlink commands, and use
 command-level help for access requirements and credit costs.
 
-## Playbook access
+## Access and sharing
 
-Use one nested `access` object with visibility and UUID-to-role grants:
+Resources use a nested `access` object with `visibility` (`private` or `public`) and UUID-to-role grants (`viewer` or `editor`):
 
 ```sh
-epismo playbook access get PLAYBOOK_ID
+# Set resource access (replaces the access configuration)
 epismo playbook access set PLAYBOOK_ID --access '{"visibility":"public","grants":{"11111111-1111-4111-8111-111111111111":"viewer"}}'
+epismo case access set CASE_ID --access '{"visibility":"private","grants":{"11111111-1111-4111-8111-111111111111":"editor"}}'
 epismo playbook owner transfer PLAYBOOK_ID --owner-id WORKSPACE_OR_USER_ID
+
+# Create an independent copy of a published playbook version
+epismo playbook copy PLAYBOOK_ID --source-version-id VERSION_ID --owner-id ACCOUNT_ID
+epismo playbook copies list PLAYBOOK_ID --all
+
+# Connect workspaces with shared teams
+epismo -w sender team invite TEAM_ID --emails customer@example.com
+epismo -w sender team invitation list TEAM_ID
+epismo team invitation get TOKEN
+epismo -w recipient team invitation accept TOKEN
+epismo -w recipient team disconnect TEAM_ID
 ```
 
-`public` permits published reads only. The Playbook owner and workspace owners/admins retain implicit edit access and need no explicit editor grant. Every workspace member can read published workspace-owned Playbooks; other members need an explicit user or team editor grant to edit them. Editors can change visibility and collaborators while retaining at least one team or another user as an explicit editor. Only owner managers can remove all additional sharing, archive a Playbook, or archive a historical version. Any member may create a Playbook owned by their workspace, or move a personally owned private Playbook into it with `playbook owner transfer`.
-
-Case editors can change public/private visibility and collaborators while retaining at least one team or another user as an explicit editor. Only the current Case assignee can remove all additional sharing or archive the Case. Access changes must preserve every task assignee's edit access. The dedicated `playbook access get` remains owner-manager-only, and `case access get` remains current-assignee-only; normal resource reads omit private grant maps; retrieve and retain the complete configuration through a manager before replacing sharing.
+`--access` is accepted on `playbook create`, `case start`, `playbook copy`, and access setters. Viewers can read published Playbooks and private Cases, Tasks, Records, and linked sources; editors can update content and drafts. Case editors can change visibility and collaborators while retaining at least one explicit editor. Owner managers or Case assignees can remove sharing or archive resources.
 
 Run `epismo --help` for command groups, or append `--help` to any group or command for its options.
 
@@ -229,50 +239,3 @@ Releases are built for macOS, Linux, and Windows from semantic-version tags such
 ## License
 
 [Apache License 2.0](LICENSE).
-
-## Access roles, shared teams, and independent copies
-
-`playbook create`, `case start`, `playbook copy`, and both access setters accept
-`--access '{"visibility":"private","grants":{"<user-or-team-uuid>":"viewer"}}'`.
-Creation defaults to private with no explicit grants. Setters replace the entire
-object; retain unrelated grants when changing only visibility. An empty map clears
-explicit sharing independently of publication; `public` is never a grant key.
-Viewers can read published Playbooks and private Cases, Tasks, Records, and linked
-sources. Editing and Playbook drafts require editor access. `--access` replaces
-the old `--visibility`, `--editors`, and creation `--acl` flags. Case ACL mutation
-commands are removed; Record `--acl` remains a read filter. Grant UUID keys stay
-unchanged while ordinary CLI fields use snake_case.
-
-```sh
-epismo playbook copy PLAYBOOK_ID --source-version-id VERSION_ID --owner-id ACCOUNT_ID
-epismo playbook copies list PLAYBOOK_ID --all
-epismo -w sender team invite TEAM_ID --emails customer@example.com
-epismo -w sender team invitation list TEAM_ID
-epismo team invitation get TOKEN
-epismo -w recipient team invitation accept TOKEN
-epismo -w sender team invitation revoke TEAM_ID INVITATION_ID
-epismo -w recipient team disconnect TEAM_ID
-epismo workspace create --handle customer --team-invitation-token TOKEN
-```
-
-Copies have independent content and versions; they do not inherit access, drafts,
-Cases, suggestions, aliases, stars, or history, and edits never synchronize.
-`copied_from` records the source/version; its `source_accessible` indicates whether
-the source remains readable. Copy lists include only readable copies. Copying
-costs the normal Playbook creation price.
-
-Only team participants who are owners or admins of their connected workspace
-can send, list, or revoke team invitations.
-
-Team invitations are email-bound and expire after fourteen days. The recipient
-chooses a workspace; acceptance adds that recipient, not every workspace member.
-Accepting into an already connected workspace returns HTTP `409` without consuming
-the invitation. Use `team member add` to add participants in that workspace.
-Each workspace manages its participants. The same user can participate through
-multiple workspaces; removing their membership in one preserves the others.
-Disconnect removes its participants
-and team access without removing other connections or direct user grants. Both
-the participation workspace and resource home must remain connected for a team
-grant to apply. Subscription requirements still apply. `case popular --assigned-to
-ACCOUNT_ID` lists public Cases assigned to a profile, newest first, including
-Cases without Records.
