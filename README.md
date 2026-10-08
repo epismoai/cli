@@ -261,9 +261,16 @@ Cases, suggestions, aliases, stars, or history, and edits never synchronize.
 the source remains readable. Copy lists include only readable copies. Copying
 costs the normal Playbook creation price.
 
+Only team participants who are owners or admins of their connected workspace
+can send, list, or revoke team invitations.
+
 Team invitations are email-bound and expire after fourteen days. The recipient
 chooses a workspace; acceptance adds that recipient, not every workspace member.
-Each workspace manages its participants. Disconnect removes its participants
+Accepting into an already connected workspace returns HTTP `409` without consuming
+the invitation. Use `team member add` to add participants in that workspace.
+Each workspace manages its participants. The same user can participate through
+multiple workspaces; removing their membership in one preserves the others.
+Disconnect removes its participants
 and team access without removing other connections or direct user grants. Both
 the participation workspace and resource home must remain connected for a team
 grant to apply. Subscription requirements still apply. `case popular --assigned-to
