@@ -51,6 +51,14 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 		"workspace member invite":      {"put", "/v1/workspaces/{workspaceId}/members"},
 		"workspace member delete":      {"delete", "/v1/workspaces/{workspaceId}/members"},
 		"workspace invitation revoke":  {"delete", "/v1/workspaces/{workspaceId}/invitations/{invitationId}"},
+		"team invite":                  {"post", "/v1/teams/{teamId}/invitations"},
+		"team invitation list":         {"get", "/v1/teams/{teamId}/invitations"},
+		"team invitation revoke":       {"delete", "/v1/teams/{teamId}/invitations/{invitationId}"},
+		"team invitation get":          {"get", "/v1/invitations/{token}"},
+		"team invitation accept":       {"post", "/v1/invitations/{token}/accept"},
+		"team disconnect":              {"delete", "/v1/teams/{teamId}/connection"},
+		"playbook copy":                {"post", "/v1/playbooks/{id}/copies"},
+		"playbook copies list":         {"get", "/v1/playbooks/{id}/copies"},
 		"team list":                    {"get", "/v1/teams"},
 		"team create":                  {"post", "/v1/teams"},
 		"team update":                  {"patch", "/v1/teams/{teamId}"},
@@ -95,8 +103,6 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 		"case access set":              {"put", "/v1/cases/{caseId}/access"},
 		"case share":                   {"post", "/v1/cases/{caseId}/share"},
 		"case assign":                  {"patch", "/v1/cases/{caseId}/assignee"},
-		"case acl set":                 {"patch", "/v1/cases/{caseId}/acl"},
-		"case acl":                     {"patch", "/v1/cases/{caseId}/acl"},
 		"case update":                  {"patch", "/v1/cases/{caseId}"},
 		"case review":                  {"post", "/v1/cases/{caseId}/review"},
 		"case handoff create":          {"post", "/v1/cases/{caseId}/handoffs"},
@@ -186,6 +192,7 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 func TestQueryCommandOptionsMatchOpenAPI(t *testing.T) {
 	contract := readOpenAPIContract(t)
 	routes := map[string]string{
+		"playbook copies list":         "/v1/playbooks/{id}/copies",
 		"playbook search":              "/v1/playbooks",
 		"playbook list":                "/v1/playbooks",
 		"playbook resource list":       "/v1/playbook-resources",

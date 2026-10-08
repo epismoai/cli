@@ -103,19 +103,29 @@ epismo case get CASE_ID
 Run `epismo source --help` for get, refresh, and unlink commands, and use
 command-level help for access requirements and credit costs.
 
-## Playbook access
+## Access and sharing
 
-Use `visibility` and explicit editors instead of a raw ACL:
+Resources use a nested `access` object with `visibility` (`private` or `public`) and UUID-to-role grants (`viewer` or `editor`):
 
 ```sh
-epismo playbook access get PLAYBOOK_ID
-epismo playbook access set PLAYBOOK_ID --visibility public --editors USER_ID,TEAM_ID
+# Set resource access (replaces the access configuration)
+epismo playbook access set PLAYBOOK_ID --access '{"visibility":"public","grants":{"11111111-1111-4111-8111-111111111111":"viewer"}}'
+epismo case access set CASE_ID --access '{"visibility":"private","grants":{"11111111-1111-4111-8111-111111111111":"editor"}}'
 epismo playbook owner transfer PLAYBOOK_ID --owner-id WORKSPACE_OR_USER_ID
+
+# Create an independent copy of a published playbook version
+epismo playbook copy PLAYBOOK_ID --source-version-id VERSION_ID --owner-id ACCOUNT_ID
+epismo playbook copies list PLAYBOOK_ID --all
+
+# Connect workspaces with shared teams
+epismo -w sender team invite TEAM_ID --emails customer@example.com
+epismo -w sender team invitation list TEAM_ID
+epismo team invitation get TOKEN
+epismo -w recipient team invitation accept TOKEN
+epismo -w recipient team disconnect TEAM_ID
 ```
 
-`public` permits published reads only. The Playbook owner and workspace owners/admins retain implicit edit access and need no explicit `--editors` grant. Every workspace member can read published workspace-owned Playbooks; other members need an explicit user or team editor grant to edit them. Editors can change visibility and collaborators while retaining at least one team or another user as an explicit editor. Only owner managers can remove all additional sharing, archive a Playbook, or archive a historical version. Any member may create a Playbook owned by their workspace, or move a personally owned private Playbook into it with `playbook owner transfer`.
-
-Case editors can change public/private visibility and collaborators while retaining at least one team or another user as an explicit editor. Only the current Case assignee can remove all additional sharing or archive the Case. Access changes must preserve every task assignee's edit access. The dedicated `playbook access get` remains owner-manager-only, and `case access get` remains current-assignee-only; editors can inspect collaborators with the normal `playbook get` or `case get` before replacing sharing.
+`--access` is accepted on `playbook create`, `case start`, `playbook copy`, and access setters. Viewers can read published Playbooks and private Cases, Tasks, Records, and linked sources; editors can update content and drafts. Case editors can change visibility and collaborators while retaining at least one explicit editor. Owner managers or Case assignees can remove sharing or archive resources.
 
 Run `epismo --help` for command groups, or append `--help` to any group or command for its options.
 
@@ -143,7 +153,14 @@ Interactive prompts such as the email-code input prompt are plain terminal text.
 Progress and warnings use a common event envelope:
 
 ```json
-{"event":{"level":"info","code":"BROWSER_WAITING","message":"Waiting for authorization in your browser...","details":{"timeout_seconds":300}}}
+{
+  "event": {
+    "level": "info",
+    "code": "BROWSER_WAITING",
+    "message": "Waiting for authorization in your browser...",
+    "details": { "timeout_seconds": 300 }
+  }
+}
 ```
 
 Commands that accept a request body support inline JSON, a file, or stdin:
@@ -184,7 +201,7 @@ Workspace references accept an exact ID or unique handle. The effective workspac
 
 `epismo login` opens a browser-based OAuth login. With `--email`, it automatically uses your organization SSO when available, otherwise it prompts for an email code.
 
-`epismo case get`, `epismo case popular`, `epismo case record list`, `epismo case handoff graph get`, `epismo playbook list`, and UUID-based `epismo playbook get` work before login for public cases and public playbooks. `epismo case get` accepts a case code (e.g. `PANDA-317`) or UUID. Public case reads expose the current title, input, records, and readable handoffs; tasks, assignment, and collaborator identities remain restricted to work collaborators. `case get` includes the latest ten records; pass its `records_next_cursor` to `case record list --cursor` with `--scope self` for older public records. Use `case popular --playbook-id <id>` to filter discovery. The CLI creates a stable random `anonymousId` in its config for analytics and fair-use rate limiting; it is not an authentication credential. Search, aliases, private data, live case work, and writes still require login.
+`epismo case get`, `epismo case popular`, `epismo case record list`, `epismo case handoff graph get`, `epismo playbook list`, and UUID-based `epismo playbook get` work before login for public cases and public playbooks. `epismo case get` accepts a case code (e.g. `PANDA-317`) or UUID. Public Case reads expose titles, inputs, Tasks, Records, Briefs, readable handoffs, and public author/assignee account references. Private grants, linked sources, and private configuration remain omitted. `case get` includes the latest ten records; pass its `records_next_cursor` to `case record list --cursor` with `--scope self` for older public records. Use `case popular --playbook-id <id>` to filter discovery. The CLI creates a stable random `anonymousId` in its config for analytics and fair-use rate limiting; it is not an authentication credential. Search, aliases, private data, live case work, and writes still require login.
 
 For CI or other non-interactive use, create a workspace-scoped token and pass it with `EPISMO_TOKEN`:
 

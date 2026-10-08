@@ -83,15 +83,15 @@ func TestCommandSurface(t *testing.T) {
 	expected := strings.Fields(`
 		login logout whoami update completion doctor examples docs
 		workspace/list workspace/current workspace/use workspace/clear workspace/create workspace/checkout workspace/update workspace/member/list workspace/member/upsert workspace/member/invite workspace/member/delete workspace/invitation/revoke
-		team/list team/create team/update team/member/list team/member/add team/member/delete
+		team/invite team/invitation/list team/invitation/revoke team/invitation/get team/invitation/accept team/disconnect team/list team/create team/update team/member/list team/member/add team/member/delete
 		credit/balance credit/checkout token/create token/list token/revoke
-		case/start case/get case/list case/popular case/access/get case/access/set case/share case/assign case/acl/set case/acl case/update case/review case/handoff/create case/handoff case/handoff/remove case/handoff/delete case/handoff/graph/get case/handoff/graph case/handoff/candidates/list case/handoff/candidate/list case/close case/reopen
+		case/start case/get case/list case/popular case/access/get case/access/set case/share case/assign case/update case/review case/handoff/create case/handoff case/handoff/remove case/handoff/delete case/handoff/graph/get case/handoff/graph case/handoff/candidates/list case/handoff/candidate/list case/close case/reopen
 		case/task/create case/task/list case/task/get case/task/update case/task/set/status case/record/append case/record/list case/record/update case/record/delete
 		case/brief/set case/brief/delete case/brief/generate
 		case/source/link case/source/unlink case/source/refresh case/source/get
 		record/append record/list record/update record/delete
 		task/create task/list task/get task/update task/set/status
-		playbook/search playbook/list playbook/resource/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/access/get playbook/access/set playbook/owner/transfer playbook/owner playbook/archive playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
+		playbook/copy playbook/copies/list playbook/search playbook/list playbook/resource/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/access/get playbook/access/set playbook/owner/transfer playbook/owner playbook/archive playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
 		playbook/suggestion/create playbook/suggestion/get playbook/suggestion/list playbook/suggestion/update playbook/suggestion/resolve
 		suggestion/create suggestion/get suggestion/list suggestion/update suggestion/resolve
 	`)
@@ -170,7 +170,7 @@ func TestPlaybookAccessCommandsUsePublicTerminology(t *testing.T) {
 		method = request.Method
 		requestPath = request.URL.Path
 		_ = json.NewDecoder(request.Body).Decode(&body)
-		_, _ = io.WriteString(w, `{"playbookId":"playbook-1","visibility":"public","editors":["team-1"]}`)
+		_, _ = io.WriteString(w, `{"playbookId":"playbook-1","access":{"visibility":"public","grants":{"11111111-1111-4111-8111-111111111111":"viewer"}}}`)
 	}))
 	defer server.Close()
 	t.Setenv("EPISMO_API_URL", server.URL)
@@ -178,7 +178,7 @@ func TestPlaybookAccessCommandsUsePublicTerminology(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 
 	var stdout, stderr bytes.Buffer
-	exitCode := Main([]string{"playbook", "access", "set", "playbook-1", "--visibility", "public", "--editors", "team-1,user-1", "--yes"}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode := Main([]string{"playbook", "access", "set", "playbook-1", "--access", `{"visibility":"public","grants":{"11111111-1111-4111-8111-111111111111":"viewer","22222222-2222-4222-8222-222222222222":"editor"}}`, "--yes"}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 0 {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
@@ -188,12 +188,16 @@ func TestPlaybookAccessCommandsUsePublicTerminology(t *testing.T) {
 	if _, exists := body["acl"]; exists {
 		t.Fatalf("request exposed internal ACL terminology: %#v", body)
 	}
-	if body["visibility"] != "public" {
-		t.Fatalf("visibility = %#v", body["visibility"])
+	access, _ := body["access"].(map[string]any)
+	if access["visibility"] != "public" {
+		t.Fatalf("access = %#v", access)
 	}
-	editors, _ := body["editors"].([]any)
-	if len(editors) != 2 || editors[0] != "team-1" || editors[1] != "user-1" {
-		t.Fatalf("editors = %#v", body["editors"])
+	grants, _ := access["grants"].(map[string]any)
+	if len(grants) != 2 || grants["11111111-1111-4111-8111-111111111111"] != "viewer" || grants["22222222-2222-4222-8222-222222222222"] != "editor" {
+		t.Fatalf("grants = %#v", grants)
+	}
+	if !strings.Contains(stdout.String(), "11111111-1111-4111-8111-111111111111") {
+		t.Fatalf("output lost the grant UUID: %s", stdout.String())
 	}
 }
 
