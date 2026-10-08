@@ -4595,6 +4595,1149 @@
         }
       }
     },
+    "/v1/playbooks/{id}/copies": {
+      "post": {
+        "operationId": "postV1PlaybooksIdCopies",
+        "tags": [
+          "playbooks"
+        ],
+        "summary": "POST /v1/playbooks/{id}/copies",
+        "description": "Copy an accessible immutable version. Uses access: { visibility, grants } on the new copy.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopyPlaybookRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "getV1PlaybooksIdCopies",
+        "tags": [
+          "playbooks"
+        ],
+        "summary": "GET /v1/playbooks/{id}/copies",
+        "description": "List readable Playbooks copied from this source.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/teams/{teamId}/invitations": {
+      "post": {
+        "operationId": "postV1TeamsTeamIdInvitations",
+        "tags": [
+          "teams"
+        ],
+        "summary": "POST /v1/teams/{teamId}/invitations",
+        "description": "Invite email recipients to connect a workspace they select. Requires participation in the team from the selected workspace.",
+        "parameters": [
+          {
+            "name": "teamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "emails"
+                ],
+                "properties": {
+                  "emails": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string",
+                      "format": "email"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "getV1TeamsTeamIdInvitations",
+        "tags": [
+          "teams"
+        ],
+        "summary": "GET /v1/teams/{teamId}/invitations",
+        "description": "List pending email-bound team invitations.",
+        "parameters": [
+          {
+            "name": "teamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/teams/{teamId}/invitations/{invitationId}": {
+      "delete": {
+        "operationId": "deleteV1TeamsTeamIdInvitationsInvitationId",
+        "tags": [
+          "teams"
+        ],
+        "summary": "DELETE /v1/teams/{teamId}/invitations/{invitationId}",
+        "description": "Revoke a pending team invitation.",
+        "parameters": [
+          {
+            "name": "teamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "invitationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/teams/{teamId}/connection": {
+      "delete": {
+        "operationId": "deleteV1TeamsTeamIdConnection",
+        "tags": [
+          "teams"
+        ],
+        "summary": "DELETE /v1/teams/{teamId}/connection",
+        "description": "Disconnect the selected workspace and remove its team participants. Other workspace connections remain.",
+        "parameters": [
+          {
+            "name": "teamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/invitations/{token}": {
+      "get": {
+        "operationId": "getV1InvitationsToken",
+        "tags": [
+          "invitations"
+        ],
+        "summary": "GET /v1/invitations/{token}",
+        "description": "Resolve a team invitation bound to the authenticated recipient's email.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/invitations/{token}/accept": {
+      "post": {
+        "operationId": "postV1InvitationsTokenAccept",
+        "tags": [
+          "invitations"
+        ],
+        "summary": "POST /v1/invitations/{token}/accept",
+        "description": "Connect the recipient-selected workspace and add the recipient's team participation atomically.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/cases": {
       "get": {
         "operationId": "getV1Cases",
@@ -4906,7 +6049,7 @@
           "cases"
         ],
         "summary": "GET /v1/cases/popular",
-        "description": "Ranks public cases that have a non-activity record. Ranking is currently distinct non-archived handoff destinations; scores stay internal and the weights may change. This is a homepage walk, not a complete catalogue. Pass playbookId to rank public cases of that playbook the same way. Works without authentication and is free. Always the public projection (no starter, assignee, or collaborator identities).",
+        "description": "Ranks public cases that have a non-activity record. Ranking is currently distinct non-archived handoff destinations; scores stay internal and the weights may change. This is a homepage walk, not a complete catalogue. Pass playbookId to rank public cases of that playbook the same way. Works without authentication and is free. Pass assignedTo to list non-archived public cases assigned to a profile, including cases without records, newest first. Always returns the public projection, including tasks and public account references, without private grants or linked sources.",
         "parameters": [
           {
             "name": "workspaceId",
@@ -4936,6 +6079,14 @@
           },
           {
             "name": "playbookId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assignedTo",
             "in": "query",
             "required": false,
             "schema": {
@@ -6695,7 +7846,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CaseResponse"
+                  "$ref": "#/components/schemas/CaseAccessResponse"
                 }
               }
             }
@@ -6831,152 +7982,6 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AssignCaseRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CaseResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "402": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/cases/{caseId}/acl": {
-      "patch": {
-        "operationId": "patchV1CasesCaseIdAcl",
-        "tags": [
-          "cases"
-        ],
-        "summary": "PATCH /v1/cases/{caseId}/acl",
-        "parameters": [
-          {
-            "name": "caseId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "workspaceId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "security": [
-          {
-            "OAuth2": [
-              "write"
-            ]
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateCaseAclRequest"
               }
             }
           }
@@ -11689,7 +12694,7 @@
           "playbooks"
         ],
         "summary": "Get playbook access",
-        "description": "Returns public/private visibility and explicit editors. Owners are implicit and are not editors.",
+        "description": "Returns access: { visibility, grants }. Owners retain implicit rights and are omitted from the grant map.",
         "parameters": [
           {
             "name": "playbookId",
@@ -11824,7 +12829,7 @@
           "playbooks"
         ],
         "summary": "Set playbook access",
-        "description": "Workspace members can read and edit workspace-owned playbooks. Only the owner (including Workspace Owners/Admins) can manage access, archive, and make a playbook public. Public grants published read access only.",
+        "description": "Replaces access: { visibility, grants } atomically. Viewers cannot edit. Editors must preserve collaborative editing; only a manager can clear all additional sharing. Public grants published reads only.",
         "parameters": [
           {
             "name": "playbookId",
@@ -13846,19 +14851,37 @@
       "SetCaseAccessRequest": {
         "type": "object",
         "properties": {
-          "visibility": {
-            "type": "string",
-            "enum": [
-              "private",
-              "public"
-            ]
-          },
-          "editors": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1
-            }
+          "access": {
+            "type": "object",
+            "properties": {
+              "visibility": {
+                "default": "private",
+                "description": "Public permits published reads only; never grants editing.",
+                "type": "string",
+                "enum": [
+                  "private",
+                  "public"
+                ]
+              },
+              "grants": {
+                "default": {},
+                "description": "Complete user/team UUID grant map. Replaces all explicit grants; an empty map clears them. Owners and Case assignees retain implicit rights.",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "enum": [
+                    "viewer",
+                    "editor"
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false
           },
           "expectedLockVersion": {
             "type": "integer",
@@ -13872,8 +14895,7 @@
           }
         },
         "required": [
-          "visibility",
-          "editors",
+          "access",
           "expectedLockVersion",
           "idempotencyKey"
         ]
@@ -13899,6 +14921,10 @@
             "minLength": 3,
             "maxLength": 30,
             "pattern": "^(?!-)[a-z0-9-]+(?<!-)$"
+          },
+          "teamInvitationToken": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": [
@@ -14003,27 +15029,34 @@
           "access": {
             "default": {
               "visibility": "private",
-              "editors": []
+              "grants": {}
             },
             "type": "object",
             "properties": {
               "visibility": {
                 "default": "private",
-                "description": "Public permits published reads only; it is not workspace-member visibility. Editors can update sharing while retaining at least one team or another user as an editor; only an owner or admin can remove all additional sharing.",
+                "description": "Public permits published reads only; never grants editing.",
                 "type": "string",
                 "enum": [
                   "private",
                   "public"
                 ]
               },
-              "editors": {
-                "default": [],
-                "description": "Active user account or team principal IDs that may edit content. Owners and workspace owners/admins retain implicit edit access and are omitted. Other workspace members have implicit published read access only.",
-                "type": "array",
-                "items": {
+              "grants": {
+                "default": {},
+                "description": "Complete user/team UUID grant map. Replaces all explicit grants; an empty map clears them. Owners and Case assignees retain implicit rights.",
+                "type": "object",
+                "propertyNames": {
                   "type": "string",
                   "format": "uuid",
                   "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "enum": [
+                    "viewer",
+                    "editor"
+                  ]
                 }
               }
             },
@@ -14514,22 +15547,37 @@
       "SetPlaybookAccessRequest": {
         "type": "object",
         "properties": {
-          "visibility": {
-            "type": "string",
-            "enum": [
-              "private",
-              "public"
-            ]
-          },
-          "editors": {
-            "default": [],
-            "description": "Active user account or team principal IDs that may edit content. Owners and workspace owners/admins retain implicit edit access and are omitted. Other workspace members have implicit published read access only.",
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-            }
+          "access": {
+            "type": "object",
+            "properties": {
+              "visibility": {
+                "default": "private",
+                "description": "Public permits published reads only; never grants editing.",
+                "type": "string",
+                "enum": [
+                  "private",
+                  "public"
+                ]
+              },
+              "grants": {
+                "default": {},
+                "description": "Complete user/team UUID grant map. Replaces all explicit grants; an empty map clears them. Owners and Case assignees retain implicit rights.",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "enum": [
+                    "viewer",
+                    "editor"
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false
           },
           "idempotencyKey": {
             "type": "string",
@@ -14538,10 +15586,9 @@
           }
         },
         "required": [
-          "visibility",
+          "access",
           "idempotencyKey"
-        ],
-        "additionalProperties": false
+        ]
       },
       "TransferPlaybookOwnerRequest": {
         "type": "object",
@@ -14646,12 +15693,41 @@
             },
             "additionalProperties": {}
           },
-          "acl": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1
-            }
+          "access": {
+            "default": {
+              "visibility": "private",
+              "grants": {}
+            },
+            "type": "object",
+            "properties": {
+              "visibility": {
+                "default": "private",
+                "description": "Public permits published reads only; never grants editing.",
+                "type": "string",
+                "enum": [
+                  "private",
+                  "public"
+                ]
+              },
+              "grants": {
+                "default": {},
+                "description": "Complete user/team UUID grant map. Replaces all explicit grants; an empty map clears them. Owners and Case assignees retain implicit rights.",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "enum": [
+                    "viewer",
+                    "editor"
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false
           },
           "idempotencyKey": {
             "type": "string",
@@ -14664,7 +15740,75 @@
         },
         "required": [
           "idempotencyKey"
-        ]
+        ],
+        "additionalProperties": false
+      },
+      "CopyPlaybookRequest": {
+        "type": "object",
+        "properties": {
+          "sourceVersionId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "ownerId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "access": {
+            "default": {
+              "visibility": "private",
+              "grants": {}
+            },
+            "type": "object",
+            "properties": {
+              "visibility": {
+                "default": "private",
+                "description": "Public permits published reads only; never grants editing.",
+                "type": "string",
+                "enum": [
+                  "private",
+                  "public"
+                ]
+              },
+              "grants": {
+                "default": {},
+                "description": "Complete user/team UUID grant map. Replaces all explicit grants; an empty map clears them. Owners and Case assignees retain implicit rights.",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "enum": [
+                    "viewer",
+                    "editor"
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "sourceVersionId",
+          "ownerId",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
       },
       "AssignCaseRequest": {
         "type": "object",
@@ -14687,33 +15831,6 @@
         },
         "required": [
           "assignedTo",
-          "expectedLockVersion",
-          "idempotencyKey"
-        ]
-      },
-      "UpdateCaseAclRequest": {
-        "type": "object",
-        "properties": {
-          "acl": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1
-            }
-          },
-          "expectedLockVersion": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "idempotencyKey": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          }
-        },
-        "required": [
-          "acl",
           "expectedLockVersion",
           "idempotencyKey"
         ]
@@ -15809,30 +16926,55 @@
         },
         "additionalProperties": false
       },
-      "PlaybookAccessResponse": {
+      "Access": {
         "type": "object",
-        "required": [
-          "playbookId",
-          "visibility",
-          "editors"
-        ],
         "properties": {
-          "playbookId": {
-            "type": "string",
-            "format": "uuid"
-          },
           "visibility": {
+            "default": "private",
+            "description": "Public permits published reads only; never grants editing.",
             "type": "string",
             "enum": [
               "private",
               "public"
             ]
           },
-          "editors": {
-            "type": "array",
-            "items": {
-              "type": "string"
+          "grants": {
+            "default": {},
+            "description": "Complete user/team UUID grant map. Replaces all explicit grants; an empty map clears them. Owners and Case assignees retain implicit rights.",
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "viewer",
+                "editor"
+              ]
             }
+          }
+        },
+        "required": [
+          "visibility",
+          "grants"
+        ],
+        "additionalProperties": false
+      },
+      "PlaybookAccessResponse": {
+        "type": "object",
+        "required": [
+          "playbookId",
+          "access"
+        ],
+        "properties": {
+          "playbookId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "access": {
+            "$ref": "#/components/schemas/Access"
           }
         },
         "additionalProperties": false
@@ -16151,12 +17293,6 @@
             "type": "object",
             "additionalProperties": true
           },
-          "acl": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
           "lockVersion": {
             "type": "integer"
           },
@@ -16196,26 +17332,23 @@
       "CaseAccessResponse": {
         "type": "object",
         "required": [
-          "visibility",
-          "editors",
+          "caseId",
+          "access",
           "lockVersion"
         ],
         "properties": {
-          "visibility": {
+          "caseId": {
             "type": "string",
-            "enum": [
-              "public",
-              "private"
-            ]
+            "format": "uuid"
           },
-          "editors": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+          "access": {
+            "$ref": "#/components/schemas/Access"
           },
           "lockVersion": {
             "type": "integer"
+          },
+          "case": {
+            "$ref": "#/components/schemas/Case"
           }
         },
         "additionalProperties": false
@@ -16493,12 +17626,6 @@
               "completed",
               "cancelled"
             ]
-          },
-          "acl": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           },
           "lockVersion": {
             "type": "integer"

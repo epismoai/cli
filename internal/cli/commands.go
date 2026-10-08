@@ -15,6 +15,7 @@ func buildCommands() []*command {
 		teamListCommand(), teamCreateCommand(), teamUpdateCommand(), teamMemberListCommand(), teamMemberAddCommand(), teamMemberDeleteCommand(),
 		creditBalanceCommand(), creditCheckoutCommand(), tokenCreateCommand(), tokenListCommand(), tokenRevokeCommand(),
 	}
+	commands = append(commands, sharedTeamCommands()...)
 	commands = append(commands, caseCommands()...)
 	commands = append(commands, caseSourceCommands()...)
 	commands = append(commands, briefCommands()...)
@@ -65,7 +66,7 @@ func enrichCommands(commands []*command) []*command {
 }
 
 func requiresConfirmation(path string) bool {
-	for _, token := range []string{" unlink", " archive", " delete", " remove", " revoke", " close", " acl", " access set", " set status", "workspace clear"} {
+	for _, token := range []string{" disconnect", " unlink", " archive", " delete", " remove", " revoke", " close", " acl", " access set", " set status", "workspace clear"} {
 		if strings.Contains(" "+path, token) {
 			return true
 		}
@@ -314,7 +315,7 @@ func workspaceClearCommand() *command {
 }
 
 func workspaceCreateCommand() *command {
-	cmd := apiOperationUnscoped("workspace create", "create a new workspace", nil, http.MethodPost, staticEndpoint("/v1/workspaces"), requestBody, false, str("--handle", "handle", "workspace handle (URL-safe slug)"))
+	cmd := apiOperationUnscoped("workspace create", "create a new workspace", nil, http.MethodPost, staticEndpoint("/v1/workspaces"), requestBody, false, str("--handle", "handle", "workspace handle (URL-safe slug)"), str("--team-invitation-token", "teamInvitationToken", "accept a team invitation atomically with workspace creation"))
 	oldRun := cmd.Run
 	cmd.Run = func(a *app, inv invocation) (any, error) {
 		created, err := oldRun(a, inv)
