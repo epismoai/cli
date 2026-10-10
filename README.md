@@ -94,17 +94,8 @@ A Brief is one current sentence for a case. Closing the case does not remove it,
 
 Link external evidence to a case and read its saved content with `case get`.
 Slack threads require a connected Slack account in the selected workspace.
-Google Drive supports personal and workspace spaces, using a separate Google
-connection for each space. In Epismo Web, connect Google Drive from Integration
-settings or a Case, then select a native Google Doc, Sheet, or Slide with Google
-Picker. Workspace Owners and Admins can prohibit Google Drive; it is allowed by
-default. Personal spaces connect directly.
-
-After granting selected-file access in Web, use its URL with the same CLI command.
-Linking shares the saved text with Case work collaborators, including those without
-access to the original file. Provider selection is automatic; Google Drive sources
-return `provider: "gdrive"`. Reads use saved content; request a refresh to retrieve
-changes. Epismo does not edit Google files or import PDFs or binary uploads.
+For Google Docs, Sheets, or Slides, connect Google Drive and select the file in
+Epismo Web first, then link its URL. See [Google Drive setup](https://epismo.ai/en/docs/integrations/google-drive).
 
 ```sh
 epismo case source link CASE_ID --url 'https://acme.slack.com/archives/C123/p1234567890123456'
