@@ -825,6 +825,7 @@ func TestSourceCommandsSendAuthenticatedRequests(t *testing.T) {
 		body   map[string]any
 	}{
 		{"link", []string{"case", "source", "link", "case-id", "--url", "https://acme.slack.com/archives/C1/p1234567890123456", "--idempotency-key", "retry-key"}, http.MethodPost, "/v1/cases/case-id/sources", map[string]any{"url": "https://acme.slack.com/archives/C1/p1234567890123456", "idempotencyKey": "retry-key"}},
+		{"gdrive link", []string{"case", "source", "link", "case-id", "--url", "https://docs.google.com/document/d/file-id/edit", "--idempotency-key", "retry-key"}, http.MethodPost, "/v1/cases/case-id/sources", map[string]any{"url": "https://docs.google.com/document/d/file-id/edit", "idempotencyKey": "retry-key"}},
 		{"unlink", []string{"case", "source", "unlink", "case-id", "source-id", "--idempotency-key", "retry-key"}, http.MethodDelete, "/v1/cases/case-id/sources/source-id", map[string]any{"idempotencyKey": "retry-key"}},
 		{"refresh", []string{"case", "source", "refresh", "case-id", "source-id", "--idempotency-key", "retry-key"}, http.MethodPost, "/v1/cases/case-id/sources/source-id/refresh", map[string]any{"idempotencyKey": "retry-key"}},
 		{"get", []string{"case", "source", "get", "case-id", "source-id"}, http.MethodGet, "/v1/cases/case-id/sources/source-id", nil},

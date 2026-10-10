@@ -40,7 +40,7 @@ func enrichCommands(commands []*command) []*command {
 		"case start":              {"epismo case start --title 'Team invitation design'", "epismo case start --version-id VERSION_ID --title 'Launch review'"},
 		"case list":               {"epismo case list --assigned-to me --status open"},
 		"case get":                {"epismo case get CASE_ID"},
-		"case source link":        {"epismo case source link CASE_ID --url https://acme.slack.com/archives/C123/p1234567890123456"},
+		"case source link":        {"epismo case source link CASE_ID --url https://acme.slack.com/archives/C123/p1234567890123456", "epismo case source link CASE_ID --url https://docs.google.com/document/d/FILE_ID/edit"},
 		"case source unlink":      {"epismo case source unlink CASE_ID SOURCE_ID"},
 		"case source refresh":     {"epismo case source refresh CASE_ID SOURCE_ID"},
 		"case source get":         {"epismo case source get CASE_ID SOURCE_ID"},
