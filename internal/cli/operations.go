@@ -75,6 +75,10 @@ func (i invocation) payload(a *app) (map[string]any, error) {
 		if option.Field == "_input" {
 			continue
 		}
+		// Brief priority options spell unset as "none"; the API uses an empty string.
+		if option.Field == "priority" && result[option.Field] == "none" {
+			result[option.Field] = ""
+		}
 		if _, exists := result[option.Field]; !exists && option.Default != nil {
 			result[option.Field] = option.Default
 		}

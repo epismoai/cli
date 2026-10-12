@@ -34,20 +34,23 @@ func TestStructuredBriefAndPriorityRequests(t *testing.T) {
 	details := `{"needs":[{"text":"Approval needed.","recordIds":["11111111-1111-4111-8111-111111111111"]}]}`
 	for _, args := range [][]string{
 		{"case", "brief", "set", "case-1", "--content", "Waiting.", "--details", details, "--priority", "high"},
-		{"case", "brief", "set", "case-1", "--content", "Waiting.", "--priority="},
+		{"case", "brief", "set", "case-1", "--content", "Waiting.", "--priority", "none"},
 		{"case", "brief", "set", "case-1", "--content", "Waiting."},
-		{"case", "update", "case-1", "--priority", "urgent", "--lock-version", "3"},
-		{"case", "update", "case-1", "--priority=", "--lock-version", "4"},
+		{"case", "brief", "set", "case-1", "--priority", "urgent"},
+		{"case", "brief", "set", "case-1", "--priority=none"},
 		{"case", "list", "--status", "open", "--priority", "high"},
-		{"case", "list", "--priority="},
+		{"case", "list", "--priority", "none"},
 		{"case", "list"},
+		{"case", "list", "--input", `{"priority":"none"}`},
+		{"case", "list", "--input", `{"priority":"none"}`, "--priority", "high"},
+		{"case", "brief", "set", "case-1", "--input", `{"priority":"none"}`},
 	} {
 		var stdout, stderr bytes.Buffer
 		if exit := Main(args, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
 			t.Fatalf("args=%v exit=%d stderr=%s", args, exit, stderr.String())
 		}
 	}
-	if len(requests) != 8 {
+	if len(requests) != 11 {
 		t.Fatalf("requests = %+v", requests)
 	}
 	var expectedDetails map[string]any
@@ -68,22 +71,26 @@ func TestStructuredBriefAndPriorityRequests(t *testing.T) {
 	}
 	for index, expected := range map[int]string{3: "urgent", 4: ""} {
 		actual := requests[index]
-		if priority, present := actual.body["priority"]; !present || priority != expected || actual.method != http.MethodPatch || actual.path != "/v1/cases/case-1" || actual.body["expectedLockVersion"] != float64(index) {
+		if priority, present := actual.body["priority"]; !present || priority != expected || actual.method != http.MethodPut || actual.path != "/v1/cases/case-1/brief" {
 			t.Fatalf("priority update request = %+v", actual)
 		}
 	}
-	for index, expected := range map[int]string{5: "priority=high&status=open", 6: "priority=", 7: ""} {
+	for index, expected := range map[int]string{5: "priority=high&status=open", 6: "priority=", 7: "", 8: "priority=", 9: "priority=high"} {
 		if actual := requests[index]; actual.method != http.MethodGet || actual.path != "/v1/cases" || actual.query != expected {
 			t.Fatalf("priority list request = %+v", actual)
 		}
+	}
+	if priority, present := requests[10].body["priority"]; !present || priority != "" {
+		t.Fatalf("priority none from JSON input = %+v", requests[10])
 	}
 }
 
 func TestCasePriorityFlagsRejectUnknownValues(t *testing.T) {
 	for _, args := range [][]string{
 		{"case", "list", "--priority", "critical"},
-		{"case", "update", "case-1", "--priority", "critical", "--lock-version", "1"},
 		{"case", "brief", "set", "case-1", "--content", "Waiting.", "--priority", "critical"},
+		{"case", "list", "--priority="},
+		{"case", "brief", "set", "case-1", "--content", "Waiting.", "--priority="},
 	} {
 		var stdout, stderr bytes.Buffer
 		if exit := Main(args, "test", strings.NewReader(""), &stdout, &stderr); exit == 0 || !strings.Contains(stderr.String(), "INVALID_ARGUMENT") {

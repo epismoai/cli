@@ -15867,16 +15867,6 @@
           "autoReview": {
             "type": "boolean"
           },
-          "priority": {
-            "type": "string",
-            "enum": [
-              "",
-              "low",
-              "normal",
-              "high",
-              "urgent"
-            ]
-          },
           "expectedLockVersion": {
             "type": "integer",
             "minimum": 0,
@@ -16007,7 +15997,6 @@
           }
         },
         "required": [
-          "content",
           "idempotencyKey"
         ]
       },
@@ -17441,16 +17430,6 @@
           "brief": {
             "$ref": "#/components/schemas/Brief"
           },
-          "priority": {
-            "type": "integer",
-            "enum": [
-              0,
-              1,
-              2,
-              3,
-              4
-            ]
-          },
           "billingAccountId": {
             "type": "string",
             "format": "uuid"
@@ -17519,7 +17498,6 @@
           },
           "content": {
             "type": "string",
-            "minLength": 1,
             "maxLength": 280
           },
           "details": {
