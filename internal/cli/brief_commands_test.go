@@ -6,9 +6,91 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
+
+func TestStructuredBriefAndPriorityRequests(t *testing.T) {
+	type request struct {
+		method, path, query string
+		body                map[string]any
+	}
+	var requests []request
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body := map[string]any{}
+		if r.Method != http.MethodGet {
+			if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+				t.Errorf("decode request: %v", err)
+			}
+		}
+		requests = append(requests, request{r.Method, r.URL.Path, r.URL.RawQuery, body})
+		_, _ = io.WriteString(w, `{"cases":[]}`)
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_TOKEN", "test-token")
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+	details := `{"needs":[{"text":"Approval needed.","recordIds":["11111111-1111-4111-8111-111111111111"]}]}`
+	for _, args := range [][]string{
+		{"case", "brief", "set", "case-1", "--content", "Waiting.", "--details", details, "--priority", "high"},
+		{"case", "brief", "set", "case-1", "--content", "Waiting.", "--priority="},
+		{"case", "brief", "set", "case-1", "--content", "Waiting."},
+		{"case", "update", "case-1", "--priority", "urgent", "--lock-version", "3"},
+		{"case", "update", "case-1", "--priority=", "--lock-version", "4"},
+		{"case", "list", "--status", "open", "--priority", "high"},
+		{"case", "list", "--priority="},
+		{"case", "list"},
+	} {
+		var stdout, stderr bytes.Buffer
+		if exit := Main(args, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+			t.Fatalf("args=%v exit=%d stderr=%s", args, exit, stderr.String())
+		}
+	}
+	if len(requests) != 8 {
+		t.Fatalf("requests = %+v", requests)
+	}
+	var expectedDetails map[string]any
+	if err := json.Unmarshal([]byte(details), &expectedDetails); err != nil {
+		t.Fatal(err)
+	}
+	if requests[0].method != http.MethodPut || requests[0].path != "/v1/cases/case-1/brief" || requests[0].body["priority"] != "high" || !reflect.DeepEqual(requests[0].body["details"], expectedDetails) {
+		t.Fatalf("structured Brief request = %+v", requests[0])
+	}
+	if priority, present := requests[1].body["priority"]; !present || priority != "" {
+		t.Fatalf("clear Brief priority request = %+v", requests[1])
+	}
+	if _, present := requests[2].body["priority"]; present {
+		t.Fatalf("omitted priority must remain absent: %+v", requests[2])
+	}
+	if _, present := requests[2].body["details"]; present {
+		t.Fatalf("omitted details must remain absent: %+v", requests[2])
+	}
+	for index, expected := range map[int]string{3: "urgent", 4: ""} {
+		actual := requests[index]
+		if priority, present := actual.body["priority"]; !present || priority != expected || actual.method != http.MethodPatch || actual.path != "/v1/cases/case-1" || actual.body["expectedLockVersion"] != float64(index) {
+			t.Fatalf("priority update request = %+v", actual)
+		}
+	}
+	for index, expected := range map[int]string{5: "priority=high&status=open", 6: "priority=", 7: ""} {
+		if actual := requests[index]; actual.method != http.MethodGet || actual.path != "/v1/cases" || actual.query != expected {
+			t.Fatalf("priority list request = %+v", actual)
+		}
+	}
+}
+
+func TestCasePriorityFlagsRejectUnknownValues(t *testing.T) {
+	for _, args := range [][]string{
+		{"case", "list", "--priority", "critical"},
+		{"case", "update", "case-1", "--priority", "critical", "--lock-version", "1"},
+		{"case", "brief", "set", "case-1", "--content", "Waiting.", "--priority", "critical"},
+	} {
+		var stdout, stderr bytes.Buffer
+		if exit := Main(args, "test", strings.NewReader(""), &stdout, &stderr); exit == 0 || !strings.Contains(stderr.String(), "INVALID_ARGUMENT") {
+			t.Fatalf("args=%v exit=%d stderr=%s", args, exit, stderr.String())
+		}
+	}
+}
 
 func TestCaseBriefMutationsAndCaseRead(t *testing.T) {
 	type request struct {

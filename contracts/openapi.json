@@ -5777,6 +5777,21 @@
             }
           },
           {
+            "name": "priority",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "",
+                "urgent",
+                "high",
+                "normal",
+                "low"
+              ]
+            }
+          },
+          {
             "name": "pageSize",
             "in": "query",
             "required": false,
@@ -15838,12 +15853,29 @@
       "UpdateCaseRequest": {
         "type": "object",
         "properties": {
+          "input": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          },
           "title": {
             "type": "string",
             "maxLength": 255
           },
           "autoReview": {
             "type": "boolean"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "",
+              "low",
+              "normal",
+              "high",
+              "urgent"
+            ]
           },
           "expectedLockVersion": {
             "type": "integer",
@@ -15868,6 +15900,105 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 280
+          },
+          "details": {
+            "type": "object",
+            "properties": {
+              "decisions": {
+                "default": [],
+                "maxItems": 3,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 280
+                    },
+                    "recordIds": {
+                      "default": [],
+                      "maxItems": 3,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      }
+                    }
+                  },
+                  "required": [
+                    "text"
+                  ]
+                }
+              },
+              "needs": {
+                "default": [],
+                "maxItems": 3,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 280
+                    },
+                    "recordIds": {
+                      "default": [],
+                      "maxItems": 3,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      }
+                    }
+                  },
+                  "required": [
+                    "text"
+                  ]
+                }
+              },
+              "actions": {
+                "default": [],
+                "maxItems": 3,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 280
+                    },
+                    "recordIds": {
+                      "default": [],
+                      "maxItems": 3,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      }
+                    }
+                  },
+                  "required": [
+                    "text"
+                  ]
+                }
+              }
+            }
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "",
+              "low",
+              "normal",
+              "high",
+              "urgent"
+            ]
           },
           "idempotencyKey": {
             "type": "string",
@@ -17310,6 +17441,16 @@
           "brief": {
             "$ref": "#/components/schemas/Brief"
           },
+          "priority": {
+            "type": "integer",
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
+          },
           "billingAccountId": {
             "type": "string",
             "format": "uuid"
@@ -17377,9 +17518,125 @@
             "format": "date-time"
           },
           "content": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 280
+          },
+          "details": {
+            "$ref": "#/components/schemas/BriefDetails"
+          },
+          "priority": {
+            "type": "integer",
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
           }
         },
+        "additionalProperties": false
+      },
+      "BriefDetails": {
+        "type": "object",
+        "properties": {
+          "decisions": {
+            "default": [],
+            "maxItems": 3,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 280
+                },
+                "recordIds": {
+                  "default": [],
+                  "maxItems": 3,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                }
+              },
+              "required": [
+                "text",
+                "recordIds"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "needs": {
+            "default": [],
+            "maxItems": 3,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 280
+                },
+                "recordIds": {
+                  "default": [],
+                  "maxItems": 3,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                }
+              },
+              "required": [
+                "text",
+                "recordIds"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "actions": {
+            "default": [],
+            "maxItems": 3,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 280
+                },
+                "recordIds": {
+                  "default": [],
+                  "maxItems": 3,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                }
+              },
+              "required": [
+                "text",
+                "recordIds"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "decisions",
+          "needs",
+          "actions"
+        ],
         "additionalProperties": false
       },
       "BriefResponse": {

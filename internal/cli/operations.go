@@ -105,7 +105,8 @@ func newUUID() string {
 func queryString(path string, payload map[string]any) string {
 	query := url.Values{}
 	for key, value := range payload {
-		if value == nil || value == "" {
+		// An explicit empty priority filters Cases whose priority is unset.
+		if value == nil || (value == "" && key != "priority") {
 			continue
 		}
 		switch typed := value.(type) {

@@ -86,9 +86,16 @@ epismo case get CASE_ID
 epismo case brief generate CASE_ID
 epismo case brief delete CASE_ID
 epismo case brief set CASE_ID --content "Waiting for launch approval."
+epismo case brief set CASE_ID --content "Waiting for launch approval." --details '{"needs":[{"text":"Launch approval","recordIds":[]}]}' --priority high
+epismo case update CASE_ID --priority urgent --lock-version 3
+epismo case update CASE_ID --priority= --lock-version 4
+epismo case list --status open --priority high
+epismo case list --priority=
 ```
 
-A Brief is one current sentence for a case. Closing the case does not remove it, and an archived case cannot be changed. Case reads include it when present. Read it through `case get`, set it with `case brief set`, delete it with `case brief delete`, or generate it from current case evidence with `case brief generate`. Generation runs synchronously and charges token-priced credits to the case billing account; set and delete are update operations costing 2 credits each to the acting user's active workspace, or personal account when no workspace is selected. Reviews do not update the Brief. Set requires non-empty content.
+A Brief contains a summary sentence of up to 280 characters and optional DNA details: `decisions`, `needs`, and `actions`. Each category has up to three `{text, recordIds}` items, each with at most three supporting Record IDs from the same case. Details summarize evidence; they do not approve work or assign tasks. Closing the case does not remove it, and an archived case cannot be changed. Case reads include it when present; reading never generates it. Use `case brief set` with required non-empty `--content` and optional `--details` and `--priority`. Omitting details clears them; omitting priority preserves it. `case brief delete` removes the summary and details and clears Case priority, including when only priority is set. Generation runs synchronously, extracts supported DNA, and optionally assesses priority; a null assessment preserves the existing priority. It charges token-priced credits to the case billing account; set and delete cost 2 credits each to the acting user's active workspace, or personal account when no workspace is selected. Reviews do not update the Brief.
+
+Case priority is independent of the Brief: `urgent`, `high`, `normal`, or `low`. Use `case update --priority` with the latest lock version to edit it without a Brief, including after close. Pass `--priority=` to clear it on writes or to select unset Cases on `case list`; omit the option to preserve it on writes or include all priorities on lists. Responses use enum numbers: `0` unset, `1` urgent, `2` high, `3` normal, `4` low. Generated priority needs concrete evidence; an absent urgency signal does not imply `normal`.
 
 ## Case sources
 
