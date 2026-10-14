@@ -100,12 +100,15 @@ Brief priority is `urgent`, `high`, `normal`, or `low`. Use `case brief set --pr
 ## Case sources
 
 Link external evidence to a case and read its saved content with `case get`.
-Slack threads require a connected Slack account in the selected workspace.
+Slack threads and Discord messages/threads require a connected provider account
+in the selected workspace. See [Discord setup](https://epismo.ai/en/docs/integrations/discord)
+for server installation, personal connection and channel permissions.
 For Google Docs, Sheets, or Slides, connect Google Drive and select the file in
 Epismo Web first, then link its URL. See [Google Drive setup](https://epismo.ai/en/docs/integrations/google-drive).
 
 ```sh
 epismo case source link CASE_ID --url 'https://acme.slack.com/archives/C123/p1234567890123456'
+epismo case source link CASE_ID --url 'https://discord.com/channels/123456789012345678/234567890123456789/345678901234567890'
 epismo case source link CASE_ID --url 'https://docs.google.com/document/d/FILE_ID/edit'
 epismo case get CASE_ID
 ```
