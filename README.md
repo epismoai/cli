@@ -69,6 +69,8 @@ epismo playbook create --definition '{"title":"Onboarding","steps":[]}'
 
 `epismo workspace checkout <workspace-id>` starts a hosted subscription checkout. If the workspace has a cancellation scheduled for the end of its current billing period, it resumes that subscription instead of creating a second one.
 
+See the [CLI guide](https://epismo.ai/en/docs/cli) for setup and workflow documentation.
+
 ## Cases and handoffs
 
 Start a case, append timeline records, connect dependent workflows, and explore the DAG:
@@ -100,18 +102,20 @@ Brief priority is `urgent`, `high`, `normal`, or `low`. Use `case brief set --pr
 ## Case sources
 
 Link external evidence to a case and read its saved content with `case get`.
-Slack threads require a connected Slack account in the selected workspace.
+Slack threads and Discord messages/threads require a connected provider account
+in the selected workspace.
 For Google Docs, Sheets, or Slides, connect Google Drive and select the file in
-Epismo Web first, then link its URL. See [Google Drive setup](https://epismo.ai/en/docs/integrations/google-drive).
+Epismo Web first, then link its URL.
 
 ```sh
-epismo case source link CASE_ID --url 'https://acme.slack.com/archives/C123/p1234567890123456'
-epismo case source link CASE_ID --url 'https://docs.google.com/document/d/FILE_ID/edit'
+epismo case source link CASE_ID --url SOURCE_URL
 epismo case get CASE_ID
 ```
 
 Run `epismo case source --help` for get, refresh, and unlink commands, and use
 command-level help for access requirements and credit costs.
+
+Setup: [Slack](https://epismo.ai/en/docs/integrations/slack) · [Discord](https://epismo.ai/en/docs/integrations/discord) · [Google Drive](https://epismo.ai/en/docs/integrations/google-drive).
 
 ## Access and sharing
 
