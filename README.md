@@ -71,6 +71,63 @@ epismo playbook create --definition '{"title":"Onboarding","steps":[]}'
 
 See the [CLI guide](https://epismo.ai/en/docs/cli) for setup and workflow documentation.
 
+## Ownership and resource lifecycle
+
+Playbooks and Cases belong to a personal or workspace account, which is also
+responsible for their usage charges. Omit `--owner-id` on create, copy, or case
+start to use the active workspace, or your personal account when none is selected.
+Assignees and maintainers identify responsibility and do not grant access.
+Workspace members need explicit sharing unless they exercise Owner/Admin rights.
+`playbook assign` changes `assignedTo`, the shared responsibility field on
+Playbooks, Cases, and Tasks. The Playbook UI calls this person the Maintainer.
+Case ownership transfer requires ownership and the latest lock version; it preserves sharing
+and assignment but clears the saved Brief, including DNA and priority.
+
+```sh
+epismo playbook list --archived
+epismo playbook restore PLAYBOOK_ID
+epismo playbook assign PLAYBOOK_ID --assigned-to USER_ID
+epismo case owner transfer CASE_ID --owner-id ACCOUNT_ID --lock-version 2
+epismo case list --archived
+epismo case archive CASE_ID --lock-version 3
+epismo case restore CASE_ID --lock-version 4
+epismo case delete CASE_ID --lock-version 5
+```
+
+Archive and restore require editing access and preserve work. Permanent Case
+deletion requires ownership, an already archived Case, and its current lock
+version. It cannot be undone. Get the current lock version from the appropriate
+active or archived listing.
+
+Before removing a workspace member, preview the responsibility/access handover:
+
+```sh
+epismo workspace member handover WORKSPACE_ID --departing-user-id OLD_USER_ID --successor-user-id NEW_USER_ID
+```
+
+Use `--preview=false` to execute and `--transfer-open-approvals` to include open
+approval tasks. This explicitly grants the successor editing access; normal
+reassignment alone does not. Remove membership separately with
+`workspace member delete --workspace-id WORKSPACE_ID OLD_USER_ID`, then run the
+handover again with `--preview=false --finalize` to clean up intervening changes.
+`--finalize` requires membership to have already been removed; it does not remove
+the member.
+The operation defaults to preview and supports the normal idempotency key and
+local `--dry-run` options. Completed approvals and authorship remain history.
+
+Initial handover preserves direct grants. Workspace member removal clears the
+User's direct grants on items owned by that Workspace, including completed and
+archived items. Finalization repeats cleanup for late grants. Personal and
+other-Workspace shares remain unchanged.
+Team and Workspace management authority follow current membership and the
+participation Workspace's SSO. Non-member direct shares use normal Epismo
+authentication. Resource lists
+use explicit access and supported publication, with no ownership exception.
+
+These operations require an API deployment that supports the bundled OpenAPI
+contract. Required workspace SSO also applies to CLI and automation credentials;
+sign in again when current SSO evidence is missing or expires.
+
 ## Cases and handoffs
 
 Start a case, append timeline records, connect dependent workflows, and explore the DAG:
@@ -123,7 +180,7 @@ Resources use a nested `access` object with `visibility` (`private` or `public`)
 
 ```sh
 # Set resource access (replaces the access configuration)
-epismo playbook access set PLAYBOOK_ID --access '{"visibility":"public","grants":{"11111111-1111-4111-8111-111111111111":"viewer"}}'
+epismo playbook access set PLAYBOOK_ID --access '{"visibility":"public","grants":{"11111111-1111-4111-8111-111111111111":"editor"}}'
 epismo case access set CASE_ID --access '{"visibility":"private","grants":{"11111111-1111-4111-8111-111111111111":"editor"}}'
 epismo playbook owner transfer PLAYBOOK_ID --owner-id WORKSPACE_OR_USER_ID
 
@@ -139,7 +196,7 @@ epismo -w recipient team invitation accept TOKEN
 epismo -w recipient team disconnect TEAM_ID
 ```
 
-`--access` is accepted on `playbook create`, `case start`, `playbook copy`, and access setters. Viewers can read published Playbooks and private Cases, Tasks, Records, and linked sources; editors can update content and drafts. Case editors can change visibility and collaborators while retaining at least one explicit editor. Owner managers or Case assignees can remove sharing or archive resources.
+`--access` is accepted on `playbook create`, `case start`, `playbook copy`, and access setters. Viewers can read published Playbooks and private Cases, Tasks, Records, and linked sources; editors can update content and drafts. Playbook and Case updates must retain at least one explicit User or Team editor, including when an owner changes sharing. Creation adds the creator as an editor. Editors can archive resources; assignment alone grants no rights. Member removal is rejected if it would remove the final editor from any owned item, including completed and archived items; add a replacement editor first.
 
 Run `epismo --help` for command groups, or append `--help` to any group or command for its options.
 
@@ -253,3 +310,5 @@ Releases are built for macOS, Linux, and Windows from semantic-version tags such
 ## License
 
 [Apache License 2.0](LICENSE).
+
+Discovery filters never grant access. Playbook browsing/resources and Task lists accept an optional `ownerId` filter for the resource or parent Case. Suggestion lists use `playbookOwnerId` for their current parent; Suggestions have no independent owner. Use `--input` to pass fields without a dedicated CLI flag. Web Workspace lists apply these filters automatically; API/CLI workspace connection alone does not restrict discovery ownership.
