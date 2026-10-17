@@ -5764,6 +5764,23 @@
             }
           },
           {
+            "name": "ownerId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "archived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
             "name": "status",
             "in": "query",
             "required": false,
@@ -7148,6 +7165,151 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CaseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteV1CasesCaseId",
+        "tags": [
+          "cases"
+        ],
+        "summary": "DELETE /v1/cases/{caseId}",
+        "description": "Permanently erase an archived Case and its Tasks, Records, Sources, and handoff links. Requires ownership. Cannot be undone. Minimal idempotency and financial facts are retained.",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteCaseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
                 }
               }
             }
@@ -9488,6 +9650,7 @@
           "tasks"
         ],
         "summary": "GET /v1/tasks",
+        "description": "Lists accessible tasks. ownerId restricts the parent Case's owning account and never grants access.",
         "parameters": [
           {
             "name": "workspaceId",
@@ -9514,15 +9677,19 @@
             }
           },
           {
+            "name": "ownerId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "status",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "open",
-                "closed"
-              ]
+              "type": "string"
             }
           },
           {
@@ -10781,6 +10948,14 @@
             }
           },
           {
+            "name": "ownerId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "category",
             "in": "query",
             "required": false,
@@ -10833,6 +11008,15 @@
             "required": false,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "archived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           },
           {
@@ -10961,7 +11145,7 @@
           "playbooks"
         ],
         "summary": "POST /v1/playbooks",
-        "description": "Any member of the connected Workspace may create a playbook owned by it. Members can read and edit workspace-owned playbooks; making them public and other access changes still require an Owner or Admin.",
+        "description": "Any member of the connected Workspace may create a playbook owned by it. Editors may change sharing, archive, and restore. Other members require an explicit user or team grant to read or edit.",
         "parameters": [
           {
             "name": "workspaceId",
@@ -11111,6 +11295,14 @@
           },
           {
             "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ownerId",
             "in": "query",
             "required": false,
             "schema": {
@@ -11429,6 +11621,153 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/PlaybookMutationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaybookResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/playbooks/{playbookId}/restore": {
+      "post": {
+        "operationId": "postV1PlaybooksPlaybookIdRestore",
+        "tags": [
+          "playbooks"
+        ],
+        "summary": "Restore an archived playbook",
+        "description": "Requires current editing access. Preserves versions, sharing, and maintenance.",
+        "parameters": [
+          {
+            "name": "playbookId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestorePlaybookRequest"
               }
             }
           }
@@ -12844,7 +13183,7 @@
           "playbooks"
         ],
         "summary": "Set playbook access",
-        "description": "Replaces access: { visibility, grants } atomically. Viewers cannot edit. Editors must preserve collaborative editing; only a manager can clear all additional sharing. Public grants published reads only.",
+        "description": "Replaces access: { visibility, grants } atomically. Requires editing access. Updates must retain at least one explicit user/team editor; empty or viewer-only grants are rejected. Owners retain full access. Assignment never grants access. Public permits published reads only.",
         "parameters": [
           {
             "name": "playbookId",
@@ -12887,6 +13226,732 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PlaybookAccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/archive": {
+      "post": {
+        "operationId": "postV1CasesCaseIdArchive",
+        "tags": [
+          "cases"
+        ],
+        "summary": "POST /v1/cases/{caseId}/archive",
+        "description": "Archive a Case. Editors and owners may archive; work is retained.",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchiveCaseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/restore": {
+      "post": {
+        "operationId": "postV1CasesCaseIdRestore",
+        "tags": [
+          "cases"
+        ],
+        "summary": "POST /v1/cases/{caseId}/restore",
+        "description": "Restore an archived Case. Current editing access is required. Status, assignments, and sharing are preserved.",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreCaseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/workspaces/{workspaceId}/member-handover": {
+      "post": {
+        "operationId": "handoverWorkspaceMember",
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "Preview or execute workspace member handover",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HandoverWorkspaceMemberRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HandoverWorkspaceMemberResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/playbooks/{playbookId}/assignee": {
+      "patch": {
+        "operationId": "patchV1PlaybooksPlaybookIdAssignee",
+        "tags": [
+          "playbooks"
+        ],
+        "summary": "Assign playbook responsibility",
+        "description": "Assigns assignedTo as the maintainer without changing ownership or sharing. Requires ownership. The target must already have editing access and belong to the owning Workspace when applicable.",
+        "parameters": [
+          {
+            "name": "playbookId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignPlaybookRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaybookResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/owner": {
+      "patch": {
+        "operationId": "patchV1CasesCaseIdOwner",
+        "tags": [
+          "cases"
+        ],
+        "summary": "Transfer Case ownership",
+        "description": "Transfers the owning and billing account between eligible personal and Workspace homes. Requires ownership, expectedLockVersion, and idempotencyKey. Preserves assignment and sharing, but clears the saved Brief including DNA and priority. Workspace-to-workspace and user-to-user moves are rejected.",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferCaseOwnerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseResponse"
                 }
               }
             }
@@ -14198,6 +15263,7 @@
           "suggestions"
         ],
         "summary": "GET /v1/suggestions",
+        "description": "Lists accessible suggestions. ownerId restricts the live parent Playbook's owning account; Suggestions have no independent owner.",
         "parameters": [
           {
             "name": "workspaceId",
@@ -14224,7 +15290,7 @@
             }
           },
           {
-            "name": "statuses",
+            "name": "ownerId",
             "in": "query",
             "required": false,
             "schema": {
@@ -14236,11 +15302,15 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": [
-                "inbox",
-                "sent"
-              ]
+              "type": "string"
+            }
+          },
+          {
+            "name": "statuses",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -14818,6 +15888,40 @@
       }
     },
     "schemas": {
+      "HandoverWorkspaceMemberResponse": {
+        "type": "object",
+        "properties": {
+          "cases": {
+            "type": "integer"
+          },
+          "workTasks": {
+            "type": "integer"
+          },
+          "playbooks": {
+            "type": "integer"
+          },
+          "openApprovalTaskIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "RestorePlaybookRequest": {
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "idempotencyKey"
+        ]
+      },
       "LinkSourceRequest": {
         "type": "object",
         "properties": {
@@ -14880,7 +15984,7 @@
               },
               "grants": {
                 "default": {},
-                "description": "Complete user/team UUID grant map. Replaces all explicit grants; an empty map clears them. Owners and Case assignees retain implicit rights.",
+                "description": "Complete user/team UUID grant map. Replaces all explicit grants. Updates must retain at least one editor; creation adds the creator as editor. Owners retain full access. Responsibility does not grant access.",
                 "type": "object",
                 "propertyNames": {
                   "type": "string",
@@ -15039,7 +16143,7 @@
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "description": "User account you manage, or the workspace this request is connected to. Any member of that workspace may create a playbook owned by it; making it public and other access changes still require an owner or admin."
+            "description": "User account you manage, or the workspace this request is connected to. Omit to use the active workspace or personal billing account. Any member of that workspace may create a playbook owned by it; making it public and other access changes still require an owner or admin."
           },
           "access": {
             "default": {
@@ -15059,7 +16163,7 @@
               },
               "grants": {
                 "default": {},
-                "description": "Complete user/team UUID grant map. Replaces all explicit grants; an empty map clears them. Owners and Case assignees retain implicit rights.",
+                "description": "Complete user/team UUID grant map. Replaces all explicit grants. Updates must retain at least one editor; creation adds the creator as editor. Owners retain full access. Responsibility does not grant access.",
                 "type": "object",
                 "propertyNames": {
                   "type": "string",
@@ -15214,7 +16318,6 @@
           }
         },
         "required": [
-          "ownerId",
           "definition",
           "idempotencyKey"
         ],
@@ -15576,7 +16679,7 @@
               },
               "grants": {
                 "default": {},
-                "description": "Complete user/team UUID grant map. Replaces all explicit grants; an empty map clears them. Owners and Case assignees retain implicit rights.",
+                "description": "Complete user/team UUID grant map. Replaces all explicit grants. Updates must retain at least one editor; creation adds the creator as editor. Owners retain full access. Responsibility does not grant access.",
                 "type": "object",
                 "propertyNames": {
                   "type": "string",
@@ -15602,6 +16705,90 @@
         },
         "required": [
           "access",
+          "idempotencyKey"
+        ]
+      },
+      "HandoverWorkspaceMemberRequest": {
+        "type": "object",
+        "properties": {
+          "departingUserId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "successorUserId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "preview": {
+            "default": true,
+            "description": "Preview only; set false to execute handover.",
+            "type": "boolean"
+          },
+          "transferOpenApprovals": {
+            "default": false,
+            "type": "boolean"
+          },
+          "finalize": {
+            "default": false,
+            "description": "Final cleanup after workspace membership has already been removed. Does not remove membership; set preview=false to execute.",
+            "type": "boolean"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "departingUserId",
+          "successorUserId",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "AssignPlaybookRequest": {
+        "type": "object",
+        "properties": {
+          "assignedTo": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "assignedTo",
+          "idempotencyKey"
+        ]
+      },
+      "TransferCaseOwnerRequest": {
+        "type": "object",
+        "properties": {
+          "ownerId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "expectedLockVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "ownerId",
+          "expectedLockVersion",
           "idempotencyKey"
         ]
       },
@@ -15726,7 +16913,7 @@
               },
               "grants": {
                 "default": {},
-                "description": "Complete user/team UUID grant map. Replaces all explicit grants; an empty map clears them. Owners and Case assignees retain implicit rights.",
+                "description": "Complete user/team UUID grant map. Replaces all explicit grants. Updates must retain at least one editor; creation adds the creator as editor. Owners retain full access. Responsibility does not grant access.",
                 "type": "object",
                 "propertyNames": {
                   "type": "string",
@@ -15751,6 +16938,11 @@
           },
           "autoReview": {
             "type": "boolean"
+          },
+          "ownerId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           }
         },
         "required": [
@@ -15794,7 +16986,7 @@
               },
               "grants": {
                 "default": {},
-                "description": "Complete user/team UUID grant map. Replaces all explicit grants; an empty map clears them. Owners and Case assignees retain implicit rights.",
+                "description": "Complete user/team UUID grant map. Replaces all explicit grants. Updates must retain at least one editor; creation adds the creator as editor. Owners retain full access. Responsibility does not grant access.",
                 "type": "object",
                 "propertyNames": {
                   "type": "string",
@@ -15820,7 +17012,6 @@
         },
         "required": [
           "sourceVersionId",
-          "ownerId",
           "idempotencyKey"
         ],
         "additionalProperties": false
@@ -16154,6 +17345,63 @@
         ]
       },
       "ReopenCaseRequest": {
+        "type": "object",
+        "properties": {
+          "expectedLockVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "expectedLockVersion",
+          "idempotencyKey"
+        ]
+      },
+      "ArchiveCaseRequest": {
+        "type": "object",
+        "properties": {
+          "expectedLockVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "expectedLockVersion",
+          "idempotencyKey"
+        ]
+      },
+      "RestoreCaseRequest": {
+        "type": "object",
+        "properties": {
+          "expectedLockVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "expectedLockVersion",
+          "idempotencyKey"
+        ]
+      },
+      "DeleteCaseRequest": {
         "type": "object",
         "properties": {
           "expectedLockVersion": {
@@ -16946,6 +18194,12 @@
             "type": "string",
             "format": "uuid"
           },
+          "access": {
+            "$ref": "#/components/schemas/Access"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/Capabilities"
+          },
           "ownerHandle": {
             "type": "string",
             "description": "Public owner handle, included in playbook lists when available."
@@ -16953,6 +18207,14 @@
           "ownerId": {
             "type": "string",
             "format": "uuid"
+          },
+          "assignedTo": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assignedToHandle": {
+            "type": "string",
+            "description": "Public maintainer handle when available."
           },
           "latestVersionId": {
             "type": "string",
@@ -17060,7 +18322,7 @@
           },
           "grants": {
             "default": {},
-            "description": "Complete user/team UUID grant map. Replaces all explicit grants; an empty map clears them. Owners and Case assignees retain implicit rights.",
+            "description": "Complete user/team UUID grant map. Replaces all explicit grants. Updates must retain at least one editor; creation adds the creator as editor. Owners retain full access. Responsibility does not grant access.",
             "type": "object",
             "propertyNames": {
               "type": "string",
@@ -17079,6 +18341,24 @@
         "required": [
           "visibility",
           "grants"
+        ],
+        "additionalProperties": false
+      },
+      "Capabilities": {
+        "type": "object",
+        "properties": {
+          "canEdit": {
+            "default": false,
+            "type": "boolean"
+          },
+          "canManage": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "canEdit",
+          "canManage"
         ],
         "additionalProperties": false
       },
@@ -17383,6 +18663,12 @@
             "type": "string",
             "format": "uuid"
           },
+          "access": {
+            "$ref": "#/components/schemas/Access"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/Capabilities"
+          },
           "code": {
             "type": "string",
             "pattern": "^[A-Z]{3,5}-[1-9][0-9]*$"
@@ -17430,7 +18716,7 @@
           "brief": {
             "$ref": "#/components/schemas/Brief"
           },
-          "billingAccountId": {
+          "ownerId": {
             "type": "string",
             "format": "uuid"
           },
@@ -17439,6 +18725,10 @@
             "format": "date-time"
           },
           "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "archivedAt": {
             "type": "string",
             "format": "date-time"
           },
@@ -18214,10 +19504,6 @@
             "type": "string",
             "format": "uuid"
           },
-          "ownerId": {
-            "type": "string",
-            "format": "uuid"
-          },
           "status": {
             "type": "string",
             "enum": [
@@ -18232,12 +19518,6 @@
           },
           "content": {
             "type": "string"
-          },
-          "acl": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           },
           "resultVersionId": {
             "type": "string",

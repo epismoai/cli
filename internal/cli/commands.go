@@ -11,7 +11,7 @@ import (
 func buildCommands() []*command {
 	commands := []*command{
 		loginCommand(), logoutCommand(), whoamiCommand(), updateCommand(),
-		workspaceListCommand(), workspaceCurrentCommand(), workspaceUseCommand(), workspaceClearCommand(), workspaceCreateCommand(), workspaceCheckoutCommand(), workspaceUpdateCommand(), workspaceMemberListCommand(), workspaceMemberUpsertCommand(), workspaceMemberInviteCommand(), workspaceMemberDeleteCommand(), workspaceInvitationRevokeCommand(),
+		workspaceListCommand(), workspaceCurrentCommand(), workspaceUseCommand(), workspaceClearCommand(), workspaceCreateCommand(), workspaceCheckoutCommand(), workspaceUpdateCommand(), workspaceMemberListCommand(), workspaceMemberUpsertCommand(), workspaceMemberInviteCommand(), workspaceMemberDeleteCommand(), workspaceMemberHandoverCommand(), workspaceInvitationRevokeCommand(),
 		teamListCommand(), teamCreateCommand(), teamUpdateCommand(), teamMemberListCommand(), teamMemberAddCommand(), teamMemberDeleteCommand(),
 		creditBalanceCommand(), creditCheckoutCommand(), tokenCreateCommand(), tokenListCommand(), tokenRevokeCommand(),
 	}
@@ -361,6 +361,15 @@ func workspaceUpdateCommand() *command {
 
 func workspaceIDOption() optionSpec {
 	return str("--workspace-id", "workspaceId", "workspace ID (use --workspace for an ID or handle)")
+}
+
+func workspaceMemberHandoverCommand() *command {
+	return apiOperationUnscoped("workspace member handover", "preview or execute responsibility and access handover before removing a member; defaults to preview", []string{"workspace-id"}, http.MethodPost, func(i invocation) string { return "/v1/workspaces/" + escaped(i.positional(0)) + "/member-handover" }, requestBody, true,
+		requiredOption(str("--departing-user-id", "departingUserId", "departing member's user ID")),
+		requiredOption(str("--successor-user-id", "successorUserId", "successor member's user ID")),
+		defaultOption(boolOption("--preview", "preview", "preview only; pass --preview=false to execute"), true),
+		boolOption("--transfer-open-approvals", "transferOpenApprovals", "also transfer open approval tasks"),
+		boolOption("--finalize", "finalize", "final cleanup after membership has already been removed; does not remove the member"))
 }
 
 func workspaceMemberListCommand() *command {
