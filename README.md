@@ -311,4 +311,4 @@ Releases are built for macOS, Linux, and Windows from semantic-version tags such
 
 [Apache License 2.0](LICENSE).
 
-Discovery filters never grant access. Playbook browsing/resources and Task lists accept an optional `ownerId` filter for the resource or parent Case. Suggestion lists use `playbookOwnerId` for their current parent; Suggestions have no independent owner. Use `--input` to pass fields without a dedicated CLI flag. Web Workspace lists apply these filters automatically; API/CLI workspace connection alone does not restrict discovery ownership.
+Discovery filters never grant access. Playbook browsing/resources and Task lists accept an optional `ownerId` filter for the resource or parent Case. Suggestion lists use `playbookOwnerId` for their current parent; Suggestions have no independent owner. Use `--input` to pass fields without a dedicated CLI flag. Workspace selection does not implicitly restrict discovery ownership. The Web sidebar narrows Team-based discovery only; API and CLI use normal access-based visibility.
