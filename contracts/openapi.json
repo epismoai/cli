@@ -10481,14 +10481,6 @@
             }
           },
           {
-            "name": "acl",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "order",
             "in": "query",
             "required": false,
