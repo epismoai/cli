@@ -148,6 +148,14 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 		"suggestion update":            {"patch", "/v1/suggestions/{suggestionId}"},
 		"suggestion resolve":           {"post", "/v1/suggestions/{suggestionId}/resolve"},
 	}
+	operations["workspace member handover"] = commandOperation{"post", "/v1/workspaces/{workspaceId}/member-handover"}
+	operations["playbook restore"] = commandOperation{"post", "/v1/playbooks/{playbookId}/restore"}
+	operations["case archive"] = commandOperation{"post", "/v1/cases/{caseId}/archive"}
+	operations["case restore"] = commandOperation{"post", "/v1/cases/{caseId}/restore"}
+	operations["case delete"] = commandOperation{"delete", "/v1/cases/{caseId}"}
+	operations["playbook assign"] = commandOperation{"patch", "/v1/playbooks/{playbookId}/assignee"}
+	operations["case owner transfer"] = commandOperation{"patch", "/v1/cases/{caseId}/owner"}
+	operations["case owner"] = commandOperation{"patch", "/v1/cases/{caseId}/owner"}
 	localOrAuth := map[string]bool{
 		"login": true, "logout": true, "whoami": true, "update": true, "completion": true, "doctor": true, "examples": true, "docs": true,
 		"workspace current": true, "workspace clear": true,
