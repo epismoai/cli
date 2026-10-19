@@ -45,6 +45,13 @@ func TestOwnershipAndLifecycleRequests(t *testing.T) {
 				if tc.field != "" && body[tc.field] != tc.value {
 					t.Errorf("body[%s] = %#v, want %#v", tc.field, body[tc.field], tc.value)
 				}
+				if tc.name == "create default home" || tc.name == "copy default home" || tc.name == "case explicit home" {
+					access, _ := body["access"].(map[string]any)
+					grants, ok := access["grants"].(map[string]any)
+					if access["visibility"] != "restricted" || !ok || len(grants) != 0 {
+						t.Errorf("default access = %#v, want restricted visibility and empty grants", access)
+					}
+				}
 				if tc.name == "case delete" {
 					if _, exists := body["confirmationCode"]; exists {
 						t.Error("case deletion sent a removed confirmation-code field")

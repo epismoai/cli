@@ -5745,7 +5745,7 @@
           "cases"
         ],
         "summary": "GET /v1/cases",
-        "description": "The caller's work inbox. Requires OAuth. Public cases are not listed here; open them by id or rank them with GET /v1/cases/popular.",
+        "description": "Lists readable cases by updated time descending, then ID. Anonymous callers receive public cases, including cases without records. Use sharingScope to filter private, shared, or anyone cases within the caller's discovery scope. Public-only pages are free and use the public projection for publication-only readers. Archives require private access.",
         "parameters": [
           {
             "name": "workspaceId",
@@ -5757,6 +5757,27 @@
           },
           {
             "name": "assignedTo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sharingScope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "private",
+                "shared",
+                "anyone"
+              ]
+            }
+          },
+          {
+            "name": "playbookId",
             "in": "query",
             "required": false,
             "schema": {
@@ -5832,7 +5853,8 @@
             "OAuth2": [
               "read"
             ]
-          }
+          },
+          {}
         ],
         "responses": {
           "200": {
@@ -5977,170 +5999,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CaseResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "402": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/cases/popular": {
-      "get": {
-        "operationId": "getV1CasesPopular",
-        "tags": [
-          "cases"
-        ],
-        "summary": "GET /v1/cases/popular",
-        "description": "Ranks public cases that have a non-activity record. Ranking is currently distinct non-archived handoff destinations; scores stay internal and the weights may change. This is a homepage walk, not a complete catalogue. Pass playbookId to rank public cases of that playbook the same way. Works without authentication and is free. Pass assignedTo to list non-archived public cases assigned to a profile, including cases without records, newest first. Always returns the public projection, including tasks and public account references, without private grants or linked sources.",
-        "parameters": [
-          {
-            "name": "workspaceId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100
-            }
-          },
-          {
-            "name": "cursor",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "playbookId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "assignedTo",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "security": [
-          {
-            "OAuth2": [
-              "read"
-            ]
-          },
-          {}
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JsonObject"
                 }
               }
             }
@@ -10948,6 +10806,15 @@
             }
           },
           {
+            "name": "assignedTo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "category",
             "in": "query",
             "required": false,
@@ -11012,11 +10879,16 @@
             }
           },
           {
-            "name": "includePublic",
+            "name": "sharingScope",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "boolean"
+              "type": "string",
+              "enum": [
+                "private",
+                "shared",
+                "anyone"
+              ]
             }
           }
         ],
@@ -11302,13 +11174,30 @@
             }
           },
           {
+            "name": "assignedTo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "pageSize",
             "in": "query",
             "required": false,
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 200
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -11320,11 +11209,16 @@
             }
           },
           {
-            "name": "includePublic",
+            "name": "sharingScope",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "boolean"
+              "type": "string",
+              "enum": [
+                "private",
+                "shared",
+                "anyone"
+              ]
             }
           }
         ],
@@ -11446,7 +11340,7 @@
           "playbooks"
         ],
         "summary": "GET /v1/playbooks/{playbookId}",
-        "description": "Returns the playbook along with its latest 5 suggestions (open, applied, or declined; newest first), recent versions, aliases, and up to 6 public cases that used it, bundled as one billable playbook read. Follow suggestionsNextCursor with GET /v1/playbooks/{playbookId}/suggestions for older suggestions, and casesNextCursor with GET /v1/cases/popular?playbookId={playbookId} for more example cases.",
+        "description": "Returns the playbook along with its latest 5 suggestions (open, applied, or declined; newest first), recent versions, aliases, and up to 6 public cases that used it, bundled as one billable playbook read. Follow suggestionsNextCursor with GET /v1/playbooks/{playbookId}/suggestions for older suggestions, and casesNextCursor with GET /v1/cases?playbookId={playbookId}&sharingScope=anyone for more example cases.",
         "parameters": [
           {
             "name": "playbookId",
@@ -15966,11 +15860,11 @@
             "type": "object",
             "properties": {
               "visibility": {
-                "default": "private",
+                "default": "restricted",
                 "description": "Public permits published reads only; never grants editing.",
                 "type": "string",
                 "enum": [
-                  "private",
+                  "restricted",
                   "public"
                 ]
               },
@@ -16139,17 +16033,17 @@
           },
           "access": {
             "default": {
-              "visibility": "private",
+              "visibility": "restricted",
               "grants": {}
             },
             "type": "object",
             "properties": {
               "visibility": {
-                "default": "private",
+                "default": "restricted",
                 "description": "Public permits published reads only; never grants editing.",
                 "type": "string",
                 "enum": [
-                  "private",
+                  "restricted",
                   "public"
                 ]
               },
@@ -16661,11 +16555,11 @@
             "type": "object",
             "properties": {
               "visibility": {
-                "default": "private",
+                "default": "restricted",
                 "description": "Public permits published reads only; never grants editing.",
                 "type": "string",
                 "enum": [
-                  "private",
+                  "restricted",
                   "public"
                 ]
               },
@@ -16889,17 +16783,17 @@
           },
           "access": {
             "default": {
-              "visibility": "private",
+              "visibility": "restricted",
               "grants": {}
             },
             "type": "object",
             "properties": {
               "visibility": {
-                "default": "private",
+                "default": "restricted",
                 "description": "Public permits published reads only; never grants editing.",
                 "type": "string",
                 "enum": [
-                  "private",
+                  "restricted",
                   "public"
                 ]
               },
@@ -16962,17 +16856,17 @@
           },
           "access": {
             "default": {
-              "visibility": "private",
+              "visibility": "restricted",
               "grants": {}
             },
             "type": "object",
             "properties": {
               "visibility": {
-                "default": "private",
+                "default": "restricted",
                 "description": "Public permits published reads only; never grants editing.",
                 "type": "string",
                 "enum": [
-                  "private",
+                  "restricted",
                   "public"
                 ]
               },
@@ -18304,11 +18198,11 @@
         "type": "object",
         "properties": {
           "visibility": {
-            "default": "private",
+            "default": "restricted",
             "description": "Public permits published reads only; never grants editing.",
             "type": "string",
             "enum": [
-              "private",
+              "restricted",
               "public"
             ]
           },
