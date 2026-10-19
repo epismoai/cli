@@ -42,7 +42,7 @@ The npm package contains a dependency-free JavaScript launcher and all supported
 Browse public cases without an account:
 
 ```sh
-epismo case popular
+epismo case list
 epismo case get CASE_ID
 ```
 
@@ -176,12 +176,12 @@ Setup: [Slack](https://epismo.ai/en/docs/integrations/slack) · [Discord](https:
 
 ## Access and sharing
 
-Resources use a nested `access` object with `visibility` (`private` or `public`) and UUID-to-role grants (`viewer` or `editor`):
+Resources use a nested `access` object with `visibility` (`restricted` or `public`) and UUID-to-role grants (`viewer` or `editor`):
 
 ```sh
 # Set resource access (replaces the access configuration)
 epismo playbook access set PLAYBOOK_ID --access '{"visibility":"public","grants":{"11111111-1111-4111-8111-111111111111":"editor"}}'
-epismo case access set CASE_ID --access '{"visibility":"private","grants":{"11111111-1111-4111-8111-111111111111":"editor"}}'
+epismo case access set CASE_ID --access '{"visibility":"restricted","grants":{"11111111-1111-4111-8111-111111111111":"editor"}}'
 epismo playbook owner transfer PLAYBOOK_ID --owner-id WORKSPACE_OR_USER_ID
 
 # Create an independent copy of a published playbook version
@@ -197,6 +197,14 @@ epismo -w recipient team disconnect TEAM_ID
 ```
 
 `--access` is accepted on `playbook create`, `case start`, `playbook copy`, and access setters. Viewers can read published Playbooks and private Cases, Tasks, Records, and linked sources; editors can update content and drafts. Playbook and Case updates must retain at least one explicit User or Team editor, including when an owner changes sharing. Creation adds the creator as an editor. Editors can archive resources; assignment alone grants no rights. Member removal is rejected if it would remove the final editor from any owned item, including completed and archived items; add a replacement editor first.
+
+Case and Playbook discovery include public resources by default. Use
+`--sharing-scope private|shared|anyone` on `case list`, `playbook list`,
+`playbook search`, or `playbook resource list` to narrow the readable results.
+Private means a single known User recipient; Shared means multiple Users or a
+Team/Workspace recipient; Anyone means public visibility. These filters never
+grant access. Playbook discovery also accepts `--assigned-to` for its Maintainer.
+The former `case popular` command and `--include-public` flag have been removed.
 
 Run `epismo --help` for command groups, or append `--help` to any group or command for its options.
 
@@ -272,7 +280,7 @@ Workspace references accept an exact ID or unique handle. The effective workspac
 
 `epismo login` opens a browser-based OAuth login. With `--email`, it automatically uses your organization SSO when available, otherwise it prompts for an email code.
 
-`epismo case get`, `epismo case popular`, `epismo case record list`, `epismo case handoff graph get`, `epismo playbook list`, and UUID-based `epismo playbook get` work before login for public cases and public playbooks. `epismo case get` accepts a case code (e.g. `PANDA-317`) or UUID. Public Case reads expose titles, inputs, Tasks, Records, Briefs, readable handoffs, and public author/assignee account references. Private grants, linked sources, and private configuration remain omitted. `case get` includes the latest ten records; pass its `records_next_cursor` to `case record list --cursor` with `--scope self` for older public records. Use `case popular --playbook-id <id>` to filter discovery. The CLI creates a stable random `anonymousId` in its config for analytics and fair-use rate limiting; it is not an authentication credential. Search, aliases, private data, live case work, and writes still require login.
+`epismo case get`, `epismo case list`, `epismo case record list`, `epismo case handoff graph get`, `epismo playbook list`, and UUID-based `epismo playbook get` work before login for public cases and public playbooks. `epismo case get` accepts a case code (e.g. `PANDA-317`) or UUID. Public Case reads expose titles, inputs, Tasks, Records, Briefs, readable handoffs, and public author/assignee account references. Private grants, linked sources, and private configuration remain omitted. `case get` includes the latest ten records; pass its `records_next_cursor` to `case record list --cursor` with `--scope self` for older public records. Use `case list --playbook-id <id>` to filter discovery. The CLI creates a stable random `anonymousId` in its config for analytics and fair-use rate limiting; it is not an authentication credential. Search, aliases, private data, live case work, and writes still require login.
 
 For CI or other non-interactive use, create a workspace-scoped token and pass it with `EPISMO_TOKEN`:
 

@@ -85,7 +85,7 @@ func TestCommandSurface(t *testing.T) {
 		workspace/list workspace/current workspace/use workspace/clear workspace/create workspace/checkout workspace/update workspace/member/list workspace/member/upsert workspace/member/invite workspace/member/delete workspace/member/handover workspace/invitation/revoke
 		team/invite team/invitation/list team/invitation/revoke team/invitation/get team/invitation/accept team/disconnect team/list team/create team/update team/member/list team/member/add team/member/delete
 		credit/balance credit/checkout token/create token/list token/revoke
-		case/start case/get case/list case/popular case/access/get case/access/set case/share case/assign case/update case/review case/handoff/create case/handoff case/handoff/remove case/handoff/delete case/handoff/graph/get case/handoff/graph case/handoff/candidates/list case/handoff/candidate/list case/close case/reopen case/archive case/restore case/delete case/owner/transfer case/owner
+		case/start case/get case/list case/access/get case/access/set case/share case/assign case/update case/review case/handoff/create case/handoff case/handoff/remove case/handoff/delete case/handoff/graph/get case/handoff/graph case/handoff/candidates/list case/handoff/candidate/list case/close case/reopen case/archive case/restore case/delete case/owner/transfer case/owner
 		case/task/create case/task/list case/task/get case/task/update case/task/set/status case/record/append case/record/list case/record/update case/record/delete
 		case/brief/set case/brief/delete case/brief/generate
 		case/source/link case/source/unlink case/source/refresh case/source/get
@@ -783,7 +783,7 @@ func TestPublicCaseReadsWithoutLogin(t *testing.T) {
 	}{
 		{"records", []string{"case", "record", "list", "case-1", "--scope", "self", "--cursor", "older"}, "/v1/cases/case-1/records?cursor=older&order=desc&scope=self", `{"records":[]}`},
 		{"handoffs", []string{"case", "handoff", "graph", "case-1", "--scope", "neighbors"}, "/v1/cases/case-1/handoff-graph?scope=neighbors", `{"graph":{"cases":[],"handoffs":[]}}`},
-		{"popular", []string{"case", "popular", "--playbook-id", "playbook-1"}, "/v1/cases/popular?playbookId=playbook-1", `{"cases":[]}`},
+		{"list", []string{"case", "list", "--playbook-id", "playbook-1"}, "/v1/cases?playbookId=playbook-1", `{"cases":[]}`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			calls := 0
