@@ -18,7 +18,7 @@ func buildCommands() []*command {
 	commands = append(commands, sharedTeamCommands()...)
 	commands = append(commands, caseCommands()...)
 	commands = append(commands, caseSourceCommands()...)
-	commands = append(commands, briefCommands()...)
+	commands = append(commands, reviewCommands()...)
 	commands = append(commands, caseHandoffCommands()...)
 	commands = append(commands, caseTaskCommands()...)
 	commands = append(commands, caseRecordCommands()...)
@@ -44,13 +44,12 @@ func enrichCommands(commands []*command) []*command {
 		"case source unlink":      {"epismo case source unlink CASE_ID SOURCE_ID"},
 		"case source refresh":     {"epismo case source refresh CASE_ID SOURCE_ID"},
 		"case source get":         {"epismo case source get CASE_ID SOURCE_ID"},
-		"case brief delete":       {"epismo case brief delete CASE_ID"},
-		"case brief generate":     {"epismo case brief generate CASE_ID"},
-		"case brief set":          {"epismo case brief set CASE_ID --content 'Waiting for approval.'"},
+		"case review get":         {"epismo case review get CASE_ID"},
+		"case review generate":    {"epismo case review generate CASE_ID"},
+		"case review act":         {"epismo case review act CASE_ID --report-id REPORT_ID --proposal-id PROPOSAL_ID --action create"},
 		"case handoff create":     {"epismo case handoff create SALES_CASE_ID --to-case-id ENGINEERING_CASE_ID", "epismo case handoff create ENGINEERING_CASE_ID --from-case-id SALES_CASE_ID"},
 		"case task set status":    {"epismo case task set status TASK_ID --status closed --outcome approved --lock-version LOCK_VERSION"},
 		"case record append":      {`epismo case record append CASE_ID --kind note --origin agent --content 'Goal: team invitations. Decision: reuse existing email flow. Open: expiry behavior. Next: inspect invitation code.'`, `epismo case record append CASE_ID --kind review --origin agent --data '{"verdict":"pass"}' --content 'Shared evidence is sufficient.'`, "epismo case record append CASE_ID --input @record.json"},
-		"case review":             {"epismo case review CASE_ID", "epismo case review CASE_ID --prompt 'Flag missing citations as blockers.'"},
 		"case record update":      {`epismo case record update RECORD_ID --content 'Updated decision'`},
 		"case record delete":      {"epismo case record delete RECORD_ID"},
 		"workspace list":          {"epismo workspace list --output table", "epismo --workspace acme workspace member list"},
