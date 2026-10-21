@@ -8609,6 +8609,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "reportId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "security": [
@@ -8625,6 +8634,160 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ReviewResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/review/history": {
+      "get": {
+        "operationId": "getV1CasesCaseIdReviewHistory",
+        "tags": [
+          "cases"
+        ],
+        "summary": "GET /v1/cases/{caseId}/review/history",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewHistoryResponse"
                 }
               }
             }
@@ -10147,7 +10310,6 @@
                 "enum": [
                   "note",
                   "output",
-                  "review",
                   "activity"
                 ]
               }
@@ -16838,10 +17000,9 @@
                   "type": "string",
                   "enum": [
                     "note",
-                    "output",
-                    "review"
+                    "output"
                   ],
-                  "description": "Record kind. note, output, or review. activity is server-only. review requires data.verdict of pass, changes_requested, or insufficient."
+                  "description": "Record kind. note or output. activity is server-only."
                 },
                 "content": {
                   "type": "string",
@@ -17129,10 +17290,9 @@
                   "type": "string",
                   "enum": [
                     "note",
-                    "output",
-                    "review"
+                    "output"
                   ],
-                  "description": "Record kind. note, output, or review. activity is server-only. review requires data.verdict of pass, changes_requested, or insufficient."
+                  "description": "Record kind. note or output. activity is server-only."
                 },
                 "content": {
                   "type": "string",
@@ -17184,10 +17344,9 @@
             "type": "string",
             "enum": [
               "note",
-              "output",
-              "review"
+              "output"
             ],
-            "description": "Record kind. note, output, or review. activity is server-only. review requires data.verdict of pass, changes_requested, or insufficient."
+            "description": "Record kind. note or output. activity is server-only."
           },
           "content": {
             "type": "string",
@@ -17232,10 +17391,9 @@
             "type": "string",
             "enum": [
               "note",
-              "output",
-              "review"
+              "output"
             ],
-            "description": "Record kind. note, output, or review. activity is server-only. review requires data.verdict of pass, changes_requested, or insufficient."
+            "description": "Record kind. note or output. activity is server-only."
           },
           "content": {
             "type": "string",
@@ -18365,6 +18523,60 @@
           },
           "job": {
             "$ref": "#/components/schemas/ReportJob"
+          },
+          "historical": {
+            "type": "boolean",
+            "description": "Superseded evaluations are read-only."
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReviewHistoryResponse": {
+        "type": "object",
+        "required": [
+          "reports"
+        ],
+        "properties": {
+          "reports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportSummary"
+            }
+          },
+          "nextCursor": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReportSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "evaluatedAt",
+          "verdict",
+          "summary"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "evaluatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "changes_requested",
+              "insufficient"
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 280
           }
         },
         "additionalProperties": false
@@ -18879,6 +19091,14 @@
           "playbookVersion": {
             "$ref": "#/components/schemas/PlaybookVersion"
           },
+          "review": {
+            "$ref": "#/components/schemas/Report",
+            "description": "Latest saved review; work readers only. History is fetched separately."
+          },
+          "reviewJob": {
+            "$ref": "#/components/schemas/ReportJob",
+            "description": "Latest review generation job; work readers only."
+          },
           "sharedUsers": {
             "type": "array",
             "items": {
@@ -19202,7 +19422,6 @@
             "enum": [
               "note",
               "output",
-              "review",
               "activity"
             ]
           },

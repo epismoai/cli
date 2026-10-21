@@ -9,6 +9,13 @@ do not edit this snapshot manually. Refresh it after the API is deployed:
 sh scripts/sync-openapi.sh
 ```
 
+For coordinated local development before an API deployment, use the generated
+contract from the sibling service repository through the same sync script:
+
+```sh
+sh scripts/sync-openapi.sh "file://$(cd ../epismo && pwd)/apps/api/openapi.json"
+```
+
 The contract's `info.version` is independent of the CLI release version. CLI
 tests verify the documented operation coverage, query parameters, and structured
 HTTP 402 response.

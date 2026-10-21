@@ -143,11 +143,23 @@ epismo case handoff graph get CASE_ID --scope connected
 epismo case record list CASE_ID --scope ancestors
 epismo case get CASE_ID
 epismo case review get CASE_ID
+epismo case review list CASE_ID --page-size 20
+epismo case review list CASE_ID --cursor NEXT_CURSOR
+epismo case review get CASE_ID --report-id REPORT_ID
 epismo case review generate CASE_ID
 epismo case review act CASE_ID --report-id REPORT_ID --proposal-id PROPOSAL_ID --action create
 epismo case review act CASE_ID --report-id REPORT_ID --proposal-id PROPOSAL_ID --action dismiss --feedback "Not needed"
 epismo case list --status open
 ```
+
+`case get` includes the latest full `review` and generation `review_job` for work
+readers; public-only reads omit them. It never fetches history or invokes AI.
+Use `case review list` to browse saved dates, verdicts and summaries, newest first,
+with `--page-size` and `--cursor`. Use `case review get --report-id` to read a full
+historical report. Superseded reports have `historical: true` and are read-only;
+creating or dismissing an unhandled proposal from one returns a conflict. Refresh
+the latest report before acting. All history reads use current work access and
+the current sharing audience.
 
 The built-in AI evaluates shared case evidence, explaining where work stands,
 evidence gaps, and the most useful next decisions with a verdict (`pass`,
@@ -327,3 +339,7 @@ Releases are built for macOS, Linux, and Windows from semantic-version tags such
 [Apache License 2.0](LICENSE).
 
 Discovery filters never grant access. Playbook browsing/resources and task lists accept an optional `ownerId` filter for the resource or parent case. Suggestion lists use `playbookOwnerId` for their current parent; suggestions have no independent owner. Use `--input` to pass fields without a dedicated CLI flag. Workspace selection does not implicitly restrict discovery ownership. The Web sidebar narrows team-based discovery only; API and CLI use normal access-based visibility.
+
+New records and kind changes accept `note` or `output`. Lists accept `note`,
+`output`, or server-authored `activity`. Record human and agent assessments as
+notes; built-in AI evaluations use reports.

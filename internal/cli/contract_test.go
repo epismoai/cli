@@ -95,6 +95,7 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 		"case start":                   {"post", "/v1/cases"},
 		"case get":                     {"get", "/v1/cases/{caseId}"},
 		"case review get":              {"get", "/v1/cases/{caseId}/review"},
+		"case review list":             {"get", "/v1/cases/{caseId}/review/history"},
 		"case review generate":         {"post", "/v1/cases/{caseId}/review"},
 		"case review act":              {"post", "/v1/cases/{caseId}/review/actions"},
 		"case list":                    {"get", "/v1/cases"},
