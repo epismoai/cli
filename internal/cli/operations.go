@@ -75,10 +75,6 @@ func (i invocation) payload(a *app) (map[string]any, error) {
 		if option.Field == "_input" {
 			continue
 		}
-		// Brief priority options spell unset as "none"; the API uses an empty string.
-		if option.Field == "priority" && result[option.Field] == "none" {
-			result[option.Field] = ""
-		}
 		if _, exists := result[option.Field]; !exists && option.Default != nil {
 			result[option.Field] = option.Default
 		}
@@ -109,8 +105,7 @@ func newUUID() string {
 func queryString(path string, payload map[string]any) string {
 	query := url.Values{}
 	for key, value := range payload {
-		// An explicit empty priority filters Cases whose priority is unset.
-		if value == nil || (value == "" && key != "priority") {
+		if value == nil || value == "" {
 			continue
 		}
 		switch typed := value.(type) {

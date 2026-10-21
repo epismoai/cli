@@ -61,7 +61,7 @@ epismo workspace list
 epismo workspace use acme # optional: save a default workspace by ID or handle
 epismo workspace member invite teammate@example.com
 epismo workspace invitation revoke INVITATION_ID
-epismo case start --title "Customer Onboarding"
+epismo case start --title "Customer onboarding"
 epismo --workspace acme playbook search onboarding
 epismo playbook resource list --kind cli
 epismo playbook create --definition '{"title":"Onboarding","steps":[]}'
@@ -73,15 +73,15 @@ See the [CLI guide](https://epismo.ai/en/docs/cli) for setup and workflow docume
 
 ## Ownership and resource lifecycle
 
-Playbooks and Cases belong to a personal or workspace account, which is also
+Playbooks and cases belong to a personal or workspace account, which is also
 responsible for their usage charges. Omit `--owner-id` on create, copy, or case
 start to use the active workspace, or your personal account when none is selected.
 Assignees and maintainers identify responsibility and do not grant access.
-Workspace members need explicit sharing unless they exercise Owner/Admin rights.
+Workspace members need explicit sharing unless they exercise owner/admin rights.
 `playbook assign` changes `assignedTo`, the shared responsibility field on
-Playbooks, Cases, and Tasks. The Playbook UI calls this person the Maintainer.
+playbooks, cases, and tasks. The playbook UI calls this person the maintainer.
 Case ownership transfer requires ownership and the latest lock version; it preserves sharing
-and assignment but clears the saved Brief, including DNA and priority.
+and assignment but clears derived review reports.
 
 ```sh
 epismo playbook list --archived
@@ -94,8 +94,8 @@ epismo case restore CASE_ID --lock-version 4
 epismo case delete CASE_ID --lock-version 5
 ```
 
-Archive and restore require editing access and preserve work. Permanent Case
-deletion requires ownership, an already archived Case, and its current lock
+Archive and restore require editing access and preserve work. Permanent case
+deletion requires ownership, an already archived case, and its current lock
 version. It cannot be undone. Get the current lock version from the appropriate
 active or archived listing.
 
@@ -116,11 +116,11 @@ The operation defaults to preview and supports the normal idempotency key and
 local `--dry-run` options. Completed approvals and authorship remain history.
 
 Initial handover preserves direct grants. Workspace member removal clears the
-User's direct grants on items owned by that Workspace, including completed and
+user's direct grants on items owned by that workspace, including completed and
 archived items. Finalization repeats cleanup for late grants. Personal and
-other-Workspace shares remain unchanged.
-Team and Workspace management authority follow current membership and the
-participation Workspace's SSO. Non-member direct shares use normal Epismo
+other-workspace shares remain unchanged.
+Team and workspace management authority follow current membership and the
+participation workspace's SSO. Non-member direct shares use normal Epismo
 authentication. Resource lists
 use explicit access and supported publication, with no ownership exception.
 
@@ -133,7 +133,7 @@ sign in again when current SSO evidence is missing or expires.
 Start a case, append timeline records, connect dependent workflows, and explore the DAG:
 
 ```sh
-epismo case start --title "Customer Onboarding"
+epismo case start --title "Customer onboarding"
 epismo case record append CASE_ID --kind output --content "Completed setup"
 epismo case record update RECORD_ID --content "Revised setup notes"
 epismo case record delete RECORD_ID
@@ -142,19 +142,26 @@ epismo case handoff remove CASE_ID HANDOFF_ID
 epismo case handoff graph get CASE_ID --scope connected
 epismo case record list CASE_ID --scope ancestors
 epismo case get CASE_ID
-epismo case brief generate CASE_ID
-epismo case brief delete CASE_ID
-epismo case brief set CASE_ID --content "Waiting for launch approval."
-epismo case brief set CASE_ID --content "Waiting for launch approval." --details '{"needs":[{"text":"Launch approval","recordIds":[]}]}' --priority high
-epismo case brief set CASE_ID --priority urgent
-epismo case brief set CASE_ID --priority none
-epismo case list --status open --priority high
-epismo case list --priority none
+epismo case review get CASE_ID
+epismo case review generate CASE_ID
+epismo case review act CASE_ID --report-id REPORT_ID --proposal-id PROPOSAL_ID --action create
+epismo case review act CASE_ID --report-id REPORT_ID --proposal-id PROPOSAL_ID --action dismiss --feedback "Not needed"
+epismo case list --status open
 ```
 
-A Brief contains a summary sentence of up to 280 characters and optional DNA details: `decisions`, `needs`, and `actions`. Each category has up to three `{text, recordIds}` items, each with at most three supporting Record IDs from the same case. Details summarize evidence; they do not approve work or assign tasks. Closing the case does not remove it, and an archived case cannot be changed. Case reads include it when present; reading never generates it. Use `case brief set` with any of `--content`, `--details`, and `--priority`. Omitted fields are preserved; pass `--details '{}'` to clear DNA. Priority-only Briefs may have an empty summary. `case brief delete` removes the summary and details and clears Case priority, including when only priority is set. Generation runs synchronously, extracts supported DNA, and optionally assesses priority; receives all saved Brief values as prior context and may revise or remove them; a null DNA or priority result clears the corresponding field. It charges token-priced credits to the case billing account; set and delete cost 2 credits each to the acting user's active workspace, or personal account when no workspace is selected. Reviews do not update the Brief.
-
-Brief priority is `urgent`, `high`, `normal`, or `low`. Use `case brief set --priority` to edit it without changing the summary or DNA, including after close. Priority is read from `case.brief.priority`. Pass `--priority none` to clear it on writes or to select unset Cases on `case list`; omit the option to preserve it on writes or include all priorities on lists. The CLI converts `none` to the API's empty-string representation, including when passed through `--input`. Responses use enum numbers: `0` unset, `1` urgent, `2` high, `3` normal, `4` low. Generated priority needs concrete evidence; an absent urgency signal does not imply `normal`.
+The built-in AI evaluates shared case evidence, explaining where work stands,
+evidence gaps, and the most useful next decisions with a verdict (`pass`,
+`changes_requested`, or `insufficient`). Evaluations run asynchronously on the
+worker: `case review generate` queues an evaluation; poll `case review get`
+until the job completes. Recommendations (up to 3) are proposed actions that the
+user can confirm unchanged as tasks, cases with directed handoffs, playbook suggestions,
+or playbooks with their first version using `case review act`, or dismiss with feedback.
+Review the full saved proposal before confirming; title, content, and definition overrides
+are not accepted. Actions use the proposal identity for retries, so do not supply
+`--idempotency-key`. New cases and playbooks use your active billing home with restricted
+creator access; source sharing and external sources are not copied. Evidence changes
+show an advisory reevaluation notice and do not block actions. Token-priced credits
+charge the case owner when a report is committed.
 
 ## Case sources
 
@@ -196,14 +203,14 @@ epismo -w recipient team invitation accept TOKEN
 epismo -w recipient team disconnect TEAM_ID
 ```
 
-`--access` is accepted on `playbook create`, `case start`, `playbook copy`, and access setters. Viewers can read published Playbooks and private Cases, Tasks, Records, and linked sources; editors can update content and drafts. Playbook and Case updates must retain at least one explicit User or Team editor, including when an owner changes sharing. Creation adds the creator as an editor. Editors can archive resources; assignment alone grants no rights. Member removal is rejected if it would remove the final editor from any owned item, including completed and archived items; add a replacement editor first.
+`--access` is accepted on `playbook create`, `case start`, `playbook copy`, and access setters. Viewers can read published playbooks and private cases, tasks, records, and linked sources; editors can update content and drafts. Playbook and case updates must retain at least one explicit user or team editor, including when an owner changes sharing. Creation adds the creator as an editor. Editors can archive resources; assignment alone grants no rights. Member removal is rejected if it would remove the final editor from any owned item, including completed and archived items; add a replacement editor first.
 
-Case and Playbook discovery include public resources by default. Use
-`--sharing-scope private|shared|anyone` on `case list`, `playbook list`,
+Case and playbook discovery include public resources by default. Use
+`--sharing-scope only_me|shared|anyone` on `case list`, `playbook list`,
 `playbook search`, or `playbook resource list` to narrow the readable results.
-Private means a single known User recipient; Shared means multiple Users or a
-Team/Workspace recipient; Anyone means public visibility. These filters never
-grant access. Playbook discovery also accepts `--assigned-to` for its Maintainer.
+Only_me means a single known user recipient; Shared means multiple users or a
+team/workspace recipient; Anyone means public visibility. These filters never
+grant access. Playbook discovery also accepts `--assigned-to` for its maintainer.
 The former `case popular` command and `--include-public` flag have been removed.
 
 Run `epismo --help` for command groups, or append `--help` to any group or command for its options.
@@ -280,7 +287,7 @@ Workspace references accept an exact ID or unique handle. The effective workspac
 
 `epismo login` opens a browser-based OAuth login. With `--email`, it automatically uses your organization SSO when available, otherwise it prompts for an email code.
 
-`epismo case get`, `epismo case list`, `epismo case record list`, `epismo case handoff graph get`, `epismo playbook list`, and UUID-based `epismo playbook get` work before login for public cases and public playbooks. `epismo case get` accepts a case code (e.g. `PANDA-317`) or UUID. Public Case reads expose titles, inputs, Tasks, Records, Briefs, readable handoffs, and public author/assignee account references. Private grants, linked sources, and private configuration remain omitted. `case get` includes the latest ten records; pass its `records_next_cursor` to `case record list --cursor` with `--scope self` for older public records. Use `case list --playbook-id <id>` to filter discovery. The CLI creates a stable random `anonymousId` in its config for analytics and fair-use rate limiting; it is not an authentication credential. Search, aliases, private data, live case work, and writes still require login.
+`epismo case get`, `epismo case list`, `epismo case record list`, `epismo case handoff graph get`, `epismo playbook list`, and UUID-based `epismo playbook get` work before login for public cases and public playbooks. `epismo case get` accepts a case code (e.g. `PANDA-317`) or UUID. Public case reads expose titles, inputs, tasks, records, readable handoffs, and public author/assignee account references. Private grants, linked sources, review reports and summaries, and private configuration remain omitted. `case get` includes the latest ten records; pass its `records_next_cursor` to `case record list --cursor` with `--scope self` for older public records. Use `case list --playbook-id <id>` to filter discovery. The CLI creates a stable random `anonymousId` in its config for analytics and fair-use rate limiting; it is not an authentication credential. Search, aliases, private data, live case work, and writes still require login.
 
 For CI or other non-interactive use, create a workspace-scoped token and pass it with `EPISMO_TOKEN`:
 
@@ -319,4 +326,4 @@ Releases are built for macOS, Linux, and Windows from semantic-version tags such
 
 [Apache License 2.0](LICENSE).
 
-Discovery filters never grant access. Playbook browsing/resources and Task lists accept an optional `ownerId` filter for the resource or parent Case. Suggestion lists use `playbookOwnerId` for their current parent; Suggestions have no independent owner. Use `--input` to pass fields without a dedicated CLI flag. Workspace selection does not implicitly restrict discovery ownership. The Web sidebar narrows Team-based discovery only; API and CLI use normal access-based visibility.
+Discovery filters never grant access. Playbook browsing/resources and task lists accept an optional `ownerId` filter for the resource or parent case. Suggestion lists use `playbookOwnerId` for their current parent; suggestions have no independent owner. Use `--input` to pass fields without a dedicated CLI flag. Workspace selection does not implicitly restrict discovery ownership. The Web sidebar narrows team-based discovery only; API and CLI use normal access-based visibility.

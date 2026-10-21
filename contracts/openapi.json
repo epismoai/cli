@@ -4747,7 +4747,7 @@
           "playbooks"
         ],
         "summary": "GET /v1/playbooks/{id}/copies",
-        "description": "List readable Playbooks copied from this source.",
+        "description": "List readable playbooks copied from this source.",
         "parameters": [
           {
             "name": "id",
@@ -5745,7 +5745,7 @@
           "cases"
         ],
         "summary": "GET /v1/cases",
-        "description": "Lists readable cases by updated time descending, then ID. Anonymous callers receive public cases, including cases without records. Use sharingScope to filter private, shared, or anyone cases within the caller's discovery scope. Public-only pages are free and use the public projection for publication-only readers. Archives require private access.",
+        "description": "Lists readable cases by updated time descending, then ID. Anonymous callers receive public cases, including cases without records. Use sharingScope to filter only_me, shared, or anyone cases within the caller's discovery scope. Public-only pages are free and use the public projection for publication-only readers. Archives require private access.",
         "parameters": [
           {
             "name": "workspaceId",
@@ -5770,7 +5770,7 @@
             "schema": {
               "type": "string",
               "enum": [
-                "private",
+                "only_me",
                 "shared",
                 "anyone"
               ]
@@ -5811,21 +5811,6 @@
                 "open",
                 "completed",
                 "cancelled"
-              ]
-            }
-          },
-          {
-            "name": "priority",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "",
-                "urgent",
-                "high",
-                "normal",
-                "low"
               ]
             }
           },
@@ -5987,7 +5972,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/StartCaseRequest"
+                "$ref": "#/components/schemas/CreateCaseRequest"
               }
             }
           }
@@ -6845,7 +6830,7 @@
           "cases"
         ],
         "summary": "GET /v1/cases/{caseId}",
-        "description": "Pass the Case UUID or Case code (e.g. PANDA-317). Work collaborators receive the live case, tasks, the latest 10 records (newest first), and the handoff neighborhood. Public-only readers receive the live title, input, the latest 10 records, and readable handoffs. Follow recordsNextCursor with GET /v1/cases/{caseId}/records for older records.",
+        "description": "Pass the case UUID or case code (e.g. PANDA-317). Work collaborators receive the live case, tasks, the latest 10 records (newest first), and the handoff neighborhood. Public-only readers receive the live title, input, the latest 10 records, and readable handoffs. Follow recordsNextCursor with GET /v1/cases/{caseId}/records for older records.",
         "parameters": [
           {
             "name": "caseId",
@@ -7125,7 +7110,7 @@
           "cases"
         ],
         "summary": "DELETE /v1/cases/{caseId}",
-        "description": "Permanently erase an archived Case and its Tasks, Records, Sources, and handoff links. Requires ownership. Cannot be undone. Minimal idempotency and financial facts are retained.",
+        "description": "Permanently erase an archived case and its tasks, records, sources, and handoff links. Requires ownership. Cannot be undone. Minimal idempotency and financial facts are retained.",
         "parameters": [
           {
             "name": "caseId",
@@ -7168,440 +7153,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/JsonObject"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "402": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/cases/{caseId}/brief": {
-      "put": {
-        "operationId": "putV1CasesCaseIdBrief",
-        "tags": [
-          "cases"
-        ],
-        "summary": "PUT /v1/cases/{caseId}/brief",
-        "parameters": [
-          {
-            "name": "caseId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "workspaceId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "security": [
-          {
-            "OAuth2": [
-              "write"
-            ]
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetBriefRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BriefResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "402": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "operationId": "deleteV1CasesCaseIdBrief",
-        "tags": [
-          "cases"
-        ],
-        "summary": "DELETE /v1/cases/{caseId}/brief",
-        "parameters": [
-          {
-            "name": "caseId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "workspaceId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "security": [
-          {
-            "OAuth2": [
-              "write"
-            ]
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DeleteBriefRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EmptyResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "402": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "operationId": "postV1CasesCaseIdBrief",
-        "tags": [
-          "cases"
-        ],
-        "summary": "POST /v1/cases/{caseId}/brief",
-        "parameters": [
-          {
-            "name": "caseId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "workspaceId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "security": [
-          {
-            "OAuth2": [
-              "write"
-            ]
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GenerateBriefRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BriefResponse"
                 }
               }
             }
@@ -8928,7 +8479,287 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReviewCaseRequest"
+                "$ref": "#/components/schemas/GenerateReviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "getV1CasesCaseIdReview",
+        "tags": [
+          "cases"
+        ],
+        "summary": "GET /v1/cases/{caseId}/review",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/review/actions": {
+      "post": {
+        "operationId": "postV1CasesCaseIdReviewActions",
+        "tags": [
+          "cases"
+        ],
+        "summary": "POST /v1/cases/{caseId}/review/actions",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActOnReviewRequest"
               }
             }
           }
@@ -8939,7 +8770,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReviewCaseResponse"
+                  "$ref": "#/components/schemas/ReviewResponse"
                 }
               }
             }
@@ -9508,7 +9339,7 @@
           "tasks"
         ],
         "summary": "GET /v1/tasks",
-        "description": "Lists accessible tasks. ownerId restricts the parent Case's owning account and never grants access.",
+        "description": "Lists accessible tasks. ownerId restricts the parent case's owning account and never grants access.",
         "parameters": [
           {
             "name": "workspaceId",
@@ -10841,19 +10672,6 @@
             }
           },
           {
-            "name": "preferredLangs",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "pattern": "^[a-z]{2}$"
-              },
-              "maxItems": 5
-            }
-          },
-          {
             "name": "resourceKind",
             "in": "query",
             "required": false,
@@ -10885,7 +10703,7 @@
             "schema": {
               "type": "string",
               "enum": [
-                "private",
+                "only_me",
                 "shared",
                 "anyone"
               ]
@@ -11009,7 +10827,7 @@
           "playbooks"
         ],
         "summary": "POST /v1/playbooks",
-        "description": "Any member of the connected Workspace may create a playbook owned by it. Editors may change sharing, archive, and restore. Other members require an explicit user or team grant to read or edit.",
+        "description": "Any member of the connected workspace may create a playbook owned by it. Editors may change sharing, archive, and restore. Other members require an explicit user or team grant to read or edit.",
         "parameters": [
           {
             "name": "workspaceId",
@@ -11215,7 +11033,7 @@
             "schema": {
               "type": "string",
               "enum": [
-                "private",
+                "only_me",
                 "shared",
                 "anyone"
               ]
@@ -13216,7 +13034,7 @@
           "cases"
         ],
         "summary": "POST /v1/cases/{caseId}/archive",
-        "description": "Archive a Case. Editors and owners may archive; work is retained.",
+        "description": "Archive a case. Editors and owners may archive; work is retained.",
         "parameters": [
           {
             "name": "caseId",
@@ -13363,7 +13181,7 @@
           "cases"
         ],
         "summary": "POST /v1/cases/{caseId}/restore",
-        "description": "Restore an archived Case. Current editing access is required. Status, assignments, and sharing are preserved.",
+        "description": "Restore an archived case. Current editing access is required. Status, assignments, and sharing are preserved.",
         "parameters": [
           {
             "name": "caseId",
@@ -13648,7 +13466,7 @@
           "playbooks"
         ],
         "summary": "Assign playbook responsibility",
-        "description": "Assigns assignedTo as the maintainer without changing ownership or sharing. Requires ownership. The target must already have editing access and belong to the owning Workspace when applicable.",
+        "description": "Assigns assignedTo as the maintainer without changing ownership or sharing. Requires ownership. The target must already have editing access and belong to the owning workspace when applicable.",
         "parameters": [
           {
             "name": "playbookId",
@@ -13794,8 +13612,8 @@
         "tags": [
           "cases"
         ],
-        "summary": "Transfer Case ownership",
-        "description": "Transfers the owning and billing account between eligible personal and Workspace homes. Requires ownership, expectedLockVersion, and idempotencyKey. Preserves assignment and sharing, but clears the saved Brief including DNA and priority. Workspace-to-workspace and user-to-user moves are rejected.",
+        "summary": "Transfer case ownership",
+        "description": "Transfers the owning and billing account between eligible personal and workspace homes. Requires ownership, expectedLockVersion, and idempotencyKey. Preserves assignment and sharing, and clears derived review reports. Workspace-to-workspace and user-to-user moves are rejected.",
         "parameters": [
           {
             "name": "caseId",
@@ -13942,7 +13760,7 @@
           "playbooks"
         ],
         "summary": "Set playbook owner",
-        "description": "Any member may move a personally owned private playbook into the Workspace this request is connected to. A Workspace-owned playbook can only move to that Workspace's Owner or the playbook creator. Workspace-to-Workspace and User-to-User moves are rejected.",
+        "description": "Any member may move a personally owned private playbook into the workspace this request is connected to. A workspace-owned playbook can only move to that workspace's owner or the playbook creator. Workspace-to-workspace and user-to-user moves are rejected.",
         "parameters": [
           {
             "name": "playbookId",
@@ -15149,7 +14967,7 @@
           "suggestions"
         ],
         "summary": "GET /v1/suggestions",
-        "description": "Lists accessible suggestions. ownerId restricts the live parent Playbook's owning account; Suggestions have no independent owner.",
+        "description": "Lists accessible suggestions. ownerId restricts the live parent playbook's owning account; suggestions have no independent owner.",
         "parameters": [
           {
             "name": "workspaceId",
@@ -16761,7 +16579,7 @@
           "idempotencyKey"
         ]
       },
-      "StartCaseRequest": {
+      "CreateCaseRequest": {
         "type": "object",
         "properties": {
           "versionId": {
@@ -16821,9 +16639,6 @@
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "autoReview": {
-            "type": "boolean"
           },
           "ownerId": {
             "type": "string",
@@ -16941,9 +16756,6 @@
             "type": "string",
             "maxLength": 255
           },
-          "autoReview": {
-            "type": "boolean"
-          },
           "expectedLockVersion": {
             "type": "integer",
             "minimum": 0,
@@ -16957,136 +16769,6 @@
         },
         "required": [
           "expectedLockVersion",
-          "idempotencyKey"
-        ]
-      },
-      "SetBriefRequest": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 280
-          },
-          "details": {
-            "type": "object",
-            "properties": {
-              "decisions": {
-                "default": [],
-                "maxItems": 3,
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "text": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 280
-                    },
-                    "recordIds": {
-                      "default": [],
-                      "maxItems": 3,
-                      "type": "array",
-                      "items": {
-                        "type": "string",
-                        "format": "uuid",
-                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                      }
-                    }
-                  },
-                  "required": [
-                    "text"
-                  ]
-                }
-              },
-              "needs": {
-                "default": [],
-                "maxItems": 3,
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "text": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 280
-                    },
-                    "recordIds": {
-                      "default": [],
-                      "maxItems": 3,
-                      "type": "array",
-                      "items": {
-                        "type": "string",
-                        "format": "uuid",
-                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                      }
-                    }
-                  },
-                  "required": [
-                    "text"
-                  ]
-                }
-              },
-              "actions": {
-                "default": [],
-                "maxItems": 3,
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "text": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 280
-                    },
-                    "recordIds": {
-                      "default": [],
-                      "maxItems": 3,
-                      "type": "array",
-                      "items": {
-                        "type": "string",
-                        "format": "uuid",
-                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                      }
-                    }
-                  },
-                  "required": [
-                    "text"
-                  ]
-                }
-              }
-            }
-          },
-          "priority": {
-            "type": "string",
-            "enum": [
-              "",
-              "low",
-              "normal",
-              "high",
-              "urgent"
-            ]
-          },
-          "idempotencyKey": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          }
-        },
-        "required": [
-          "idempotencyKey"
-        ]
-      },
-      "DeleteBriefRequest": {
-        "type": "object",
-        "properties": {
-          "idempotencyKey": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          }
-        },
-        "required": [
           "idempotencyKey"
         ]
       },
@@ -17200,35 +16882,51 @@
           "status"
         ]
       },
-      "ReviewCaseRequest": {
+      "GenerateReviewRequest": {
         "type": "object",
         "properties": {
           "idempotencyKey": {
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "prompt": {
-            "type": "string",
-            "maxLength": 65535
           }
         },
         "required": [
           "idempotencyKey"
         ]
       },
-      "GenerateBriefRequest": {
+      "ActOnReviewRequest": {
         "type": "object",
         "properties": {
-          "idempotencyKey": {
+          "reportId": {
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "proposalId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "dismiss",
+              "create"
+            ]
+          },
+          "feedback": {
+            "default": "",
+            "type": "string",
+            "maxLength": 2000
           }
         },
         "required": [
-          "idempotencyKey"
-        ]
+          "reportId",
+          "proposalId",
+          "action"
+        ],
+        "additionalProperties": false
       },
       "ReopenCaseRequest": {
         "type": "object",
@@ -18573,6 +18271,9 @@
           "title": {
             "type": "string"
           },
+          "summary": {
+            "type": "string"
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -18595,12 +18296,6 @@
           "assignedTo": {
             "type": "string",
             "format": "uuid"
-          },
-          "autoReview": {
-            "type": "boolean"
-          },
-          "brief": {
-            "$ref": "#/components/schemas/Brief"
           },
           "ownerId": {
             "type": "string",
@@ -18661,144 +18356,364 @@
         },
         "additionalProperties": false
       },
-      "Brief": {
-        "type": "object",
-        "required": [
-          "updatedAt",
-          "content"
-        ],
-        "properties": {
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "content": {
-            "type": "string",
-            "maxLength": 280
-          },
-          "details": {
-            "$ref": "#/components/schemas/BriefDetails"
-          },
-          "priority": {
-            "type": "integer",
-            "enum": [
-              0,
-              1,
-              2,
-              3,
-              4
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
-      "BriefDetails": {
-        "type": "object",
-        "properties": {
-          "decisions": {
-            "default": [],
-            "maxItems": 3,
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "text": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 280
-                },
-                "recordIds": {
-                  "default": [],
-                  "maxItems": 3,
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  }
-                }
-              },
-              "required": [
-                "text",
-                "recordIds"
-              ],
-              "additionalProperties": false
-            }
-          },
-          "needs": {
-            "default": [],
-            "maxItems": 3,
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "text": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 280
-                },
-                "recordIds": {
-                  "default": [],
-                  "maxItems": 3,
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  }
-                }
-              },
-              "required": [
-                "text",
-                "recordIds"
-              ],
-              "additionalProperties": false
-            }
-          },
-          "actions": {
-            "default": [],
-            "maxItems": 3,
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "text": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 280
-                },
-                "recordIds": {
-                  "default": [],
-                  "maxItems": 3,
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  }
-                }
-              },
-              "required": [
-                "text",
-                "recordIds"
-              ],
-              "additionalProperties": false
-            }
-          }
-        },
-        "required": [
-          "decisions",
-          "needs",
-          "actions"
-        ],
-        "additionalProperties": false
-      },
-      "BriefResponse": {
+      "ReviewResponse": {
         "type": "object",
         "required": [],
         "properties": {
-          "brief": {
-            "$ref": "#/components/schemas/Brief"
+          "report": {
+            "$ref": "#/components/schemas/Report"
+          },
+          "job": {
+            "$ref": "#/components/schemas/ReportJob"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Report": {
+        "type": "object",
+        "required": [
+          "id",
+          "subjectType",
+          "subjectId",
+          "content",
+          "summary",
+          "verdict",
+          "stale"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subjectType": {
+            "type": "string",
+            "description": "Report scope; only case is currently implemented."
+          },
+          "subjectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "changes_requested",
+              "insufficient"
+            ]
+          },
+          "evaluatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "stale": {
+            "type": "boolean"
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 280
+          },
+          "content": {
+            "type": "string"
+          },
+          "verifications": {
+            "type": "array",
+            "description": "Future criterion-level results; currently empty. Empty does not imply a pass.",
+            "items": {
+              "$ref": "#/components/schemas/Verification"
+            }
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            }
+          },
+          "proposals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Proposal"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "Evidence": {
+        "type": "object",
+        "required": [
+          "kind",
+          "id"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Verification": {
+        "type": "object",
+        "required": [],
+        "properties": {},
+        "additionalProperties": false
+      },
+      "Proposal": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "content",
+          "state"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            }
+          },
+          "task": {
+            "$ref": "#/components/schemas/TaskProposal"
+          },
+          "suggestion": {
+            "$ref": "#/components/schemas/SuggestionProposal"
+          },
+          "case": {
+            "$ref": "#/components/schemas/CaseDefinition"
+          },
+          "playbook": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "proposed",
+              "dismissed",
+              "linked"
+            ]
+          },
+          "targetId": {
+            "type": "string"
+          },
+          "targetStatus": {
+            "type": "string"
+          },
+          "feedback": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "task"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "case"
+                  ]
+                },
+                {
+                  "required": [
+                    "suggestion"
+                  ]
+                },
+                {
+                  "required": [
+                    "playbook"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "required": [
+              "case"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "task"
+                  ]
+                },
+                {
+                  "required": [
+                    "suggestion"
+                  ]
+                },
+                {
+                  "required": [
+                    "playbook"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "required": [
+              "suggestion"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "task"
+                  ]
+                },
+                {
+                  "required": [
+                    "case"
+                  ]
+                },
+                {
+                  "required": [
+                    "playbook"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "required": [
+              "playbook"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "task"
+                  ]
+                },
+                {
+                  "required": [
+                    "case"
+                  ]
+                },
+                {
+                  "required": [
+                    "suggestion"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "CaseDefinition": {
+        "type": "object",
+        "properties": {
+          "versionId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "input": {
+            "default": {},
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "additionalProperties": false
+      },
+      "TaskProposal": {
+        "type": "object",
+        "required": [
+          "caseId"
+        ],
+        "properties": {
+          "caseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceStepId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SuggestionProposal": {
+        "type": "object",
+        "required": [
+          "playbookId",
+          "baseVersionId"
+        ],
+        "properties": {
+          "playbookId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "baseVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "targetStepId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReportJob": {
+        "type": "object",
+        "required": [
+          "id",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "complete",
+              "failed",
+              "skipped"
+            ]
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "attempts": {
+            "type": "integer"
           }
         },
         "additionalProperties": false
@@ -18894,7 +18809,7 @@
           },
           "snapshotOmitted": {
             "type": "boolean",
-            "description": "Payload omitted from the Case response budget. Retrieve the latest complete content with GET /v1/cases/{caseId}/sources/{sourceId}."
+            "description": "Payload omitted from the case response budget. Retrieve the latest complete content with GET /v1/cases/{caseId}/sources/{sourceId}."
           }
         },
         "additionalProperties": false
@@ -19351,16 +19266,6 @@
           },
           "nextCursor": {
             "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ReviewCaseResponse": {
-        "type": "object",
-        "required": [],
-        "properties": {
-          "record": {
-            "$ref": "#/components/schemas/Record"
           }
         },
         "additionalProperties": false

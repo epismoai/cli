@@ -85,9 +85,9 @@ func TestCommandSurface(t *testing.T) {
 		workspace/list workspace/current workspace/use workspace/clear workspace/create workspace/checkout workspace/update workspace/member/list workspace/member/upsert workspace/member/invite workspace/member/delete workspace/member/handover workspace/invitation/revoke
 		team/invite team/invitation/list team/invitation/revoke team/invitation/get team/invitation/accept team/disconnect team/list team/create team/update team/member/list team/member/add team/member/delete
 		credit/balance credit/checkout token/create token/list token/revoke
-		case/start case/get case/list case/access/get case/access/set case/share case/assign case/update case/review case/handoff/create case/handoff case/handoff/remove case/handoff/delete case/handoff/graph/get case/handoff/graph case/handoff/candidates/list case/handoff/candidate/list case/close case/reopen case/archive case/restore case/delete case/owner/transfer case/owner
+		case/start case/get case/list case/access/get case/access/set case/share case/assign case/update case/handoff/create case/handoff case/handoff/remove case/handoff/delete case/handoff/graph/get case/handoff/graph case/handoff/candidates/list case/handoff/candidate/list case/close case/reopen case/archive case/restore case/delete case/owner/transfer case/owner
 		case/task/create case/task/list case/task/get case/task/update case/task/set/status case/record/append case/record/list case/record/update case/record/delete
-		case/brief/set case/brief/delete case/brief/generate
+		case/review/get case/review/generate case/review/act
 		case/source/link case/source/unlink case/source/refresh case/source/get
 		record/append record/list record/update record/delete
 		task/create task/list task/get task/update task/set/status
@@ -127,11 +127,11 @@ func TestPlaybookSearchRequest(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 
 	var stdout, stderr bytes.Buffer
-	exitCode := Main([]string{"playbook", "search", "--query", "pb:demo", "--category", "learning", "--lang", "ja,fr", "--page-size", "20"}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode := Main([]string{"playbook", "search", "--query", "pb:demo", "--category", "learning", "--page-size", "20"}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 0 {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
-	if requestPath != "/v1/playbooks?category=learning&pageSize=20&preferredLangs=ja&preferredLangs=fr&query=pb%3Ademo" {
+	if requestPath != "/v1/playbooks?category=learning&pageSize=20&query=pb%3Ademo" {
 		t.Fatalf("request path = %q", requestPath)
 	}
 	if !strings.Contains(stdout.String(), `"created_at"`) || !strings.Contains(stdout.String(), `"account_id"`) || strings.Contains(stdout.String(), `"createdAt"`) || strings.Contains(stdout.String(), `"accountId"`) {
