@@ -89,3 +89,66 @@ func TestCaseReviewRequests(t *testing.T) {
 		t.Fatalf("act dismiss body = %+v", requests[3].body)
 	}
 }
+
+func TestCaseReviewHistoryRequests(t *testing.T) {
+	tests := []struct {
+		name      string
+		args      []string
+		path      string
+		query     map[string]string
+		response  string
+		resultKey string
+	}{
+		{"history page", []string{"case", "review", "list", "case-1", "--page-size", "2", "--cursor", "older+/=?"}, "/v1/cases/case-1/review/history", map[string]string{"pageSize": "2", "cursor": "older+/=?"}, `{"reports":[{"id":"old","summary":"Past review"}],"nextCursor":"next"}`, "reports"},
+		{"selected review", []string{"case", "review", "get", "case-1", "--report-id", "old-report"}, "/v1/cases/case-1/review", map[string]string{"reportId": "old-report"}, `{"report":{"id":"old-report","content":"Full historical review"},"historical":true}`, "historical"},
+		{"case detail includes latest review", []string{"case", "get", "case-1"}, "/v1/cases/case-1", map[string]string{}, `{"case":{"id":"case-1"},"review":{"id":"latest","content":"Full latest review"},"reviewJob":{"id":"job","status":"complete"}}`, "review"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			calls := 0
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				calls++
+				if r.Method != http.MethodGet || r.URL.Path != tt.path {
+					t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+				}
+				if r.Header.Get("Authorization") != "Bearer test-token" {
+					t.Error("missing authorization")
+				}
+				if len(r.URL.Query()) != len(tt.query) {
+					t.Errorf("query = %v", r.URL.Query())
+				}
+				for key, want := range tt.query {
+					if r.URL.Query().Get(key) != want {
+						t.Errorf("query %s = %q, want %q", key, r.URL.Query().Get(key), want)
+					}
+				}
+				body, _ := io.ReadAll(r.Body)
+				if len(body) != 0 {
+					t.Errorf("GET body = %q", body)
+				}
+				_, _ = io.WriteString(w, tt.response)
+			}))
+			defer server.Close()
+			t.Setenv("EPISMO_API_URL", server.URL)
+			t.Setenv("EPISMO_TOKEN", "test-token")
+			t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+			var stdout, stderr bytes.Buffer
+			if exit := Main(tt.args, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+				t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
+			}
+			var result map[string]any
+			if err := json.Unmarshal(stdout.Bytes(), &result); err != nil {
+				t.Fatal(err)
+			}
+			if result[tt.resultKey] == nil {
+				t.Fatalf("missing %s in %s", tt.resultKey, stdout.String())
+			}
+			if tt.resultKey == "historical" && result["historical"] != true {
+				t.Fatalf("historical marker lost: %s", stdout.String())
+			}
+			if calls != 1 {
+				t.Fatalf("calls=%d; reads must not automatically fetch history or generate reviews", calls)
+			}
+		})
+	}
+}
