@@ -142,20 +142,20 @@ epismo case handoff remove CASE_ID HANDOFF_ID
 epismo case handoff graph get CASE_ID --scope connected
 epismo case record list CASE_ID --scope ancestors
 epismo case get CASE_ID
-epismo case review get CASE_ID
-epismo case review list CASE_ID --page-size 20
-epismo case review list CASE_ID --cursor NEXT_CURSOR
-epismo case review get CASE_ID --report-id REPORT_ID
-epismo case review generate CASE_ID
-epismo case review act CASE_ID --report-id REPORT_ID --proposal-id PROPOSAL_ID --action create
-epismo case review act CASE_ID --report-id REPORT_ID --proposal-id PROPOSAL_ID --action dismiss --feedback "Not needed"
+epismo report case get CASE_ID
+epismo report case list CASE_ID --page-size 20
+epismo report case list CASE_ID --cursor NEXT_CURSOR
+epismo report case get CASE_ID --report-id REPORT_ID
+epismo report case generate CASE_ID
+epismo report case act CASE_ID --report-id REPORT_ID --proposal-id PROPOSAL_ID --action create
+epismo report case act CASE_ID --report-id REPORT_ID --proposal-id PROPOSAL_ID --action dismiss --feedback "Not needed"
 epismo case list --status open
 ```
 
-`case get` includes the latest full `review` and generation `review_job` for work
+`case get` includes the latest full `report` and generation `report_job` for work
 readers; public-only reads omit them. It never fetches history or invokes AI.
-Use `case review list` to browse saved dates, verdicts and summaries, newest first,
-with `--page-size` and `--cursor`. Use `case review get --report-id` to read a full
+Use `report case list` (or alias `case report list`) to browse saved dates, verdicts and summaries, newest first,
+with `--page-size` and `--cursor`. Use `report case get --report-id` to read a full
 historical report. Superseded reports have `historical: true` and are read-only;
 creating or dismissing an unhandled proposal from one returns a conflict. Refresh
 the latest report before acting. All history reads use current work access and
@@ -164,10 +164,10 @@ the current sharing audience.
 The built-in AI evaluates shared case evidence, explaining where work stands,
 evidence gaps, and the most useful next decisions with a verdict (`pass`,
 `changes_requested`, or `insufficient`). Evaluations run asynchronously on the
-worker: `case review generate` queues an evaluation; poll `case review get`
+worker: `report case generate` (or alias `case report generate`) queues an evaluation; poll `report case get`
 until the job completes. Recommendations (up to 3) are proposed actions that the
 user can confirm unchanged as tasks, cases with directed handoffs, playbook suggestions,
-or playbooks with their first version using `case review act`, or dismiss with feedback.
+or playbooks with their first version using `report case act` (or alias `case report act`), or dismiss with feedback.
 Review the full saved proposal before confirming; title, content, and definition overrides
 are not accepted. Actions use the proposal identity for retries, so do not supply
 `--idempotency-key`. New cases and playbooks use your active billing home with restricted
@@ -343,3 +343,44 @@ Discovery filters never grant access. Playbook browsing/resources and task lists
 New records and kind changes accept `note` or `output`. Lists accept `note`,
 `output`, or server-authored `activity`. Record human and agent assessments as
 notes; built-in AI evaluations use reports.
+
+### Personal reports
+
+Personal reports assess your assigned open cases, assigned open tasks, and open
+suggestions in your managed playbook inbox. They include only work owned by the
+active workspace, or your own account in personal space. Shared work owned by
+another space is excluded. Home team filters do not narrow the selection.
+Collection is bounded, and does not inspect external sources or playbook definitions.
+
+```bash
+epismo report personal generate --idempotency-key UUID
+epismo report personal get --job-id JOB_ID
+epismo report personal get
+epismo report personal list --page-size 20
+epismo report personal list --cursor NEXT_CURSOR
+epismo report personal get --report-id REPORT_ID
+epismo report personal act REPORT_ID --proposal-id PROPOSAL_ID --action create
+epismo report personal act REPORT_ID --proposal-id PROPOSAL_ID --action dismiss --feedback "Not needed"
+```
+
+Generation returns HTTP 202 with a job. Poll `get --job-id` until `job.status` is
+`complete`, `failed`, or `skipped`. Reuse the same idempotency key on retries to
+avoid another generation or charge; changing the billing home with that key
+conflicts. Output follows the language of the supplied evidence; there is no
+language flag.
+
+Reads return `report`, optional `job`, and `historical`. Only the generating user
+can read a personal report in its original billing home. Personal verdicts are
+empty because prioritization is not an overall approval. Credit usage, token
+counts, and provider costs are not returned. CLI output uses snake_case fields.
+
+Saved history, also available from **History** on Home, includes reports older
+than 14 days. Generation considers recommendation history from the past 14 days
+in the same account scope; copying a handled proposal into a newer report does
+not renew its handling window. Saved reports and handling results remain readable.
+
+Review the full saved proposal before acting. Actions use its contents unchanged
+and check current destination permissions. New personal cases are ad hoc and
+create no implicit handoff. Generation never executes proposals automatically.
+Newer reports make older unhandled proposals read-only; refresh the latest report
+before acting. Actions use proposal identity for retries, so omit `--idempotency-key`.

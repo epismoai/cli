@@ -87,7 +87,7 @@ func TestCommandSurface(t *testing.T) {
 		credit/balance credit/checkout token/create token/list token/revoke
 		case/start case/get case/list case/access/get case/access/set case/share case/assign case/update case/handoff/create case/handoff case/handoff/remove case/handoff/delete case/handoff/graph/get case/handoff/graph case/handoff/candidates/list case/handoff/candidate/list case/close case/reopen case/archive case/restore case/delete case/owner/transfer case/owner
 		case/task/create case/task/list case/task/get case/task/update case/task/set/status case/record/append case/record/list case/record/update case/record/delete
-		case/review/get case/review/list case/review/generate case/review/act
+		case/report/get case/report/list case/report/generate case/report/act report/case/get report/case/list report/case/generate report/case/act report/personal/generate report/personal/get report/personal/list report/personal/act
 		case/source/link case/source/unlink case/source/refresh case/source/get
 		record/append record/list record/update record/delete
 		task/create task/list task/get task/update task/set/status
