@@ -230,7 +230,7 @@ func TestPersonalReportGetRequests(t *testing.T) {
 				} else if len(r.URL.Query()) != 1 || r.URL.Query().Get(test.field) != test.id {
 					t.Errorf("query: %s", r.URL.RawQuery)
 				}
-				_, _ = io.WriteString(w, `{"report":{"id":"report-1","verdict":"","summary":"Confirm approval"},"job":{"id":"job-1","status":"complete"},"historical":false}`)
+				_, _ = io.WriteString(w, `{"report":{"id":"report-1","health":"unknown","summary":"Progress cannot be established from current evidence."},"job":{"id":"job-1","status":"complete"},"historical":false}`)
 			}))
 			defer server.Close()
 			t.Setenv("EPISMO_API_URL", server.URL)
@@ -250,7 +250,7 @@ func TestPersonalReportGetRequests(t *testing.T) {
 			}
 			report, _ := result["report"].(map[string]any)
 			job, _ := result["job"].(map[string]any)
-			if report["id"] != "report-1" || report["verdict"] != "" || job["status"] != "complete" || result["historical"] != false {
+			if report["id"] != "report-1" || report["health"] != "unknown" || report["summary"] != "Progress cannot be established from current evidence." || report["verdict"] != nil || job["status"] != "complete" || result["historical"] != false {
 				t.Fatalf("result=%s", stdout.String())
 			}
 			if calls != 1 {
@@ -316,6 +316,97 @@ func TestPersonalReportActRequest(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	var stdout, stderr bytes.Buffer
 	exit := Main([]string{"report", "personal", "act", "report-1", "--proposal-id", "proposal-1", "--action", "create"}, "test", strings.NewReader(""), &stdout, &stderr)
+	if exit != 0 {
+		t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
+	}
+	if calls != 1 {
+		t.Fatalf("calls=%d", calls)
+	}
+}
+
+func TestTeamReportRequests(t *testing.T) {
+	for _, tc := range []struct {
+		verb, method, suffix string
+		flags                []string
+	}{
+		{"generate", http.MethodPost, "", []string{"--idempotency-key", "11111111-1111-4111-8111-111111111111"}},
+		{"get", http.MethodGet, "", []string{"--job-id", "job-1"}},
+		{"list", http.MethodGet, "/history", []string{"--page-size", "5", "--cursor", "older"}},
+	} {
+		t.Run(tc.verb, func(t *testing.T) {
+			calls := 0
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				calls++
+				if r.Method != tc.method || r.URL.Path != "/v1/teams/team-1/report"+tc.suffix {
+					t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+				}
+				if r.Header.Get("Authorization") != "Bearer test-token" {
+					t.Error("missing authentication")
+				}
+				if tc.verb == "get" && r.URL.Query().Get("jobId") != "job-1" {
+					t.Errorf("query=%s", r.URL.RawQuery)
+				}
+				if tc.verb == "list" && (r.URL.Query().Get("pageSize") != "5" || r.URL.Query().Get("cursor") != "older") {
+					t.Errorf("query=%s", r.URL.RawQuery)
+				}
+				if tc.verb == "generate" {
+					var body map[string]any
+					if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+						t.Fatal(err)
+					}
+					if body["idempotencyKey"] != "11111111-1111-4111-8111-111111111111" {
+						t.Errorf("body=%v", body)
+					}
+					w.WriteHeader(http.StatusAccepted)
+				}
+				_, _ = io.WriteString(w, `{"job":{"id":"job-1","status":"queued"},"historical":false}`)
+			}))
+			defer server.Close()
+			t.Setenv("EPISMO_API_URL", server.URL)
+			t.Setenv("EPISMO_TOKEN", "test-token")
+			t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+			args := append([]string{"report", "team", tc.verb, "team-1"}, tc.flags...)
+			var stdout, stderr bytes.Buffer
+			if exit := Main(args, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+				t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
+			}
+			if calls != 1 {
+				t.Fatalf("calls=%d", calls)
+			}
+			var output map[string]any
+			if err := json.Unmarshal(stdout.Bytes(), &output); err != nil {
+				t.Fatal(err)
+			}
+			job, _ := output["job"].(map[string]any)
+			if job["id"] != "job-1" {
+				t.Errorf("output=%v", output)
+			}
+		})
+	}
+}
+
+func TestTeamReportActRequest(t *testing.T) {
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if r.Method != http.MethodPost || r.URL.Path != "/v1/reports/report-1/actions" {
+			t.Errorf("request: %s %s", r.Method, r.URL.Path)
+		}
+		var body map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Fatal(err)
+		}
+		if body["proposalId"] != "proposal-1" || body["action"] != "create" {
+			t.Errorf("body=%v", body)
+		}
+		_, _ = io.WriteString(w, `{"report":{"id":"report-1","summary":"Team summary"}}`)
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_TOKEN", "test-token")
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+	var stdout, stderr bytes.Buffer
+	exit := Main([]string{"report", "team", "act", "report-1", "--proposal-id", "proposal-1", "--action", "create"}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exit != 0 {
 		t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
 	}

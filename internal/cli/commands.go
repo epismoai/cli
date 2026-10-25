@@ -34,6 +34,10 @@ func buildCommands() []*command {
 
 func enrichCommands(commands []*command) []*command {
 	examples := map[string][]string{
+		"report team act":          {"epismo -w acme report team act REPORT_ID --proposal-id PROPOSAL_ID --action create"},
+		"report team generate":     {"epismo -w acme report team generate TEAM_ID"},
+		"report team get":          {"epismo -w acme report team get TEAM_ID --job-id JOB_ID", "epismo -w acme report team get TEAM_ID --report-id REPORT_ID"},
+		"report team list":         {"epismo -w acme report team list TEAM_ID --page-size 20"},
 		"playbook search":          {"epismo playbook search --query onboarding", "epismo -w acme playbook search onboarding"},
 		"playbook create":          {`epismo playbook create --definition '{"title":"Onboarding","steps":[]}'`, "epismo playbook create --input @playbook.json"},
 		"playbook owner transfer":  {"epismo playbook owner transfer PLAYBOOK_ID --owner-id WORKSPACE_ID"},
