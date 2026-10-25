@@ -224,6 +224,7 @@ func printGroupHelp(w io.Writer, prefix string, commands []*command) {
 		"report":               "generate assessments of your work",
 		"report case":          "read reports, queue evaluations, and act on proposed actions",
 		"report personal":      "read personal reports, queue assessments, and act on proposed work",
+		"report team":          "read shared team reports, queue assessments, and handle proposals",
 		"case report":          "read reports, queue evaluations, and act on proposed actions",
 		"case handoff":         "connect distinct cases and inspect their context links",
 		"playbook":             "manage reusable playbooks",
