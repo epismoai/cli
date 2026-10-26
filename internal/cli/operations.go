@@ -45,9 +45,9 @@ func pagingOptions() []optionSpec {
 
 func (i invocation) payload(a *app) (map[string]any, error) {
 	base := map[string]any{}
-	if raw := i.text("_input"); raw != "" {
+	if raw := i.text("_request"); raw != "" {
 		var err error
-		base, err = readObjectSource(raw, "--input", a.stdin)
+		base, err = readObjectSource(raw, "--request", a.stdin)
 		if err != nil {
 			return nil, err
 		}
@@ -59,7 +59,7 @@ func (i invocation) payload(a *app) (map[string]any, error) {
 	}
 	overrides := map[string]any{}
 	for field, value := range i.Values {
-		if field == "_input" {
+		if field == "_request" {
 			continue
 		}
 		if i.Present[field] {
@@ -72,7 +72,7 @@ func (i invocation) payload(a *app) (map[string]any, error) {
 	}
 	result := mergeDefined(base, overrides)
 	for _, option := range baseOptions(i.Command) {
-		if option.Field == "_input" {
+		if option.Field == "_request" {
 			continue
 		}
 		if _, exists := result[option.Field]; !exists && option.Default != nil {

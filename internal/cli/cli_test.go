@@ -213,9 +213,9 @@ func TestChildCreateCommandsUseOwningResourcePaths(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 
 	commands := [][]string{
-		{"case", "task", "create", "case-1", "--input", `{"kind":"work","title":"Investigate"}`},
-		{"case", "record", "append", "case-1", "--input", `{"kind":"note"}`},
-		{"playbook", "suggestion", "create", "playbook-1", "--input", `{"baseVersionId":"version-1","title":"Improve","content":"Details"}`},
+		{"case", "task", "create", "case-1", "--request", `{"kind":"work","title":"Investigate"}`},
+		{"case", "record", "append", "case-1", "--request", `{"kind":"note"}`},
+		{"playbook", "suggestion", "create", "playbook-1", "--request", `{"baseVersionId":"version-1","title":"Improve","content":"Details"}`},
 		{"playbook", "alias", "set", "playbook-1", "release", "--owner-id", "account-1"},
 	}
 	for _, args := range commands {
@@ -340,7 +340,7 @@ func TestMutationMergesInputAndExplicitFlags(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 
 	var stdout, stderr bytes.Buffer
-	exitCode := Main([]string{"case", "close", "case-1", "--input", `{"status":"cancelled","expectedLockVersion":2,"extra":"kept"}`, "--status", "completed", "--lock-version", "3"}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode := Main([]string{"case", "close", "case-1", "--request", `{"status":"cancelled","expectedLockVersion":2,"extra":"kept"}`, "--status", "completed", "--lock-version", "3"}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 0 {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
@@ -388,7 +388,7 @@ func TestTokenCreateReadsWorkspaceFromInput(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 
 	var stdout, stderr bytes.Buffer
-	exitCode := Main([]string{"token", "create", "--input", `{"workspaceId":"workspace-from-input"}`}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode := Main([]string{"token", "create", "--request", `{"workspaceId":"workspace-from-input"}`}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 0 {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
@@ -444,7 +444,7 @@ func TestRequiredFieldsCanComeFromInputFile(t *testing.T) {
 	}
 
 	var stdout, stderr bytes.Buffer
-	exitCode := Main([]string{"case", "close", "case-1", "--input", "@" + inputPath}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode := Main([]string{"case", "close", "case-1", "--request", "@" + inputPath}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 0 {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
@@ -453,7 +453,7 @@ func TestRequiredFieldsCanComeFromInputFile(t *testing.T) {
 	}
 	stdout.Reset()
 	stderr.Reset()
-	exitCode = Main([]string{"case", "close", "case-1", "--input", `{"status":"completed"}`}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode = Main([]string{"case", "close", "case-1", "--request", `{"status":"completed"}`}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 1 || !strings.Contains(stderr.String(), `"code":"MISSING_OPTION_VALUE"`) {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
@@ -473,7 +473,7 @@ func TestDraftSavePreservesBaseRevisionFromInput(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 
 	var stdout, stderr bytes.Buffer
-	exitCode := Main([]string{"playbook", "draft", "save", "playbook-1", "--input", `{"baseRevision":7,"definition":{"schemaVersion":1,"title":"Draft"}}`}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode := Main([]string{"playbook", "draft", "save", "playbook-1", "--request", `{"baseRevision":7,"definition":{"schemaVersion":1,"title":"Draft"}}`}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 0 {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
@@ -482,7 +482,7 @@ func TestDraftSavePreservesBaseRevisionFromInput(t *testing.T) {
 	}
 	stdout.Reset()
 	stderr.Reset()
-	exitCode = Main([]string{"playbook", "draft", "save", "playbook-1", "--input", `{"definition":{"schemaVersion":1,"title":"Draft"}}`}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode = Main([]string{"playbook", "draft", "save", "playbook-1", "--request", `{"definition":{"schemaVersion":1,"title":"Draft"}}`}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 0 {
 		t.Fatalf("default exit = %d, stderr = %s", exitCode, stderr.String())
 	}
@@ -503,7 +503,7 @@ func TestCaseRecordListPreservesOrderFromInput(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 
 	var stdout, stderr bytes.Buffer
-	exitCode := Main([]string{"case", "record", "list", "case-1", "--input", `{"order":"asc"}`}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode := Main([]string{"case", "record", "list", "case-1", "--request", `{"order":"asc"}`}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 0 {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
@@ -727,7 +727,7 @@ func TestConfigPermissionsAndCompatibility(t *testing.T) {
 
 func TestParseJSONRejectsTrailingData(t *testing.T) {
 	for _, input := range []string{`{"title":"x"} trailing`, `{"title":"x"} {"title":"y"}`} {
-		if _, err := parseJSON([]byte(input), "--input"); err == nil {
+		if _, err := parseJSON([]byte(input), "--request"); err == nil {
 			t.Fatalf("parseJSON(%q) accepted trailing data", input)
 		}
 	}

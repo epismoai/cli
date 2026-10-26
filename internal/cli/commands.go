@@ -39,7 +39,7 @@ func enrichCommands(commands []*command) []*command {
 		"report team get":          {"epismo -w acme report team get TEAM_ID --job-id JOB_ID", "epismo -w acme report team get TEAM_ID --report-id REPORT_ID"},
 		"report team list":         {"epismo -w acme report team list TEAM_ID --page-size 20"},
 		"playbook search":          {"epismo playbook search --query onboarding", "epismo -w acme playbook search onboarding"},
-		"playbook create":          {`epismo playbook create --definition '{"title":"Onboarding","steps":[]}'`, "epismo playbook create --input @playbook.json"},
+		"playbook create":          {`epismo playbook create --definition '{"title":"Onboarding","steps":[]}'`, "epismo playbook create --request @playbook.json"},
 		"playbook owner transfer":  {"epismo playbook owner transfer PLAYBOOK_ID --owner-id WORKSPACE_ID"},
 		"case start":               {"epismo case start --title 'Team invitation design'", "epismo case start --version-id VERSION_ID --title 'Launch review'"},
 		"case list":                {"epismo case list --assigned-to me --status open"},
@@ -60,7 +60,7 @@ func enrichCommands(commands []*command) []*command {
 		"case report act":          {"epismo case report act CASE_ID --report-id REPORT_ID --proposal-id PROPOSAL_ID --action create"},
 		"case handoff create":      {"epismo case handoff create SALES_CASE_ID --to-case-id ENGINEERING_CASE_ID", "epismo case handoff create ENGINEERING_CASE_ID --from-case-id SALES_CASE_ID"},
 		"case task set status":     {"epismo case task set status TASK_ID --status closed --outcome approved --lock-version LOCK_VERSION"},
-		"case record append":       {`epismo case record append CASE_ID --kind note --origin agent --content 'Goal: team invitations. Decision: reuse existing email flow. Open: expiry behavior. Next: inspect invitation code.'`, `epismo case record append CASE_ID --kind note --origin agent --content 'Assessment: shared evidence is sufficient; see the cited results.'`, "epismo case record append CASE_ID --input @record.json"},
+		"case record append":       {`epismo case record append CASE_ID --kind note --origin agent --content 'Goal: team invitations. Decision: reuse existing email flow. Open: expiry behavior. Next: inspect invitation code.'`, `epismo case record append CASE_ID --kind note --origin agent --content 'Assessment: shared evidence is sufficient; see the cited results.'`, "epismo case record append CASE_ID --request @record.json"},
 		"case record update":       {`epismo case record update RECORD_ID --content 'Updated decision'`},
 		"case record delete":       {"epismo case record delete RECORD_ID"},
 		"workspace list":           {"epismo workspace list --output table", "epismo --workspace acme workspace member list"},
@@ -135,7 +135,7 @@ func doctorCommand() *command {
 
 func examplesCommand() *command {
 	return &command{Path: "examples", Summary: "show common Epismo workflows", Run: func(_ *app, _ invocation) (any, error) {
-		return map[string]any{"examples": []any{"epismo login", "epismo case start --title 'Team invitation design'", "epismo case record append CASE_ID --kind note --origin agent --input @context.json", "epismo case list --assigned-to me --status open", "epismo case get CASE_ID", "epismo playbook list"}}, nil
+		return map[string]any{"examples": []any{"epismo login", "epismo case start --title 'Team invitation design'", "epismo case record append CASE_ID --kind note --origin agent --request @context.json", "epismo case list --assigned-to me --status open", "epismo case get CASE_ID", "epismo playbook list"}}, nil
 	}}
 }
 
@@ -374,10 +374,10 @@ func workspaceIDOption() optionSpec {
 
 func workspaceMemberHandoverCommand() *command {
 	return apiOperationUnscoped("workspace member handover", "preview or execute responsibility and access handover before removing a member; defaults to preview", []string{"workspace-id"}, http.MethodPost, func(i invocation) string { return "/v1/workspaces/" + escaped(i.positional(0)) + "/member-handover" }, requestBody, true,
-		requiredOption(str("--departing-user-id", "departingUserId", "departing member's user ID")),
-		requiredOption(str("--successor-user-id", "successorUserId", "successor member's user ID")),
+		requiredOption(str("--member-id", "memberId", "departing member's user ID")),
+		requiredOption(str("--successor-id", "successorId", "successor member's user ID")),
 		defaultOption(boolOption("--preview", "preview", "preview only; pass --preview=false to execute"), true),
-		boolOption("--transfer-open-approvals", "transferOpenApprovals", "also transfer open approval tasks"),
+		boolOption("--transfer-approvals", "transferApprovals", "also transfer open approval tasks"),
 		boolOption("--finalize", "finalize", "final cleanup after membership has already been removed; does not remove the member"))
 }
 
@@ -509,7 +509,7 @@ func creditCheckoutCommand() *command {
 		}
 		quantity, ok := exactInteger(payload["quantity"])
 		if !ok || quantity <= 0 {
-			return nil, &Error{Code: "INVALID_INPUT", Message: `"quantity" is required and must be a positive integer.`, Hint: "Pass --quantity 500 or use --input @file.json.", ExitCode: 1}
+			return nil, &Error{Code: "INVALID_INPUT", Message: `"quantity" is required and must be a positive integer.`, Hint: "Pass --quantity 500 or use --request @file.json.", ExitCode: 1}
 		}
 		if quantity < 500 {
 			return nil, &Error{Code: "INVALID_INPUT", Message: "Minimum total purchase is 500 credits.", ExitCode: 1}
@@ -567,7 +567,7 @@ func tokenListCommand() *command {
 }
 
 func tokenRevokeCommand() *command {
-	cmd := apiOperationUnscoped("token revoke", "revoke a CLI token by ID", []string{"token-id"}, http.MethodDelete, func(i invocation) string { return "/v1/cli/tokens/" + escaped(i.positional(0)) }, requestQuery, true, str("--workspace-id", "workspaceId", "workspace the token was scoped to"))
+	cmd := apiOperationUnscoped("token revoke", "revoke a CLI token by ID", []string{"token-id"}, http.MethodDelete, func(i invocation) string { return "/v1/cli/tokens/" + escaped(i.positional(0)) }, requestQuery, false, str("--workspace-id", "workspaceId", "workspace the token was scoped to"))
 	cmd.Run = func(a *app, inv invocation) (any, error) {
 		payload, err := inv.payload(a)
 		if err != nil {

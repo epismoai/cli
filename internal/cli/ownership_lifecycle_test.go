@@ -11,6 +11,16 @@ import (
 )
 
 func TestOwnershipAndLifecycleRequests(t *testing.T) {
+	contract := readOpenAPIContract(t)
+	components, _ := contract["components"].(map[string]any)
+	schemas, _ := components["schemas"].(map[string]any)
+	handover, _ := schemas["HandoverWorkspaceMemberRequest"].(map[string]any)
+	properties, _ := handover["properties"].(map[string]any)
+	required, _ := handover["required"].([]any)
+	if len(properties) == 0 || len(required) == 0 {
+		t.Fatal("handover request schema is missing properties or required fields")
+	}
+
 	for _, tc := range []struct {
 		name, method, path string
 		args               []string
@@ -27,8 +37,9 @@ func TestOwnershipAndLifecycleRequests(t *testing.T) {
 		{"case archive", "POST", "/v1/cases/case/archive", []string{"case", "archive", "case", "--lock-version", "3", "--yes"}, "expectedLockVersion", float64(3)},
 		{"case restore", "POST", "/v1/cases/case/restore", []string{"case", "restore", "case", "--lock-version", "4"}, "expectedLockVersion", float64(4)},
 		{"case delete", "DELETE", "/v1/cases/case", []string{"case", "delete", "case", "--lock-version", "5", "--yes"}, "expectedLockVersion", float64(5)},
-		{"handover preview", "POST", "/v1/workspaces/home/member-handover", []string{"workspace", "member", "handover", "home", "--departing-user-id", "old", "--successor-user-id", "new"}, "preview", true},
-		{"handover finalize", "POST", "/v1/workspaces/home/member-handover", []string{"workspace", "member", "handover", "home", "--departing-user-id", "old", "--successor-user-id", "new", "--preview=false", "--finalize"}, "preview", false},
+		{"handover preview", "POST", "/v1/workspaces/home/member-handover", []string{"workspace", "member", "handover", "home", "--member-id", "old", "--successor-id", "new"}, "preview", true},
+		{"handover transfer approvals", "POST", "/v1/workspaces/home/member-handover", []string{"workspace", "member", "handover", "home", "--member-id", "old", "--successor-id", "new", "--preview=false", "--transfer-approvals"}, "transferApprovals", true},
+		{"handover finalize", "POST", "/v1/workspaces/home/member-handover", []string{"workspace", "member", "handover", "home", "--member-id", "old", "--successor-id", "new", "--preview=false", "--finalize"}, "preview", false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			calls := 0
@@ -57,8 +68,20 @@ func TestOwnershipAndLifecycleRequests(t *testing.T) {
 						t.Error("case deletion sent a removed confirmation-code field")
 					}
 				}
-				if strings.HasPrefix(tc.name, "handover") && (body["departingUserId"] != "old" || body["successorUserId"] != "new") {
-					t.Errorf("handover participants = %#v", body)
+				if strings.HasPrefix(tc.name, "handover") {
+					if body["memberId"] != "old" || body["successorId"] != "new" {
+						t.Errorf("handover participants = %#v", body)
+					}
+					for field := range body {
+						if _, ok := properties[field]; !ok {
+							t.Errorf("handover sent field %q absent from the API contract", field)
+						}
+					}
+					for _, field := range required {
+						if _, ok := body[field.(string)]; !ok {
+							t.Errorf("handover omitted required API field %q", field)
+						}
+					}
 				}
 				if tc.name == "case ownership" && body["ownerId"] != "home" {
 					t.Errorf("ownerId = %#v", body["ownerId"])
