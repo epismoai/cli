@@ -74,7 +74,7 @@ func baseOptions(cmd *command) []optionSpec {
 		if help == "" {
 			help = "JSON object, @file, or - for stdin"
 		}
-		options = append([]optionSpec{{Name: "--input", Field: "_input", Help: help, Kind: kindString}}, options...)
+		options = append([]optionSpec{{Name: "--request", Field: "_request", Help: help, Kind: kindString}}, options...)
 	}
 	if cmd.Safety.IdempotencyKey {
 		options = append(options, optionSpec{Name: "--idempotency-key", Field: "idempotencyKey", Help: "retry key; generated automatically when omitted", Kind: kindString})

@@ -52,7 +52,7 @@ Append `--help` to any command for its arguments and options.
 
 ## Scripts and agents
 
-Commands return JSON on stdout; errors and progress go to stderr. Output fields use `snake_case`. Use `--output table` for interactive reading, or `--input @file.json` and `--input -` for JSON input from a file or stdin.
+Commands return JSON on stdout; errors and progress go to stderr. Output fields use `snake_case`. Use `--output table` for interactive reading, or `--request @file.json` and `--request -` for JSON input from a file or stdin. `--request` supplies all request parameters; `case start --input` supplies only the case input values.
 
 For automation, supply a workspace-scoped token through `EPISMO_TOKEN`. Set `EPISMO_WORKSPACE` or pass `--workspace` to select a workspace. Run `epismo doctor` to inspect your setup.
 

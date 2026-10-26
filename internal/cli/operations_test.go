@@ -171,7 +171,7 @@ func TestAllPaginationControlsMayComeFromInput(t *testing.T) {
 	t.Setenv("EPISMO_TOKEN", "test-token")
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	var stdout, stderr bytes.Buffer
-	if exit := Main([]string{"playbook", "list", "--input", `{"all":true,"limit":2,"page_size":1}`}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+	if exit := Main([]string{"playbook", "list", "--request", `{"all":true,"limit":2,"page_size":1}`}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
 		t.Fatalf("exit = %d stderr=%s", exit, stderr.String())
 	}
 	if calls != 2 {
@@ -232,5 +232,65 @@ func TestAllPaginationUsesRemainingLimitForLaterPages(t *testing.T) {
 	}
 	if len(result["playbooks"].([]any)) != 5 || result["next_cursor"] != "third" {
 		t.Fatalf("result = %#v", result)
+	}
+}
+
+func TestCaseStartSeparatesRequestFromInput(t *testing.T) {
+	for _, source := range []string{"inline", "file", "stdin", "input-only"} {
+		t.Run(source, func(t *testing.T) {
+			calls := 0
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				calls++
+				if r.Method != http.MethodPost || r.URL.Path != "/v1/cases" {
+					t.Errorf("request = %s %s", r.Method, r.URL.Path)
+				}
+				var body map[string]any
+				if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+					t.Error(err)
+					return
+				}
+				input, _ := body["input"].(map[string]any)
+				if body["title"] != "Review" || input["customer"] != "Acme" || len(input) != 1 {
+					t.Errorf("request and case input were not kept separate: %#v", body)
+				}
+				for _, field := range []string{"request", "_request"} {
+					if _, exists := body[field]; exists {
+						t.Errorf("request source leaked into API body: %s", field)
+					}
+				}
+				_, _ = io.WriteString(w, `{"case":{}}`)
+			}))
+			defer server.Close()
+			t.Setenv("EPISMO_API_URL", server.URL)
+			t.Setenv("EPISMO_TOKEN", "test-token")
+			t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+
+			requestJSON := `{"title":"Review","input":{"customer":"Original","obsolete":true}}`
+			args := []string{"case", "start"}
+			stdin := ""
+			switch source {
+			case "inline":
+				args = append(args, "--request", requestJSON)
+			case "file":
+				path := filepath.Join(t.TempDir(), "request.json")
+				if err := os.WriteFile(path, []byte(requestJSON), 0o600); err != nil {
+					t.Fatal(err)
+				}
+				args = append(args, "--request", "@"+path)
+			case "stdin":
+				args = append(args, "--request", "-")
+				stdin = requestJSON
+			case "input-only":
+				args = append(args, "--title", "Review")
+			}
+			args = append(args, "--input", `{"customer":"Acme"}`)
+			var stdout, stderr bytes.Buffer
+			if exit := Main(args, "test", strings.NewReader(stdin), &stdout, &stderr); exit != 0 {
+				t.Fatalf("exit = %d, stderr = %s", exit, stderr.String())
+			}
+			if calls != 1 {
+				t.Fatalf("requests = %d, want 1", calls)
+			}
+		})
 	}
 }

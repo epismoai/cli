@@ -23,7 +23,7 @@ func TestSharingCommandsSendNestedAccessAndKeepGrantUUIDs(t *testing.T) {
 		{"case access", []string{"case", "access", "set", "case-id", "--access", settings, "--lock-version", "7", "--yes"}, "PUT", "/v1/cases/case-id/access"},
 		{"playbook create", []string{"playbook", "create", "--owner-id", "owner-id", "--definition", `{"title":"Shared guide","steps":[]}`, "--access", settings}, "POST", "/v1/playbooks"},
 		{"playbook copy", []string{"playbook", "copy", "source-id", "--source-version-id", "version-id", "--owner-id", "owner-id", "--access", settings}, "POST", "/v1/playbooks/source-id/copies"},
-		{"input access", []string{"playbook", "access", "set", "playbook-id", "--input", `{"access":{"visibility":"public","grants":{"abcdefab-cdef-4abc-8def-abcdefabcdef":"viewer"}}}`, "--yes"}, "PUT", "/v1/playbooks/playbook-id/access"},
+		{"input access", []string{"playbook", "access", "set", "playbook-id", "--request", `{"access":{"visibility":"public","grants":{"abcdefab-cdef-4abc-8def-abcdefabcdef":"viewer"}}}`, "--yes"}, "PUT", "/v1/playbooks/playbook-id/access"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			var body map[string]any
