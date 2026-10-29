@@ -42,6 +42,7 @@ func enrichCommands(commands []*command) []*command {
 		"playbook create":          {`epismo playbook create --definition '{"title":"Onboarding","steps":[]}'`, "epismo playbook create --request @playbook.json"},
 		"playbook owner transfer":  {"epismo playbook owner transfer PLAYBOOK_ID --owner-id WORKSPACE_ID"},
 		"case start":               {"epismo case start --title 'Team invitation design'", "epismo case start --version-id VERSION_ID --title 'Launch review'"},
+		"case update":              {`epismo case update CASE_ID --input '{"customer":"Acme"}' --lock-version 1`, `epismo case update CASE_ID --version-id VERSION_ID --input '{"customer":"Acme"}' --lock-version 1`},
 		"case list":                {"epismo case list --assigned-to me --status open"},
 		"case get":                 {"epismo case get CASE_ID"},
 		"case source link":         {"epismo case source link CASE_ID --url https://acme.slack.com/archives/C123/p1234567890123456", "epismo case source link CASE_ID --url https://docs.google.com/document/d/FILE_ID/edit"},
