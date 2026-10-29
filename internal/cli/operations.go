@@ -45,9 +45,9 @@ func pagingOptions() []optionSpec {
 
 func (i invocation) payload(a *app) (map[string]any, error) {
 	base := map[string]any{}
-	if raw := i.text("_input"); raw != "" {
+	if raw := i.text("_request"); raw != "" {
 		var err error
-		base, err = readObjectSource(raw, "--input", a.stdin)
+		base, err = readObjectSource(raw, "--request", a.stdin)
 		if err != nil {
 			return nil, err
 		}
@@ -59,7 +59,7 @@ func (i invocation) payload(a *app) (map[string]any, error) {
 	}
 	overrides := map[string]any{}
 	for field, value := range i.Values {
-		if field == "_input" {
+		if field == "_request" {
 			continue
 		}
 		if i.Present[field] {
@@ -72,12 +72,8 @@ func (i invocation) payload(a *app) (map[string]any, error) {
 	}
 	result := mergeDefined(base, overrides)
 	for _, option := range baseOptions(i.Command) {
-		if option.Field == "_input" {
+		if option.Field == "_request" {
 			continue
-		}
-		// Brief priority options spell unset as "none"; the API uses an empty string.
-		if option.Field == "priority" && result[option.Field] == "none" {
-			result[option.Field] = ""
 		}
 		if _, exists := result[option.Field]; !exists && option.Default != nil {
 			result[option.Field] = option.Default
@@ -109,8 +105,7 @@ func newUUID() string {
 func queryString(path string, payload map[string]any) string {
 	query := url.Values{}
 	for key, value := range payload {
-		// An explicit empty priority filters Cases whose priority is unset.
-		if value == nil || (value == "" && key != "priority") {
+		if value == nil || value == "" {
 			continue
 		}
 		switch typed := value.(type) {

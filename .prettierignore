@@ -1,0 +1,2 @@
+# Keep the generated contract in scripts/format-openapi.go's canonical format.
+contracts/openapi.json

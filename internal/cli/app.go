@@ -117,7 +117,7 @@ func MainWithDistribution(args []string, version, distribution string, stdin io.
 		}
 		return printResultOrError(a, preview, nil)
 	}
-	if cmd.Safety.Confirmation && a.isTTY && !options.Yes && invocation.text("_input") != "-" {
+	if cmd.Safety.Confirmation && a.isTTY && !options.Yes && invocation.text("_request") != "-" {
 		if !confirm(a, cmd.Path) {
 			return printAppError(a, &Error{Code: "CONFIRMATION_REQUIRED", Message: "Operation cancelled.", Hint: "Re-run with --yes to proceed without a prompt.", ExitCode: 1})
 		}

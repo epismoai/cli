@@ -82,16 +82,16 @@ func TestRefreshRaceAdoptsCredentialsWrittenByAnotherProcess(t *testing.T) {
 func TestCommandSurface(t *testing.T) {
 	expected := strings.Fields(`
 		login logout whoami update completion doctor examples docs
-		workspace/list workspace/current workspace/use workspace/clear workspace/create workspace/checkout workspace/update workspace/member/list workspace/member/upsert workspace/member/invite workspace/member/delete workspace/invitation/revoke
+		workspace/list workspace/current workspace/use workspace/clear workspace/create workspace/checkout workspace/update workspace/member/list workspace/member/upsert workspace/member/invite workspace/member/delete workspace/member/handover workspace/invitation/revoke
 		team/invite team/invitation/list team/invitation/revoke team/invitation/get team/invitation/accept team/disconnect team/list team/create team/update team/member/list team/member/add team/member/delete
 		credit/balance credit/checkout token/create token/list token/revoke
-		case/start case/get case/list case/popular case/access/get case/access/set case/share case/assign case/update case/review case/handoff/create case/handoff case/handoff/remove case/handoff/delete case/handoff/graph/get case/handoff/graph case/handoff/candidates/list case/handoff/candidate/list case/close case/reopen
+		case/start case/get case/list case/access/get case/access/set case/share case/assign case/update case/handoff/create case/handoff case/handoff/remove case/handoff/delete case/handoff/graph/get case/handoff/graph case/handoff/candidates/list case/handoff/candidate/list case/close case/reopen case/archive case/restore case/delete case/owner/transfer case/owner
 		case/task/create case/task/list case/task/get case/task/update case/task/set/status case/record/append case/record/list case/record/update case/record/delete
-		case/brief/set case/brief/delete case/brief/generate
+		case/report/get case/report/list case/report/generate case/report/act report/case/get report/case/list report/case/generate report/case/act report/personal/generate report/personal/get report/personal/list report/personal/act report/team/generate report/team/get report/team/list report/team/act
 		case/source/link case/source/unlink case/source/refresh case/source/get
 		record/append record/list record/update record/delete
 		task/create task/list task/get task/update task/set/status
-		playbook/copy playbook/copies/list playbook/search playbook/list playbook/resource/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/access/get playbook/access/set playbook/owner/transfer playbook/owner playbook/archive playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
+		playbook/copy playbook/copies/list playbook/search playbook/list playbook/resource/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/access/get playbook/access/set playbook/owner/transfer playbook/owner playbook/archive playbook/restore playbook/assign playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
 		playbook/suggestion/create playbook/suggestion/get playbook/suggestion/list playbook/suggestion/update playbook/suggestion/resolve
 		suggestion/create suggestion/get suggestion/list suggestion/update suggestion/resolve
 	`)
@@ -127,11 +127,11 @@ func TestPlaybookSearchRequest(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 
 	var stdout, stderr bytes.Buffer
-	exitCode := Main([]string{"playbook", "search", "--query", "pb:demo", "--category", "learning", "--lang", "ja,fr", "--page-size", "20"}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode := Main([]string{"playbook", "search", "--query", "pb:demo", "--category", "learning", "--page-size", "20"}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 0 {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
-	if requestPath != "/v1/playbooks?category=learning&pageSize=20&preferredLangs=ja&preferredLangs=fr&query=pb%3Ademo" {
+	if requestPath != "/v1/playbooks?category=learning&pageSize=20&query=pb%3Ademo" {
 		t.Fatalf("request path = %q", requestPath)
 	}
 	if !strings.Contains(stdout.String(), `"created_at"`) || !strings.Contains(stdout.String(), `"account_id"`) || strings.Contains(stdout.String(), `"createdAt"`) || strings.Contains(stdout.String(), `"accountId"`) {
@@ -213,9 +213,9 @@ func TestChildCreateCommandsUseOwningResourcePaths(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 
 	commands := [][]string{
-		{"case", "task", "create", "case-1", "--input", `{"kind":"work","title":"Investigate"}`},
-		{"case", "record", "append", "case-1", "--input", `{"kind":"note"}`},
-		{"playbook", "suggestion", "create", "playbook-1", "--input", `{"baseVersionId":"version-1","title":"Improve","content":"Details"}`},
+		{"case", "task", "create", "case-1", "--request", `{"kind":"work","title":"Investigate"}`},
+		{"case", "record", "append", "case-1", "--request", `{"kind":"note"}`},
+		{"playbook", "suggestion", "create", "playbook-1", "--request", `{"baseVersionId":"version-1","title":"Improve","content":"Details"}`},
 		{"playbook", "alias", "set", "playbook-1", "release", "--owner-id", "account-1"},
 	}
 	for _, args := range commands {
@@ -340,7 +340,7 @@ func TestMutationMergesInputAndExplicitFlags(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 
 	var stdout, stderr bytes.Buffer
-	exitCode := Main([]string{"case", "close", "case-1", "--input", `{"status":"cancelled","expectedLockVersion":2,"extra":"kept"}`, "--status", "completed", "--lock-version", "3"}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode := Main([]string{"case", "close", "case-1", "--request", `{"status":"cancelled","expectedLockVersion":2,"extra":"kept"}`, "--status", "completed", "--lock-version", "3"}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 0 {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
@@ -388,7 +388,7 @@ func TestTokenCreateReadsWorkspaceFromInput(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 
 	var stdout, stderr bytes.Buffer
-	exitCode := Main([]string{"token", "create", "--input", `{"workspaceId":"workspace-from-input"}`}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode := Main([]string{"token", "create", "--request", `{"workspaceId":"workspace-from-input"}`}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 0 {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
@@ -444,7 +444,7 @@ func TestRequiredFieldsCanComeFromInputFile(t *testing.T) {
 	}
 
 	var stdout, stderr bytes.Buffer
-	exitCode := Main([]string{"case", "close", "case-1", "--input", "@" + inputPath}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode := Main([]string{"case", "close", "case-1", "--request", "@" + inputPath}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 0 {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
@@ -453,7 +453,7 @@ func TestRequiredFieldsCanComeFromInputFile(t *testing.T) {
 	}
 	stdout.Reset()
 	stderr.Reset()
-	exitCode = Main([]string{"case", "close", "case-1", "--input", `{"status":"completed"}`}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode = Main([]string{"case", "close", "case-1", "--request", `{"status":"completed"}`}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 1 || !strings.Contains(stderr.String(), `"code":"MISSING_OPTION_VALUE"`) {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
@@ -473,7 +473,7 @@ func TestDraftSavePreservesBaseRevisionFromInput(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 
 	var stdout, stderr bytes.Buffer
-	exitCode := Main([]string{"playbook", "draft", "save", "playbook-1", "--input", `{"baseRevision":7,"definition":{"schemaVersion":1,"title":"Draft"}}`}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode := Main([]string{"playbook", "draft", "save", "playbook-1", "--request", `{"baseRevision":7,"definition":{"schemaVersion":1,"title":"Draft"}}`}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 0 {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
@@ -482,7 +482,7 @@ func TestDraftSavePreservesBaseRevisionFromInput(t *testing.T) {
 	}
 	stdout.Reset()
 	stderr.Reset()
-	exitCode = Main([]string{"playbook", "draft", "save", "playbook-1", "--input", `{"definition":{"schemaVersion":1,"title":"Draft"}}`}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode = Main([]string{"playbook", "draft", "save", "playbook-1", "--request", `{"definition":{"schemaVersion":1,"title":"Draft"}}`}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 0 {
 		t.Fatalf("default exit = %d, stderr = %s", exitCode, stderr.String())
 	}
@@ -503,7 +503,7 @@ func TestCaseRecordListPreservesOrderFromInput(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 
 	var stdout, stderr bytes.Buffer
-	exitCode := Main([]string{"case", "record", "list", "case-1", "--input", `{"order":"asc"}`}, "test", strings.NewReader(""), &stdout, &stderr)
+	exitCode := Main([]string{"case", "record", "list", "case-1", "--request", `{"order":"asc"}`}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exitCode != 0 {
 		t.Fatalf("exit = %d, stderr = %s", exitCode, stderr.String())
 	}
@@ -727,7 +727,7 @@ func TestConfigPermissionsAndCompatibility(t *testing.T) {
 
 func TestParseJSONRejectsTrailingData(t *testing.T) {
 	for _, input := range []string{`{"title":"x"} trailing`, `{"title":"x"} {"title":"y"}`} {
-		if _, err := parseJSON([]byte(input), "--input"); err == nil {
+		if _, err := parseJSON([]byte(input), "--request"); err == nil {
 			t.Fatalf("parseJSON(%q) accepted trailing data", input)
 		}
 	}
@@ -783,7 +783,7 @@ func TestPublicCaseReadsWithoutLogin(t *testing.T) {
 	}{
 		{"records", []string{"case", "record", "list", "case-1", "--scope", "self", "--cursor", "older"}, "/v1/cases/case-1/records?cursor=older&order=desc&scope=self", `{"records":[]}`},
 		{"handoffs", []string{"case", "handoff", "graph", "case-1", "--scope", "neighbors"}, "/v1/cases/case-1/handoff-graph?scope=neighbors", `{"graph":{"cases":[],"handoffs":[]}}`},
-		{"popular", []string{"case", "popular", "--playbook-id", "playbook-1"}, "/v1/cases/popular?playbookId=playbook-1", `{"cases":[]}`},
+		{"list", []string{"case", "list", "--playbook-id", "playbook-1"}, "/v1/cases?playbookId=playbook-1", `{"cases":[]}`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			calls := 0

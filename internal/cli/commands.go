@@ -11,14 +11,14 @@ import (
 func buildCommands() []*command {
 	commands := []*command{
 		loginCommand(), logoutCommand(), whoamiCommand(), updateCommand(),
-		workspaceListCommand(), workspaceCurrentCommand(), workspaceUseCommand(), workspaceClearCommand(), workspaceCreateCommand(), workspaceCheckoutCommand(), workspaceUpdateCommand(), workspaceMemberListCommand(), workspaceMemberUpsertCommand(), workspaceMemberInviteCommand(), workspaceMemberDeleteCommand(), workspaceInvitationRevokeCommand(),
+		workspaceListCommand(), workspaceCurrentCommand(), workspaceUseCommand(), workspaceClearCommand(), workspaceCreateCommand(), workspaceCheckoutCommand(), workspaceUpdateCommand(), workspaceMemberListCommand(), workspaceMemberUpsertCommand(), workspaceMemberInviteCommand(), workspaceMemberDeleteCommand(), workspaceMemberHandoverCommand(), workspaceInvitationRevokeCommand(),
 		teamListCommand(), teamCreateCommand(), teamUpdateCommand(), teamMemberListCommand(), teamMemberAddCommand(), teamMemberDeleteCommand(),
 		creditBalanceCommand(), creditCheckoutCommand(), tokenCreateCommand(), tokenListCommand(), tokenRevokeCommand(),
 	}
 	commands = append(commands, sharedTeamCommands()...)
 	commands = append(commands, caseCommands()...)
 	commands = append(commands, caseSourceCommands()...)
-	commands = append(commands, briefCommands()...)
+	commands = append(commands, reportCommands()...)
 	commands = append(commands, caseHandoffCommands()...)
 	commands = append(commands, caseTaskCommands()...)
 	commands = append(commands, caseRecordCommands()...)
@@ -34,27 +34,37 @@ func buildCommands() []*command {
 
 func enrichCommands(commands []*command) []*command {
 	examples := map[string][]string{
-		"playbook search":         {"epismo playbook search --query onboarding", "epismo -w acme playbook search onboarding"},
-		"playbook create":         {`epismo playbook create --definition '{"title":"Onboarding","steps":[]}'`, "epismo playbook create --input @playbook.json"},
-		"playbook owner transfer": {"epismo playbook owner transfer PLAYBOOK_ID --owner-id WORKSPACE_ID"},
-		"case start":              {"epismo case start --title 'Team invitation design'", "epismo case start --version-id VERSION_ID --title 'Launch review'"},
-		"case list":               {"epismo case list --assigned-to me --status open"},
-		"case get":                {"epismo case get CASE_ID"},
-		"case source link":        {"epismo case source link CASE_ID --url https://acme.slack.com/archives/C123/p1234567890123456", "epismo case source link CASE_ID --url https://docs.google.com/document/d/FILE_ID/edit"},
-		"case source unlink":      {"epismo case source unlink CASE_ID SOURCE_ID"},
-		"case source refresh":     {"epismo case source refresh CASE_ID SOURCE_ID"},
-		"case source get":         {"epismo case source get CASE_ID SOURCE_ID"},
-		"case brief delete":       {"epismo case brief delete CASE_ID"},
-		"case brief generate":     {"epismo case brief generate CASE_ID"},
-		"case brief set":          {"epismo case brief set CASE_ID --content 'Waiting for approval.'"},
-		"case popular":            {"epismo case popular"},
-		"case handoff create":     {"epismo case handoff create SALES_CASE_ID --to-case-id ENGINEERING_CASE_ID", "epismo case handoff create ENGINEERING_CASE_ID --from-case-id SALES_CASE_ID"},
-		"case task set status":    {"epismo case task set status TASK_ID --status closed --outcome approved --lock-version LOCK_VERSION"},
-		"case record append":      {`epismo case record append CASE_ID --kind note --origin agent --content 'Goal: team invitations. Decision: reuse existing email flow. Open: expiry behavior. Next: inspect invitation code.'`, `epismo case record append CASE_ID --kind review --origin agent --data '{"verdict":"pass"}' --content 'Shared evidence is sufficient.'`, "epismo case record append CASE_ID --input @record.json"},
-		"case review":             {"epismo case review CASE_ID", "epismo case review CASE_ID --prompt 'Flag missing citations as blockers.'"},
-		"case record update":      {`epismo case record update RECORD_ID --content 'Updated decision'`},
-		"case record delete":      {"epismo case record delete RECORD_ID"},
-		"workspace list":          {"epismo workspace list --output table", "epismo --workspace acme workspace member list"},
+		"report team act":          {"epismo -w acme report team act REPORT_ID --proposal-id PROPOSAL_ID --action create"},
+		"report team generate":     {"epismo -w acme report team generate TEAM_ID"},
+		"report team get":          {"epismo -w acme report team get TEAM_ID --job-id JOB_ID", "epismo -w acme report team get TEAM_ID --report-id REPORT_ID"},
+		"report team list":         {"epismo -w acme report team list TEAM_ID --page-size 20"},
+		"playbook search":          {"epismo playbook search --query onboarding", "epismo -w acme playbook search onboarding"},
+		"playbook create":          {`epismo playbook create --definition '{"title":"Onboarding","steps":[]}'`, "epismo playbook create --request @playbook.json"},
+		"playbook owner transfer":  {"epismo playbook owner transfer PLAYBOOK_ID --owner-id WORKSPACE_ID"},
+		"case start":               {"epismo case start --title 'Team invitation design'", "epismo case start --version-id VERSION_ID --title 'Launch review'"},
+		"case update":              {`epismo case update CASE_ID --input '{"customer":"Acme"}' --lock-version 1`, `epismo case update CASE_ID --version-id VERSION_ID --input '{"customer":"Acme"}' --lock-version 1`},
+		"case list":                {"epismo case list --assigned-to me --status open"},
+		"case get":                 {"epismo case get CASE_ID"},
+		"case source link":         {"epismo case source link CASE_ID --url https://acme.slack.com/archives/C123/p1234567890123456", "epismo case source link CASE_ID --url https://docs.google.com/document/d/FILE_ID/edit"},
+		"case source unlink":       {"epismo case source unlink CASE_ID SOURCE_ID"},
+		"case source refresh":      {"epismo case source refresh CASE_ID SOURCE_ID"},
+		"case source get":          {"epismo case source get CASE_ID SOURCE_ID"},
+		"report case get":          {"epismo report case get CASE_ID", "epismo report case get CASE_ID --report-id REPORT_ID"},
+		"report case list":         {"epismo report case list CASE_ID --page-size 20"},
+		"report case generate":     {"epismo report case generate CASE_ID"},
+		"report case act":          {"epismo report case act CASE_ID --report-id REPORT_ID --proposal-id PROPOSAL_ID --action create"},
+		"case report get":          {"epismo case report get CASE_ID", "epismo case report get CASE_ID --report-id REPORT_ID"},
+		"report personal generate": {"epismo report personal generate", "epismo -w acme report personal generate"},
+		"report personal act":      {"epismo report personal act REPORT_ID --proposal-id PROPOSAL_ID --action create"},
+		"case report list":         {"epismo case report list CASE_ID --page-size 20"},
+		"case report generate":     {"epismo case report generate CASE_ID"},
+		"case report act":          {"epismo case report act CASE_ID --report-id REPORT_ID --proposal-id PROPOSAL_ID --action create"},
+		"case handoff create":      {"epismo case handoff create SALES_CASE_ID --to-case-id ENGINEERING_CASE_ID", "epismo case handoff create ENGINEERING_CASE_ID --from-case-id SALES_CASE_ID"},
+		"case task set status":     {"epismo case task set status TASK_ID --status closed --outcome approved --lock-version LOCK_VERSION"},
+		"case record append":       {`epismo case record append CASE_ID --kind note --origin agent --content 'Goal: team invitations. Decision: reuse existing email flow. Open: expiry behavior. Next: inspect invitation code.'`, `epismo case record append CASE_ID --kind note --origin agent --content 'Assessment: shared evidence is sufficient; see the cited results.'`, "epismo case record append CASE_ID --request @record.json"},
+		"case record update":       {`epismo case record update RECORD_ID --content 'Updated decision'`},
+		"case record delete":       {"epismo case record delete RECORD_ID"},
+		"workspace list":           {"epismo workspace list --output table", "epismo --workspace acme workspace member list"},
 	}
 	for _, command := range commands {
 		if values, ok := examples[command.Path]; ok {
@@ -126,7 +136,7 @@ func doctorCommand() *command {
 
 func examplesCommand() *command {
 	return &command{Path: "examples", Summary: "show common Epismo workflows", Run: func(_ *app, _ invocation) (any, error) {
-		return map[string]any{"examples": []any{"epismo login", "epismo case start --title 'Team invitation design'", "epismo case record append CASE_ID --kind note --origin agent --input @context.json", "epismo case list --assigned-to me --status open", "epismo case get CASE_ID", "epismo playbook list"}}, nil
+		return map[string]any{"examples": []any{"epismo login", "epismo case start --title 'Team invitation design'", "epismo case record append CASE_ID --kind note --origin agent --request @context.json", "epismo case list --assigned-to me --status open", "epismo case get CASE_ID", "epismo playbook list"}}, nil
 	}}
 }
 
@@ -363,6 +373,15 @@ func workspaceIDOption() optionSpec {
 	return str("--workspace-id", "workspaceId", "workspace ID (use --workspace for an ID or handle)")
 }
 
+func workspaceMemberHandoverCommand() *command {
+	return apiOperationUnscoped("workspace member handover", "preview or execute responsibility and access handover before removing a member; defaults to preview", []string{"workspace-id"}, http.MethodPost, func(i invocation) string { return "/v1/workspaces/" + escaped(i.positional(0)) + "/member-handover" }, requestBody, true,
+		requiredOption(str("--member-id", "memberId", "departing member's user ID")),
+		requiredOption(str("--successor-id", "successorId", "successor member's user ID")),
+		defaultOption(boolOption("--preview", "preview", "preview only; pass --preview=false to execute"), true),
+		boolOption("--transfer-approvals", "transferApprovals", "also transfer open approval tasks"),
+		boolOption("--finalize", "finalize", "final cleanup after membership has already been removed; does not remove the member"))
+}
+
 func workspaceMemberListCommand() *command {
 	return &command{Path: "workspace member list", Summary: "list members in a workspace", Options: []optionSpec{workspaceIDOption()}, Run: func(a *app, inv invocation) (any, error) {
 		return selectedWorkspaceRequest(a, inv.text("workspaceId"), http.MethodGet, "/members", nil)
@@ -491,7 +510,7 @@ func creditCheckoutCommand() *command {
 		}
 		quantity, ok := exactInteger(payload["quantity"])
 		if !ok || quantity <= 0 {
-			return nil, &Error{Code: "INVALID_INPUT", Message: `"quantity" is required and must be a positive integer.`, Hint: "Pass --quantity 500 or use --input @file.json.", ExitCode: 1}
+			return nil, &Error{Code: "INVALID_INPUT", Message: `"quantity" is required and must be a positive integer.`, Hint: "Pass --quantity 500 or use --request @file.json.", ExitCode: 1}
 		}
 		if quantity < 500 {
 			return nil, &Error{Code: "INVALID_INPUT", Message: "Minimum total purchase is 500 credits.", ExitCode: 1}
@@ -549,7 +568,7 @@ func tokenListCommand() *command {
 }
 
 func tokenRevokeCommand() *command {
-	cmd := apiOperationUnscoped("token revoke", "revoke a CLI token by ID", []string{"token-id"}, http.MethodDelete, func(i invocation) string { return "/v1/cli/tokens/" + escaped(i.positional(0)) }, requestQuery, true, str("--workspace-id", "workspaceId", "workspace the token was scoped to"))
+	cmd := apiOperationUnscoped("token revoke", "revoke a CLI token by ID", []string{"token-id"}, http.MethodDelete, func(i invocation) string { return "/v1/cli/tokens/" + escaped(i.positional(0)) }, requestQuery, false, str("--workspace-id", "workspaceId", "workspace the token was scoped to"))
 	cmd.Run = func(a *app, inv invocation) (any, error) {
 		payload, err := inv.payload(a)
 		if err != nil {

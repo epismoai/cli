@@ -45,10 +45,10 @@ func TestInputAndIdempotencyKeyAreIndependent(t *testing.T) {
 	inputOnly := &command{Input: &inputSpec{}}
 	idempotencyOnly := &command{Safety: commandSafety{IdempotencyKey: true}}
 
-	if optionsHaveField(baseOptions(inputOnly), "idempotencyKey") || !optionsHaveField(baseOptions(inputOnly), "_input") {
+	if optionsHaveField(baseOptions(inputOnly), "idempotencyKey") || !optionsHaveField(baseOptions(inputOnly), "_request") {
 		t.Fatalf("input-only options = %#v", baseOptions(inputOnly))
 	}
-	if !optionsHaveField(baseOptions(idempotencyOnly), "idempotencyKey") || optionsHaveField(baseOptions(idempotencyOnly), "_input") {
+	if !optionsHaveField(baseOptions(idempotencyOnly), "idempotencyKey") || optionsHaveField(baseOptions(idempotencyOnly), "_request") {
 		t.Fatalf("idempotency-only options = %#v", baseOptions(idempotencyOnly))
 	}
 }

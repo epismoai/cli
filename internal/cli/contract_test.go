@@ -94,17 +94,28 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 		"playbook alias delete":        {"delete", "/v1/aliases/{alias}"},
 		"case start":                   {"post", "/v1/cases"},
 		"case get":                     {"get", "/v1/cases/{caseId}"},
-		"case brief delete":            {"delete", "/v1/cases/{caseId}/brief"},
-		"case brief set":               {"put", "/v1/cases/{caseId}/brief"},
-		"case brief generate":          {"post", "/v1/cases/{caseId}/brief"},
+		"report team act":              {"post", "/v1/reports/{reportId}/actions"},
+		"report team get":              {"get", "/v1/teams/{teamId}/report"},
+		"report team list":             {"get", "/v1/teams/{teamId}/report/history"},
+		"report team generate":         {"post", "/v1/teams/{teamId}/report"},
+		"report personal get":          {"get", "/v1/reports/personal"},
+		"report personal list":         {"get", "/v1/reports/personal/history"},
+		"report personal act":          {"post", "/v1/reports/{reportId}/actions"},
+		"report personal generate":     {"post", "/v1/reports/personal"},
+		"report case get":              {"get", "/v1/cases/{caseId}/report"},
+		"report case list":             {"get", "/v1/cases/{caseId}/report/history"},
+		"report case generate":         {"post", "/v1/cases/{caseId}/report"},
+		"report case act":              {"post", "/v1/cases/{caseId}/report/actions"},
+		"case report get":              {"get", "/v1/cases/{caseId}/report"},
+		"case report list":             {"get", "/v1/cases/{caseId}/report/history"},
+		"case report generate":         {"post", "/v1/cases/{caseId}/report"},
+		"case report act":              {"post", "/v1/cases/{caseId}/report/actions"},
 		"case list":                    {"get", "/v1/cases"},
-		"case popular":                 {"get", "/v1/cases/popular"},
 		"case access get":              {"get", "/v1/cases/{caseId}/access"},
 		"case access set":              {"put", "/v1/cases/{caseId}/access"},
 		"case share":                   {"post", "/v1/cases/{caseId}/share"},
 		"case assign":                  {"patch", "/v1/cases/{caseId}/assignee"},
 		"case update":                  {"patch", "/v1/cases/{caseId}"},
-		"case review":                  {"post", "/v1/cases/{caseId}/review"},
 		"case handoff create":          {"post", "/v1/cases/{caseId}/handoffs"},
 		"case handoff":                 {"post", "/v1/cases/{caseId}/handoffs"},
 		"case handoff remove":          {"delete", "/v1/cases/{caseId}/handoffs/{handoffId}"},
@@ -148,6 +159,14 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 		"suggestion update":            {"patch", "/v1/suggestions/{suggestionId}"},
 		"suggestion resolve":           {"post", "/v1/suggestions/{suggestionId}/resolve"},
 	}
+	operations["workspace member handover"] = commandOperation{"post", "/v1/workspaces/{workspaceId}/member-handover"}
+	operations["playbook restore"] = commandOperation{"post", "/v1/playbooks/{playbookId}/restore"}
+	operations["case archive"] = commandOperation{"post", "/v1/cases/{caseId}/archive"}
+	operations["case restore"] = commandOperation{"post", "/v1/cases/{caseId}/restore"}
+	operations["case delete"] = commandOperation{"delete", "/v1/cases/{caseId}"}
+	operations["playbook assign"] = commandOperation{"patch", "/v1/playbooks/{playbookId}/assignee"}
+	operations["case owner transfer"] = commandOperation{"patch", "/v1/cases/{caseId}/owner"}
+	operations["case owner"] = commandOperation{"patch", "/v1/cases/{caseId}/owner"}
 	localOrAuth := map[string]bool{
 		"login": true, "logout": true, "whoami": true, "update": true, "completion": true, "doctor": true, "examples": true, "docs": true,
 		"workspace current": true, "workspace clear": true,
@@ -192,6 +211,12 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 func TestQueryCommandOptionsMatchOpenAPI(t *testing.T) {
 	contract := readOpenAPIContract(t)
 	routes := map[string]string{
+		"report personal get":          "/v1/reports/personal",
+		"report personal list":         "/v1/reports/personal/history",
+		"report case get":              "/v1/cases/{caseId}/report",
+		"report case list":             "/v1/cases/{caseId}/report/history",
+		"case report get":              "/v1/cases/{caseId}/report",
+		"case report list":             "/v1/cases/{caseId}/report/history",
 		"playbook copies list":         "/v1/playbooks/{id}/copies",
 		"playbook search":              "/v1/playbooks",
 		"playbook list":                "/v1/playbooks",
@@ -199,7 +224,6 @@ func TestQueryCommandOptionsMatchOpenAPI(t *testing.T) {
 		"playbook version list":        "/v1/playbooks/{playbookId}/versions",
 		"playbook alias list":          "/v1/aliases",
 		"case list":                    "/v1/cases",
-		"case popular":                 "/v1/cases/popular",
 		"case handoff graph get":       "/v1/cases/{caseId}/handoff-graph",
 		"case handoff candidates list": "/v1/cases/{caseId}/handoff-candidates",
 		"case task list":               "/v1/cases/{caseId}/tasks",
