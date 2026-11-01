@@ -14229,7 +14229,7 @@
           "playbooks"
         ],
         "summary": "Set playbook access",
-        "description": "Replaces access: { visibility, grants } atomically. Requires editing access. Updates must retain at least one explicit user/team editor; empty or viewer-only grants are rejected. Owners retain full access. Assignment never grants access. Public permits published reads only.",
+        "description": "Replaces access: { visibility, grants } atomically. Grant keys accept user/team UUIDs or registered user emails; emails resolve to UUIDs before saving. Unresolved emails or conflicting roles for the same user reject the entire write. Responses use UUID keys. Requires editing access. Updates must retain at least one explicit user/team editor; empty or viewer-only grants are rejected. Owners retain full access. Assignment never grants access. Public permits published reads only.",
         "parameters": [
           {
             "name": "playbookId",
@@ -17425,12 +17425,21 @@
               },
               "grants": {
                 "default": {},
-                "description": "Complete user/team UUID grant map. Replaces all explicit grants. Updates must retain at least one editor; creation adds the creator as editor. Owners retain full access. Responsibility does not grant access.",
+                "description": "Complete grant map keyed by user/team UUID or registered user email. Emails resolve to user UUIDs before saving. Replaces all explicit grants. Updates must retain at least one editor; creation retains creator editing through direct or Team access. Owners retain full access. Responsibility does not grant access.",
                 "type": "object",
                 "propertyNames": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "format": "email",
+                      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                    }
+                  ]
                 },
                 "additionalProperties": {
                   "type": "string",
@@ -17458,7 +17467,8 @@
           "access",
           "expectedLockVersion",
           "idempotencyKey"
-        ]
+        ],
+        "additionalProperties": false
       },
       "CreditPurchaseRequest": {
         "type": "object",
@@ -17584,13 +17594,25 @@
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "description": "User account you manage, or the workspace this request is connected to. Omit to use the active workspace or personal billing account. Any member of that workspace may create a playbook owned by it; making it public and other access changes still require an owner or admin."
+            "description": "User account you manage, or the workspace this request is connected to. Omit to use the active workspace or personal billing account. Any member may create restricted creator or current-Team sharing in that workspace; other initial sharing requires an owner or admin."
+          },
+          "private": {
+            "description": "Create with restricted visibility and a direct creator edit grant. Does not change the owning account or workspace management rights.",
+            "type": "boolean",
+            "const": true
+          },
+          "teamIds": {
+            "description": "Create with editor grants for these Teams in the selected workspace. Mutually exclusive with private and access.",
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
           },
           "access": {
-            "default": {
-              "visibility": "restricted",
-              "grants": {}
-            },
+            "description": "Explicit complete initial sharing settings. Mutually exclusive with private and teamIds.",
             "type": "object",
             "properties": {
               "visibility": {
@@ -17604,12 +17626,21 @@
               },
               "grants": {
                 "default": {},
-                "description": "Complete user/team UUID grant map. Replaces all explicit grants. Updates must retain at least one editor; creation adds the creator as editor. Owners retain full access. Responsibility does not grant access.",
+                "description": "Complete grant map keyed by user/team UUID or registered user email. Emails resolve to user UUIDs before saving. Replaces all explicit grants. Updates must retain at least one editor; creation retains creator editing through direct or Team access. Owners retain full access. Responsibility does not grant access.",
                 "type": "object",
                 "propertyNames": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "format": "email",
+                      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                    }
+                  ]
                 },
                 "additionalProperties": {
                   "type": "string",
@@ -17762,7 +17793,87 @@
           "definition",
           "idempotencyKey"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "private"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "teamIds"
+                  ]
+                },
+                {
+                  "required": [
+                    "access"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "required": [
+              "teamIds"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "private"
+                  ]
+                },
+                {
+                  "required": [
+                    "access"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "required": [
+              "access"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "private"
+                  ]
+                },
+                {
+                  "required": [
+                    "teamIds"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "private"
+                  ]
+                },
+                {
+                  "required": [
+                    "teamIds"
+                  ]
+                },
+                {
+                  "required": [
+                    "access"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
       },
       "PlaybookMutationRequest": {
         "type": "object",
@@ -18120,12 +18231,21 @@
               },
               "grants": {
                 "default": {},
-                "description": "Complete user/team UUID grant map. Replaces all explicit grants. Updates must retain at least one editor; creation adds the creator as editor. Owners retain full access. Responsibility does not grant access.",
+                "description": "Complete grant map keyed by user/team UUID or registered user email. Emails resolve to user UUIDs before saving. Replaces all explicit grants. Updates must retain at least one editor; creation retains creator editing through direct or Team access. Owners retain full access. Responsibility does not grant access.",
                 "type": "object",
                 "propertyNames": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "format": "email",
+                      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                    }
+                  ]
                 },
                 "additionalProperties": {
                   "type": "string",
@@ -18147,7 +18267,8 @@
         "required": [
           "access",
           "idempotencyKey"
-        ]
+        ],
+        "additionalProperties": false
       },
       "HandoverWorkspaceMemberRequest": {
         "type": "object",
@@ -18339,11 +18460,23 @@
             },
             "additionalProperties": {}
           },
+          "private": {
+            "description": "Create with restricted visibility and a direct creator edit grant. Does not change the owning account or workspace management rights.",
+            "type": "boolean",
+            "const": true
+          },
+          "teamIds": {
+            "description": "Create with editor grants for these Teams in the selected workspace. Mutually exclusive with private and access.",
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
           "access": {
-            "default": {
-              "visibility": "restricted",
-              "grants": {}
-            },
+            "description": "Explicit complete initial sharing settings. Mutually exclusive with private and teamIds.",
             "type": "object",
             "properties": {
               "visibility": {
@@ -18357,12 +18490,21 @@
               },
               "grants": {
                 "default": {},
-                "description": "Complete user/team UUID grant map. Replaces all explicit grants. Updates must retain at least one editor; creation adds the creator as editor. Owners retain full access. Responsibility does not grant access.",
+                "description": "Complete grant map keyed by user/team UUID or registered user email. Emails resolve to user UUIDs before saving. Replaces all explicit grants. Updates must retain at least one editor; creation retains creator editing through direct or Team access. Owners retain full access. Responsibility does not grant access.",
                 "type": "object",
                 "propertyNames": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "format": "email",
+                      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                    }
+                  ]
                 },
                 "additionalProperties": {
                   "type": "string",
@@ -18389,7 +18531,87 @@
         "required": [
           "idempotencyKey"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "private"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "teamIds"
+                  ]
+                },
+                {
+                  "required": [
+                    "access"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "required": [
+              "teamIds"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "private"
+                  ]
+                },
+                {
+                  "required": [
+                    "access"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "required": [
+              "access"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "private"
+                  ]
+                },
+                {
+                  "required": [
+                    "teamIds"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "private"
+                  ]
+                },
+                {
+                  "required": [
+                    "teamIds"
+                  ]
+                },
+                {
+                  "required": [
+                    "access"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
       },
       "CopyPlaybookRequest": {
         "type": "object",
@@ -18409,11 +18631,23 @@
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
+          "private": {
+            "description": "Create with restricted visibility and a direct creator edit grant. Does not change the owning account or workspace management rights.",
+            "type": "boolean",
+            "const": true
+          },
+          "teamIds": {
+            "description": "Create with editor grants for these Teams in the selected workspace. Mutually exclusive with private and access.",
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
           "access": {
-            "default": {
-              "visibility": "restricted",
-              "grants": {}
-            },
+            "description": "Explicit complete initial sharing settings. Mutually exclusive with private and teamIds.",
             "type": "object",
             "properties": {
               "visibility": {
@@ -18427,12 +18661,21 @@
               },
               "grants": {
                 "default": {},
-                "description": "Complete user/team UUID grant map. Replaces all explicit grants. Updates must retain at least one editor; creation adds the creator as editor. Owners retain full access. Responsibility does not grant access.",
+                "description": "Complete grant map keyed by user/team UUID or registered user email. Emails resolve to user UUIDs before saving. Replaces all explicit grants. Updates must retain at least one editor; creation retains creator editing through direct or Team access. Owners retain full access. Responsibility does not grant access.",
                 "type": "object",
                 "propertyNames": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string",
+                      "format": "email",
+                      "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                    }
+                  ]
                 },
                 "additionalProperties": {
                   "type": "string",
@@ -18455,7 +18698,87 @@
           "sourceVersionId",
           "idempotencyKey"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "private"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "teamIds"
+                  ]
+                },
+                {
+                  "required": [
+                    "access"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "required": [
+              "teamIds"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "private"
+                  ]
+                },
+                {
+                  "required": [
+                    "access"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "required": [
+              "access"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "private"
+                  ]
+                },
+                {
+                  "required": [
+                    "teamIds"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "private"
+                  ]
+                },
+                {
+                  "required": [
+                    "teamIds"
+                  ]
+                },
+                {
+                  "required": [
+                    "access"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
       },
       "AssignCaseRequest": {
         "type": "object",
@@ -18486,10 +18809,17 @@
         "type": "object",
         "properties": {
           "versionId": {
-            "description": "Attach one playbook version to an open case without a playbook. Cannot replace or remove an existing playbook. The resulting input must satisfy this version's input schema.",
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            "description": "Attach or replace the playbook version on an open case; null removes it, omission preserves it. The resulting input must satisfy the selected version's input schema.",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "input": {
             "type": "object",
@@ -19689,7 +20019,6 @@
           },
           "grants": {
             "default": {},
-            "description": "Complete user/team UUID grant map. Replaces all explicit grants. Updates must retain at least one editor; creation adds the creator as editor. Owners retain full access. Responsibility does not grant access.",
             "type": "object",
             "propertyNames": {
               "type": "string",

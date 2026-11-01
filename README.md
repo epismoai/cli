@@ -30,7 +30,7 @@ Binaries and checksums are available from [GitHub Releases](https://github.com/e
 ```sh
 epismo login
 epismo workspace use acme # optional: select your workspace
-epismo case start --title "Customer onboarding"
+epismo case start --title "Customer onboarding" --private
 epismo case get CASE_ID
 ```
 
@@ -52,7 +52,7 @@ Append `--help` to any command for its arguments and options.
 
 ## Scripts and agents
 
-Commands return JSON on stdout; errors and progress go to stderr. Output fields use `snake_case`. Use `--output table` for interactive reading, or `--request @file.json` and `--request -` for JSON input from a file or stdin. `--request` supplies all request parameters; `case start --input` and `case update --input` supply only the case input values. On update, `--input` replaces the complete object. Attach one playbook version to an open case without a playbook using `case update CASE_ID --version-id VERSION_ID --lock-version N`, optionally with `--input`; the resulting input must satisfy that version’s schema.
+Commands return JSON on stdout; errors and progress go to stderr. Output fields use `snake_case`. Use `--output table` for interactive reading, or `--request @file.json` and `--request -` for JSON input from a file or stdin. `--request` supplies all request parameters; `case start --input` and `case update --input` supply only the case input values. On update, `--input` replaces the complete object. Attach or replace a playbook version on an open case with `case update CASE_ID --version-id VERSION_ID --lock-version N`, optionally with `--input`; the resulting input must satisfy the selected version’s schema. To remove the playbook, send an explicit null with `case update CASE_ID --request '{"version_id":null,"expected_lock_version":3}'`, using the latest lock version. Omission preserves the current selection.
 
 For automation, supply a workspace-scoped token through `EPISMO_TOKEN`. Set `EPISMO_WORKSPACE` or pass `--workspace` to select a workspace. Run `epismo doctor` to inspect your setup.
 
