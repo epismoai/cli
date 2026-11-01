@@ -119,3 +119,129 @@ func TestSharedTeamCommandsUseSelectedWorkspace(t *testing.T) {
 		})
 	}
 }
+
+func TestEmailGrantKeysArePreservedInAccessRequests(t *testing.T) {
+	const email = "Tanaka_Name+Sales@Example.com"
+	const access = `{"visibility":"restricted","grants":{"Tanaka_Name+Sales@Example.com":"editor","abcdefab-cdef-4abc-8def-abcdefabcdef":"viewer"}}`
+	for _, args := range [][]string{
+		{"case", "access", "set", "case-id", "--access", access, "--lock-version", "3", "--yes"},
+		{"playbook", "access", "set", "playbook-id", "--request", `{"access":` + access + `}`, "--yes"},
+	} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			var body map[string]any
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+					t.Error(err)
+				}
+				_, _ = io.WriteString(w, `{"access":`+access+`}`)
+			}))
+			defer server.Close()
+			t.Setenv("EPISMO_API_URL", server.URL)
+			t.Setenv("EPISMO_TOKEN", "test-token")
+			t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+			var stdout, stderr bytes.Buffer
+			if code := Main(args, "test", strings.NewReader(""), &stdout, &stderr); code != 0 {
+				t.Fatalf("exit=%d stderr=%s", code, stderr.String())
+			}
+			settings, _ := body["access"].(map[string]any)
+			grants, _ := settings["grants"].(map[string]any)
+			if grants[email] != "editor" || len(grants) != 2 {
+				t.Fatalf("grants=%#v", grants)
+			}
+			if !strings.Contains(stdout.String(), email) {
+				t.Fatalf("output changed email: %s", stdout.String())
+			}
+		})
+	}
+}
+
+func TestCreationSharingFlags(t *testing.T) {
+	const first = "11111111-1111-4111-8111-111111111111"
+	const second = "22222222-2222-4222-8222-222222222222"
+	for _, command := range [][]string{
+		{"case", "start", "--title", "Team work"},
+		{"playbook", "create", "--definition", `{"schemaVersion":1,"title":"Guide"}`},
+		{"playbook", "copy", "source", "--source-version-id", "version"},
+	} {
+		for _, selection := range [][]string{{"--private"}, {"--team-ids", first + "," + second}} {
+			t.Run(strings.Join(append(command, selection...), " "), func(t *testing.T) {
+				var body map[string]any
+				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+						t.Error(err)
+					}
+					_, _ = io.WriteString(w, `{}`)
+				}))
+				defer server.Close()
+				t.Setenv("EPISMO_API_URL", server.URL)
+				t.Setenv("EPISMO_TOKEN", "test-token")
+				t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+				var stdout, stderr bytes.Buffer
+				if code := Main(append(append([]string{}, command...), selection...), "test", strings.NewReader(""), &stdout, &stderr); code != 0 {
+					t.Fatalf("exit=%d stderr=%s", code, stderr.String())
+				}
+				if _, exists := body["access"]; exists {
+					t.Fatalf("implicit access hides sharing omission: %#v", body)
+				}
+				if selection[0] == "--private" {
+					if body["private"] != true {
+						t.Fatalf("body=%#v", body)
+					}
+				} else if !reflect.DeepEqual(body["teamIds"], []any{first, second}) {
+					t.Fatalf("body=%#v", body)
+				}
+			})
+		}
+	}
+}
+
+func TestDiscardedSharingFlagsAreNotAdvertisedOrAccepted(t *testing.T) {
+	for _, args := range [][]string{
+		{"case", "start", "--team-id", "team"},
+		{"case", "access", "set", "case", "--team-ids", "team", "--lock-version", "1"},
+		{"case", "access", "set", "case", "--keep-direct-access", "--lock-version", "1"},
+		{"playbook", "access", "set", "book", "--team-id", "team"},
+		{"playbook", "access", "set", "book", "--remove-self"},
+	} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			var stdout, stderr bytes.Buffer
+			if code := Main(args, "test", strings.NewReader(""), &stdout, &stderr); code == 0 || !strings.Contains(stderr.String(), "UNKNOWN_OPTION") {
+				t.Fatalf("exit=%d stderr=%s", code, stderr.String())
+			}
+		})
+	}
+}
+
+func TestCreationForwardsSavedWorkspaceWithoutInventingSharing(t *testing.T) {
+	const workspace = "33333333-3333-4333-8333-333333333333"
+	var body map[string]any
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("workspaceId") != workspace {
+			t.Errorf("workspace not forwarded: %s", r.URL.RequestURI())
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Error(err)
+		}
+		_, _ = io.WriteString(w, `{}`)
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_TOKEN", "")
+	t.Setenv("EPISMO_WORKSPACE", "")
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+	if err := writeConfig(cliConfig{DefaultWorkspace: &savedWorkspace{ID: workspace, Handle: "acme"}}); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeJSONAtomic(credentialsPath(), storedCredentials{AccessToken: "token", RefreshToken: "refresh", ExpiresAt: "2999-01-01T00:00:00Z", ClientID: cliClientID, UserID: "user"}); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	if code := Main([]string{"case", "start", "--title", "Work"}, "test", strings.NewReader(""), &stdout, &stderr); code != 0 {
+		t.Fatalf("exit=%d stderr=%s", code, stderr.String())
+	}
+	for _, field := range []string{"access", "private", "teamIds"} {
+		if _, exists := body[field]; exists {
+			t.Fatalf("CLI must not bypass server sharing validation with a default: %#v", body)
+		}
+	}
+}

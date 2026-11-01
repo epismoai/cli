@@ -28,7 +28,7 @@ func cliJSON(value any) (any, error) {
 					ExitCode: 1,
 				}
 			}
-			// Grant-map keys are opaque principal UUIDs, not field names.
+			// Grant-map keys are opaque principal references, not field names.
 			if key == "grants" {
 				result[publicKey] = typed[key]
 				continue
@@ -89,7 +89,7 @@ func apiJSON(value any) (any, error) {
 					ExitCode: 1,
 				}
 			}
-			// Preserve UUID keys inside access grants on the wire.
+			// Preserve UUID/email keys inside access grants on the wire.
 			if key == "grants" {
 				result[wireKey] = typed[key]
 				continue
