@@ -198,7 +198,7 @@ func caseTaskCommands() []*command {
 	create := apiOperation("case task create", "create a work or approval task in a case", []string{"case-id"}, http.MethodPost, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/tasks"
 	}, requestBody, true, choice("--kind", "kind", "task kind", "work", "approval"), str("--title", "title", "task title"), str("--instructions", "instructions", "task instructions"), str("--source-step-id", "sourceStepId", "four-character step ID"), str("--assigned-to", "assignedTo", "task assignee"), str("--subject-record-id", "subjectRecordId", "record this APPROVAL task is checking"))
-	listOptions := append(pagingOptions(), choice("--status", "status", "task status", "open", "closed"))
+	listOptions := append(pagingOptions(), choice("--status", "status", "task status", "open", "completed", "cancelled", "approved", "rejected"))
 	list := apiOperation("case task list", "list tasks in a case", []string{"case-id"}, http.MethodGet, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/tasks"
 	}, requestQuery, false, listOptions...)
@@ -208,7 +208,7 @@ func caseTaskCommands() []*command {
 func caseTaskDetailCommands() []*command {
 	get := apiOperation("case task get", "get a task", []string{"task-id"}, http.MethodGet, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) }, requestNone, false)
 	update := lockedMutation("case task update", "update editable task fields, including the assignee", "task-id", http.MethodPatch, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) }, str("--title", "title", "task title"), str("--instructions", "instructions", "task instructions"), str("--assigned-to", "assignedTo", "account responsible for the task; empty string unassigns"))
-	setStatus := lockedMutation("case task set status", "close a task with an outcome, or reopen a closed one", "task-id", http.MethodPost, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) + "/status" }, requiredOption(choice("--status", "status", "task status", "open", "closed")), str("--outcome", "outcome", "required when closing"), array("--records", "records", "JSON array of records to append with the transition"))
+	setStatus := lockedMutation("case task set status", "resolve work as completed/cancelled or approval as approved/rejected/cancelled; use open to reopen", "task-id", http.MethodPost, func(i invocation) string { return "/v1/tasks/" + escaped(i.positional(0)) + "/status" }, requiredOption(choice("--status", "status", "task status", "open", "completed", "cancelled", "approved", "rejected")), array("--records", "records", "JSON array of records to append with the transition"))
 	return []*command{get, update, setStatus}
 }
 
@@ -240,7 +240,7 @@ func taskCommands() []*command {
 		return "/v1/cases/" + escaped(caseID) + "/tasks"
 	}, requestBody, true, str("--case-id", "caseId", "case ID"), choice("--kind", "kind", "task kind", "work", "approval"), str("--title", "title", "task title"), str("--instructions", "instructions", "task instructions"), str("--source-step-id", "sourceStepId", "four-character step ID"), str("--assigned-to", "assignedTo", "task assignee"), str("--subject-record-id", "subjectRecordId", "record this APPROVAL task is checking"))
 	create.Prepare = requireField("caseId", "Pass --case-id <case-id> or use `epismo case task create <case-id>`.")
-	listOptions := append(pagingOptions(), str("--case-id", "caseId", "case ID"), str("--assigned-to", "assignedTo", "assignee Account ID or me"), choice("--status", "status", "task status", "open", "closed"))
+	listOptions := append(pagingOptions(), str("--case-id", "caseId", "case ID"), str("--assigned-to", "assignedTo", "assignee Account ID or me"), choice("--status", "status", "task status", "open", "completed", "cancelled", "approved", "rejected"))
 	list := &command{Path: "task list", Summary: "list your assigned tasks across cases", Options: listOptions, Input: &inputSpec{Help: "query-parameters JSON object, @file, or - for stdin"}, Run: func(a *app, inv invocation) (any, error) {
 		payload, err := inv.payload(a)
 		if err != nil {

@@ -60,7 +60,7 @@ func enrichCommands(commands []*command) []*command {
 		"case report generate":     {"epismo case report generate CASE_ID"},
 		"case report act":          {"epismo case report act CASE_ID --report-id REPORT_ID --proposal-id PROPOSAL_ID --action create"},
 		"case handoff create":      {"epismo case handoff create SALES_CASE_ID --to-case-id ENGINEERING_CASE_ID", "epismo case handoff create ENGINEERING_CASE_ID --from-case-id SALES_CASE_ID"},
-		"case task set status":     {"epismo case task set status TASK_ID --status closed --outcome approved --lock-version LOCK_VERSION"},
+		"case task set status":     {"epismo case task set status TASK_ID --status approved --lock-version LOCK_VERSION"},
 		"case record append":       {`epismo case record append CASE_ID --kind note --origin agent --content 'Goal: team invitations. Decision: reuse existing email flow. Open: expiry behavior. Next: inspect invitation code.'`, `epismo case record append CASE_ID --kind note --origin agent --content 'Assessment: shared evidence is sufficient; see the cited results.'`, "epismo case record append CASE_ID --request @record.json"},
 		"case record update":       {`epismo case record update RECORD_ID --content 'Updated decision'`},
 		"case record delete":       {"epismo case record delete RECORD_ID"},
