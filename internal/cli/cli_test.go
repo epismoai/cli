@@ -877,3 +877,47 @@ func TestSourceCommandsSendAuthenticatedRequests(t *testing.T) {
 		})
 	}
 }
+
+func TestTaskStatusCommandsUseExplicitResults(t *testing.T) {
+	var got map[string]any
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			if r.URL.Path != "/v1/tasks/task-1/status" {
+				t.Errorf("path = %s", r.URL.Path)
+			}
+			if err := json.NewDecoder(r.Body).Decode(&got); err != nil {
+				t.Fatal(err)
+			}
+		} else {
+			got = map[string]any{"status": r.URL.Query().Get("status")}
+		}
+		_, _ = io.WriteString(w, `{}`)
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_TOKEN", "test-token")
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+	for _, state := range []string{"open", "completed", "cancelled", "approved", "rejected"} {
+		for _, args := range [][]string{
+			{"task", "set", "status", "task-1", "--status", state, "--lock-version", "2"},
+			{"case", "task", "set", "status", "task-1", "--status", state, "--lock-version", "2"},
+			{"task", "list", "--status", state},
+			{"case", "task", "list", "case-1", "--status", state},
+		} {
+			var out, errOut bytes.Buffer
+			if code := Main(args, "test", strings.NewReader(""), &out, &errOut); code != 0 {
+				t.Fatalf("%v: %s", args, errOut.String())
+			}
+			if got["status"] != state {
+				t.Fatalf("request = %#v", got)
+			}
+			if _, ok := got["outcome"]; ok {
+				t.Fatalf("legacy outcome sent: %#v", got)
+			}
+		}
+	}
+	var out, errOut bytes.Buffer
+	if code := Main([]string{"task", "set", "status", "task-1", "--status", "closed", "--lock-version", "2"}, "test", strings.NewReader(""), &out, &errOut); code == 0 {
+		t.Fatal("legacy closed status accepted")
+	}
+}

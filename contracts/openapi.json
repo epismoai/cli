@@ -10541,7 +10541,10 @@
               "type": "string",
               "enum": [
                 "open",
-                "closed"
+                "completed",
+                "cancelled",
+                "approved",
+                "rejected"
               ]
             }
           },
@@ -19224,12 +19227,11 @@
             "type": "string",
             "enum": [
               "open",
-              "closed"
+              "completed",
+              "cancelled",
+              "approved",
+              "rejected"
             ]
-          },
-          "outcome": {
-            "type": "string",
-            "maxLength": 64
           },
           "records": {
             "default": [],
@@ -19286,7 +19288,8 @@
           "expectedLockVersion",
           "idempotencyKey",
           "status"
-        ]
+        ],
+        "additionalProperties": false
       },
       "AppendCaseRecordRequest": {
         "type": "object",
@@ -21294,11 +21297,11 @@
             "type": "string",
             "enum": [
               "open",
-              "closed"
+              "completed",
+              "cancelled",
+              "approved",
+              "rejected"
             ]
-          },
-          "outcome": {
-            "type": "string"
           },
           "lockVersion": {
             "type": "integer"
