@@ -11493,7 +11493,8 @@
                 "enum": [
                   "note",
                   "output",
-                  "activity"
+                  "activity",
+                  "agreement"
                 ]
               }
             }
@@ -18917,9 +18918,10 @@
                   "type": "string",
                   "enum": [
                     "note",
-                    "output"
+                    "output",
+                    "agreement"
                   ],
-                  "description": "Record kind. note or output. activity is server-only."
+                  "description": "Record kind. note, output, or agreement. activity is server-only."
                 },
                 "content": {
                   "type": "string",
@@ -19247,9 +19249,10 @@
                   "type": "string",
                   "enum": [
                     "note",
-                    "output"
+                    "output",
+                    "agreement"
                   ],
-                  "description": "Record kind. note or output. activity is server-only."
+                  "description": "Record kind. note, output, or agreement. activity is server-only."
                 },
                 "content": {
                   "type": "string",
@@ -19302,9 +19305,10 @@
             "type": "string",
             "enum": [
               "note",
-              "output"
+              "output",
+              "agreement"
             ],
-            "description": "Record kind. note or output. activity is server-only."
+            "description": "Record kind. note, output, or agreement. activity is server-only."
           },
           "content": {
             "type": "string",
@@ -19349,9 +19353,10 @@
             "type": "string",
             "enum": [
               "note",
-              "output"
+              "output",
+              "agreement"
             ],
-            "description": "Record kind. note or output. activity is server-only."
+            "description": "Record kind. note, output, or agreement. activity is server-only."
           },
           "content": {
             "type": "string",
@@ -21386,7 +21391,8 @@
             "enum": [
               "note",
               "output",
-              "activity"
+              "activity",
+              "agreement"
             ]
           },
           "content": {
