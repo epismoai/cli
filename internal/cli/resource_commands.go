@@ -213,16 +213,16 @@ func caseTaskDetailCommands() []*command {
 }
 
 func caseRecordCommands() []*command {
-	appendRecord := apiOperation("case record append", "save decisions, findings, feedback, or continuation context in an open case. kind is closed: note (commentary, a decision, an assessment, or a handoff) or output (a durable deliverable). activity is server-only. Use case report generate for an on-demand Epismo AI evaluation; it saves a report rather than a review record. Include goal, constraints, agreed decisions versus proposals, open questions, artifact references, and next step as relevant. Do not save secrets or raw transcripts", []string{"case-id"}, http.MethodPost, func(i invocation) string {
+	appendRecord := apiOperation("case record append", "save decisions, findings, feedback, or continuation context in an open case. kind is closed: note (commentary, an assessment, or a handoff), output (a durable deliverable), or agreement (a shared decision or commitment). activity is server-only. Use case report generate for an on-demand Epismo AI evaluation; it saves a report. Include goal, constraints, agreed decisions versus proposals, open questions, artifact references, and next step as relevant. Do not save secrets or raw transcripts", []string{"case-id"}, http.MethodPost, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/records"
-	}, requestBody, true, str("--task-id", "taskId", "task this record belongs to"), str("--source-step-id", "sourceStepId", "four-character step ID"), choice("--kind", "kind", "record kind", "note", "output"), str("--content", "content", "record content"), object("--data", "data", "record data JSON object"), choice("--origin", "origin", "record origin", "user", "agent"))
-	listOptions := append(pagingOptions(), choice("--scope", "scope", "handoff scope", "self", "ancestors", "descendants", "neighbors", "connected"), str("--task-id", "taskId", "task ID"), str("--created-by", "createdBy", "creator Account ID or me"), csv("--kinds", "kinds", "comma-separated record kinds (note, output, activity)"), csv("--origins", "origins", "comma-separated origins"), defaultOption(choice("--order", "order", "sort order", "asc", "desc"), "desc"))
+	}, requestBody, true, str("--task-id", "taskId", "task this record belongs to"), str("--source-step-id", "sourceStepId", "four-character step ID"), choice("--kind", "kind", "record kind", "note", "output", "agreement"), str("--content", "content", "record content"), object("--data", "data", "record data JSON object"), choice("--origin", "origin", "record origin", "user", "agent"))
+	listOptions := append(pagingOptions(), choice("--scope", "scope", "handoff scope", "self", "ancestors", "descendants", "neighbors", "connected"), str("--task-id", "taskId", "task ID"), str("--created-by", "createdBy", "creator Account ID or me"), csv("--kinds", "kinds", "comma-separated record kinds (note, output, activity, agreement)"), csv("--origins", "origins", "comma-separated origins"), defaultOption(choice("--order", "order", "sort order", "asc", "desc"), "desc"))
 	list := publicApiOperation("case record list", "read saved decisions and progress in a case; follow pagination for additional context and distinguish current decisions from superseded proposals", []string{"case-id"}, http.MethodGet, func(i invocation) string {
 		return "/v1/cases/" + escaped(i.positional(0)) + "/records"
 	}, requestQuery, listOptions...)
 	update := apiOperation("case record update", "edit a record you created. Kind, content, and structured data may change; task and provenance stay fixed", []string{"record-id"}, http.MethodPatch, func(i invocation) string {
 		return "/v1/records/" + escaped(i.positional(0))
-	}, requestBody, true, choice("--kind", "kind", "record kind", "note", "output"), str("--content", "content", "record content"), object("--data", "data", "record data JSON object"))
+	}, requestBody, true, choice("--kind", "kind", "record kind", "note", "output", "agreement"), str("--content", "content", "record content"), object("--data", "data", "record data JSON object"))
 	deleteRecord := apiOperation("case record delete", "redact a record you created. The id remains as a tombstone for references", []string{"record-id"}, http.MethodDelete, func(i invocation) string {
 		return "/v1/records/" + escaped(i.positional(0))
 	}, requestBody, true)
@@ -263,9 +263,9 @@ func recordCommands() []*command {
 	appendRecord := apiOperation("record append", "append a record to a case", nil, http.MethodPost, func(i invocation) string {
 		caseID := strings.TrimSpace(i.text("caseId"))
 		return "/v1/cases/" + escaped(caseID) + "/records"
-	}, requestBody, true, str("--case-id", "caseId", "case ID"), str("--task-id", "taskId", "task this record belongs to"), str("--source-step-id", "sourceStepId", "four-character step ID"), choice("--kind", "kind", "record kind", "note", "output"), str("--content", "content", "record content"), object("--data", "data", "record data JSON object"), choice("--origin", "origin", "record origin", "user", "agent"))
+	}, requestBody, true, str("--case-id", "caseId", "case ID"), str("--task-id", "taskId", "task this record belongs to"), str("--source-step-id", "sourceStepId", "four-character step ID"), choice("--kind", "kind", "record kind", "note", "output", "agreement"), str("--content", "content", "record content"), object("--data", "data", "record data JSON object"), choice("--origin", "origin", "record origin", "user", "agent"))
 	appendRecord.Prepare = requireField("caseId", "Pass --case-id <case-id> or use `epismo case record append <case-id>`.")
-	listOptions := append(pagingOptions(), str("--case-id", "caseId", "case ID"), choice("--scope", "scope", "handoff scope", "self", "ancestors", "descendants", "neighbors", "connected"), str("--task-id", "taskId", "task ID"), str("--created-by", "createdBy", "creator Account ID or me"), csv("--kinds", "kinds", "comma-separated record kinds (note, output, activity)"), csv("--origins", "origins", "comma-separated origins"), defaultOption(choice("--order", "order", "sort order", "asc", "desc"), "desc"))
+	listOptions := append(pagingOptions(), str("--case-id", "caseId", "case ID"), choice("--scope", "scope", "handoff scope", "self", "ancestors", "descendants", "neighbors", "connected"), str("--task-id", "taskId", "task ID"), str("--created-by", "createdBy", "creator Account ID or me"), csv("--kinds", "kinds", "comma-separated record kinds (note, output, activity, agreement)"), csv("--origins", "origins", "comma-separated origins"), defaultOption(choice("--order", "order", "sort order", "asc", "desc"), "desc"))
 	list := apiOperation("record list", "list records in a case", nil, http.MethodGet, func(i invocation) string {
 		caseID := strings.TrimSpace(i.text("caseId"))
 		return "/v1/cases/" + escaped(caseID) + "/records"
@@ -273,7 +273,7 @@ func recordCommands() []*command {
 	list.Prepare = requireField("caseId", "Pass --case-id <case-id> or use `epismo case record list <case-id>`.")
 	update := apiOperation("record update", "edit a record you created. Kind, content, and structured data may change; task and provenance stay fixed", []string{"record-id"}, http.MethodPatch, func(i invocation) string {
 		return "/v1/records/" + escaped(i.positional(0))
-	}, requestBody, true, choice("--kind", "kind", "record kind", "note", "output"), str("--content", "content", "record content"), object("--data", "data", "record data JSON object"))
+	}, requestBody, true, choice("--kind", "kind", "record kind", "note", "output", "agreement"), str("--content", "content", "record content"), object("--data", "data", "record data JSON object"))
 	deleteRecord := apiOperation("record delete", "redact a record you created. The id remains as a tombstone for references", []string{"record-id"}, http.MethodDelete, func(i invocation) string {
 		return "/v1/records/" + escaped(i.positional(0))
 	}, requestBody, true)
