@@ -20594,19 +20594,14 @@
             "description": "Current situation and main evidence-based reason for health; unknown explains the evidence gap."
           },
           "content": {
-            "type": "string"
+            "type": "string",
+            "description": "Supplementary context not covered by summary, verifications or proposals; empty when no additional explanation is needed."
           },
           "verifications": {
             "type": "array",
-            "description": "Future criterion-level results; currently empty. Empty does not imply a pass.",
+            "description": "Criterion-level verification results for Case reports; empty for Personal and Team reports. Empty does not imply a pass.",
             "items": {
               "$ref": "#/components/schemas/Verification"
-            }
-          },
-          "evidence": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Evidence"
             }
           },
           "proposals": {
@@ -20643,8 +20638,48 @@
       },
       "Verification": {
         "type": "object",
-        "required": [],
-        "properties": {},
+        "required": [
+          "id",
+          "criterion",
+          "basis",
+          "status",
+          "summary"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "criterion": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "basis": {
+            "type": "string",
+            "enum": [
+              "stated",
+              "inferred"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "passed",
+              "failed",
+              "unknown"
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            }
+          }
+        },
         "additionalProperties": false
       },
       "Proposal": {
