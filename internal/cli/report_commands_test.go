@@ -414,3 +414,68 @@ func TestTeamReportActRequest(t *testing.T) {
 		t.Fatalf("calls=%d", calls)
 	}
 }
+
+func TestReportDeleteUsesSharedEndpoint(t *testing.T) {
+	var method, path string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		method, path = r.Method, r.URL.Path
+		_, _ = io.WriteString(w, `{}`)
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_TOKEN", "test-token")
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+	var stdout, stderr bytes.Buffer
+	if exit := Main([]string{"report", "delete", "report-1", "--yes"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+		t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
+	}
+	if method != http.MethodDelete || path != "/v1/reports/report-1" {
+		t.Fatalf("request: %s %s", method, path)
+	}
+}
+
+func TestReportListPreservesDeletedHistory(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.WriteString(w, `{"reports":[{"id":"deleted-report","deletedAt":"2026-11-10T00:00:00Z","summary":"","health":""}]}`)
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_TOKEN", "test-token")
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+	for _, args := range [][]string{{"report", "case", "list", "case-1"}, {"report", "personal", "list"}, {"report", "team", "list", "team-1"}} {
+		var stdout, stderr bytes.Buffer
+		if exit := Main(args, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 || !strings.Contains(stdout.String(), "deleted_at") {
+			t.Fatalf("args=%v exit=%d stdout=%s stderr=%s", args, exit, stdout.String(), stderr.String())
+		}
+	}
+}
+
+func TestReportGenerationCriteria(t *testing.T) {
+	for _, args := range [][]string{
+		{"report", "case", "generate", "case-1"},
+		{"report", "personal", "generate"},
+		{"report", "team", "generate", "team-1"},
+	} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			var body map[string]any
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+					t.Error(err)
+				}
+				_, _ = io.WriteString(w, `{"job":{"status":"queued"}}`)
+			}))
+			defer server.Close()
+			t.Setenv("EPISMO_API_URL", server.URL)
+			t.Setenv("EPISMO_TOKEN", "test-token")
+			t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+			args = append(args, "--criteria", "Check the release requirements", "--idempotency-key", "11111111-1111-4111-8111-111111111111")
+			var stdout, stderr bytes.Buffer
+			if exit := Main(args, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+				t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
+			}
+			if body["criteria"] != "Check the release requirements" {
+				t.Fatalf("body = %+v", body)
+			}
+		})
+	}
+}

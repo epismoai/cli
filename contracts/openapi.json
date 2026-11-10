@@ -6717,7 +6717,8 @@
             "OAuth2": [
               "read"
             ]
-          }
+          },
+          {}
         ],
         "responses": {
           "200": {
@@ -8625,7 +8626,8 @@
             "OAuth2": [
               "read"
             ]
-          }
+          },
+          {}
         ],
         "responses": {
           "200": {
@@ -9959,7 +9961,8 @@
             "OAuth2": [
               "read"
             ]
-          }
+          },
+          {}
         ],
         "responses": {
           "200": {
@@ -9968,6 +9971,142 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ReportHistoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/reports/{reportId}": {
+      "delete": {
+        "operationId": "deleteV1ReportsReportId",
+        "tags": [
+          "reports"
+        ],
+        "summary": "DELETE /v1/reports/{reportId}",
+        "parameters": [
+          {
+            "name": "reportId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
                 }
               }
             }
@@ -16925,8 +17064,8 @@
         "tags": [
           "reviews"
         ],
-        "summary": "Generate an AI review from supplied data",
-        "description": "Uses a dedicated review API key, not an OAuth access token. The key fixes the billing account. Returns the completed review synchronously. Request bodies must fit within 600,000 bytes.",
+        "summary": "Run a review against supplied context and an optional rubric",
+        "description": "Uses a dedicated review API key. Returns application output and independent standard verifications synchronously. Optional criteria is a natural-language rubric supporting detailed requirements, exceptions, examples, and evaluation methods. Review decomposes it into checkable conditions; when omitted, it discovers conditions in context. Evidence is selected from context and returned as exact quotes with RFC 6901 context_path pointers. Passed and failed require supporting evidence; results do not imply independent testing or approval. output_schema customizes output only; its root verifications property is reserved. Request bodies must fit within 600,000 bytes.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -16949,7 +17088,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/GenerateReviewRequest"
+                "$ref": "#/components/schemas/RunReviewRequest"
               }
             }
           }
@@ -16962,14 +17101,27 @@
                 "schema": {
                   "type": "object",
                   "required": [
+                    "run_id",
                     "output",
+                    "verifications",
                     "credits_consumed"
                   ],
                   "additionalProperties": false,
                   "properties": {
+                    "run_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Persisted execution identifier for future feedback."
+                    },
                     "output": {
                       "type": "object",
                       "additionalProperties": true
+                    },
+                    "verifications": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Verification"
+                      }
                     },
                     "credits_consumed": {
                       "type": "integer",
@@ -17308,7 +17460,7 @@
           }
         }
       },
-      "GenerateReviewRequest": {
+      "RunReviewRequest": {
         "type": "object",
         "properties": {
           "context": {
@@ -17318,6 +17470,10 @@
             },
             "additionalProperties": {},
             "description": "JSON object limited to 500000 UTF-8 bytes when serialized."
+          },
+          "criteria": {
+            "type": "string",
+            "description": "Optional natural-language rubric with detailed requirements, scope, exceptions, examples, and evaluation methods. Review decomposes it into checkable conditions; blank or omitted uses context."
           },
           "instructions": {
             "type": "string"
@@ -17333,6 +17489,12 @@
           "model": {
             "type": "string",
             "maxLength": 200
+          },
+          "previous_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Accessible successful review run to continue."
           }
         },
         "required": [
@@ -17347,6 +17509,11 @@
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "criteria": {
+            "type": "string",
+            "maxLength": 32000,
+            "description": "Optional natural-language evaluation criteria passed to Review. Blank or omitted uses the report's normal assessment. At most 32,000 UTF-8 bytes."
           }
         },
         "required": [
@@ -18969,6 +19136,11 @@
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "criteria": {
+            "type": "string",
+            "maxLength": 32000,
+            "description": "Optional natural-language evaluation criteria passed to Review. Blank or omitted uses the report's normal assessment. At most 32,000 UTF-8 bytes."
           }
         },
         "required": [
@@ -18982,6 +19154,11 @@
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "criteria": {
+            "type": "string",
+            "maxLength": 32000,
+            "description": "Optional natural-language evaluation criteria passed to Review. Blank or omitted uses the report's normal assessment. At most 32,000 UTF-8 bytes."
           }
         },
         "required": [
@@ -20534,14 +20711,20 @@
               "healthy",
               "at_risk",
               "critical",
-              "unknown"
+              "unknown",
+              ""
             ],
-            "description": "Evidence-based work health, not approval or task completion."
+            "description": "Evidence-based work health; empty when the report was deleted."
           },
           "summary": {
             "type": "string",
             "maxLength": 280,
-            "description": "Current situation and main evidence-based reason for health; unknown explains the evidence gap."
+            "description": "Saved summary; empty when the report was deleted."
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Deletion time when report content has been erased."
           }
         },
         "additionalProperties": false
@@ -20560,7 +20743,8 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Report ID; new reports share their Review execution ID."
           },
           "subjectType": {
             "type": "string",
@@ -20599,9 +20783,9 @@
           },
           "verifications": {
             "type": "array",
-            "description": "Criterion-level verification results for Case reports; empty for Personal and Team reports. Empty does not imply a pass.",
+            "description": "Condition-level verification results for Case reports; empty for Personal and Team reports. Empty does not imply a pass.",
             "items": {
-              "$ref": "#/components/schemas/Verification"
+              "$ref": "#/components/schemas/ReportVerification"
             }
           },
           "proposals": {
@@ -20624,8 +20808,7 @@
             "type": "string"
           },
           "id": {
-            "type": "string",
-            "format": "uuid"
+            "type": "string"
           },
           "label": {
             "type": "string"
@@ -20636,25 +20819,88 @@
         },
         "additionalProperties": false
       },
+      "ContextCitation": {
+        "type": "object",
+        "required": [
+          "context_path",
+          "quote"
+        ],
+        "properties": {
+          "context_path": {
+            "type": "string"
+          },
+          "quote": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      },
       "Verification": {
         "type": "object",
         "required": [
           "id",
-          "criterion",
-          "basis",
+          "condition",
+          "origin",
           "status",
-          "summary"
+          "summary",
+          "evidence"
         ],
         "properties": {
           "id": {
-            "type": "string",
-            "format": "uuid"
+            "type": "string"
           },
-          "criterion": {
+          "condition": {
             "type": "string",
             "maxLength": 300
           },
-          "basis": {
+          "origin": {
+            "type": "string",
+            "enum": [
+              "stated",
+              "inferred"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "passed",
+              "failed",
+              "unknown"
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContextCitation"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReportVerification": {
+        "type": "object",
+        "required": [
+          "id",
+          "condition",
+          "origin",
+          "status",
+          "summary",
+          "evidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "condition": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "origin": {
             "type": "string",
             "enum": [
               "stated",

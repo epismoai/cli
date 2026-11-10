@@ -94,6 +94,7 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 		"playbook alias delete":        {"delete", "/v1/aliases/{alias}"},
 		"case start":                   {"post", "/v1/cases"},
 		"case get":                     {"get", "/v1/cases/{caseId}"},
+		"report delete":                {"delete", "/v1/reports/{reportId}"},
 		"report team act":              {"post", "/v1/reports/{reportId}/actions"},
 		"report team get":              {"get", "/v1/teams/{teamId}/report"},
 		"report team list":             {"get", "/v1/teams/{teamId}/report/history"},
