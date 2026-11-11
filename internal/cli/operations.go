@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -183,7 +184,18 @@ func apiOperationScoped(path, summary string, args []string, method string, endp
 		if scoped {
 			requestPath = withWorkspace(requestPath, ctx.WorkspaceID)
 		}
-		return a.client.request(method, requestPath, ctx.Auth.AccessToken, body)
+		result, requestErr := a.client.request(method, requestPath, ctx.Auth.AccessToken, body)
+		if requestErr != nil && idempotencyKey {
+			var failure *Error
+			if errors.As(requestErr, &failure) && failure.Retryable {
+				if failure.Details == nil {
+					failure.Details = map[string]any{}
+				}
+				failure.Details["idempotencyKey"] = payload["idempotencyKey"]
+				failure.Hint = "Retry with the same --idempotency-key."
+			}
+		}
+		return result, requestErr
 	}
 	return cmd
 }
