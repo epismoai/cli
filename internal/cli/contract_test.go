@@ -96,7 +96,7 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 		"case get":                     {"get", "/v1/cases/{caseId}"},
 		"report feedback create":       {"post", "/v1/reviews/{runId}/feedback"},
 		"report feedback list":         {"get", "/v1/reviews/{runId}/feedback"},
-		"report feedback delete":       {"delete", "/v1/reviews/{runId}/feedback"},
+		"report feedback delete":       {"delete", "/v1/reviews/{runId}/feedback/{feedbackId}"},
 		"report delete":                {"delete", "/v1/reports/{reportId}"},
 		"report team act":              {"post", "/v1/reports/{reportId}/actions"},
 		"report team get":              {"get", "/v1/teams/{teamId}/report"},

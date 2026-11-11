@@ -489,7 +489,7 @@ func TestReviewFeedbackRequests(t *testing.T) {
 	}{
 		{"create", []string{"report", "feedback", "create", "run-1", "--idempotency-key", "11111111-1111-4111-8111-111111111111", "--content", "Missing evidence", "--verification-id", "verification-1"}, http.MethodPost, "/v1/reviews/run-1/feedback", `{"content":"Missing evidence","idempotencyKey":"11111111-1111-4111-8111-111111111111","verification_id":"verification-1"}`},
 		{"list", []string{"report", "feedback", "list", "run-1"}, http.MethodGet, "/v1/reviews/run-1/feedback", ""},
-		{"delete", []string{"report", "feedback", "delete", "run-1", "feedback-1", "--yes"}, http.MethodDelete, "/v1/reviews/run-1/feedback", ""},
+		{"delete", []string{"report", "feedback", "delete", "run-1", "feedback-1", "--yes"}, http.MethodDelete, "/v1/reviews/run-1/feedback/feedback-1", ""},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -499,9 +499,7 @@ func TestReviewFeedbackRequests(t *testing.T) {
 				if r.Method != tc.method || r.URL.Path != tc.path {
 					t.Errorf("request %s %s", r.Method, r.URL.Path)
 				}
-				if tc.name == "delete" && r.URL.Query().Get("feedback_id") != "feedback-1" {
-					t.Errorf("missing feedback_id: %s", r.URL.RawQuery)
-				}
+
 				if r.Header.Get("Authorization") != "Bearer test-token" {
 					t.Error("missing authentication")
 				}

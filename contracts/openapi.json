@@ -18046,17 +18046,27 @@
             }
           }
         }
-      },
+      }
+    },
+    "/v1/reviews/{runId}/feedback/{feedbackId}": {
       "delete": {
-        "operationId": "deleteV1ReviewsRunIdFeedback",
+        "operationId": "deleteV1ReviewsRunIdFeedbackFeedbackId",
         "tags": [
           "reviews"
         ],
-        "summary": "DELETE /v1/reviews/{runId}/feedback",
+        "summary": "DELETE /v1/reviews/{runId}/feedback/{feedbackId}",
         "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. Durable Markdown memory is available only to Review API credentials and standalone namespaces, not app OAuth. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers may search or delete memory but cannot create or edit it directly. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
         "parameters": [
           {
             "name": "runId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "feedbackId",
             "in": "path",
             "required": true,
             "schema": {
@@ -18069,15 +18079,6 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "feedback_id",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
             }
           }
         ],
