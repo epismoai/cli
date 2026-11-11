@@ -487,7 +487,7 @@ func TestReviewFeedbackRequests(t *testing.T) {
 		args               []string
 		method, path, body string
 	}{
-		{"create", []string{"report", "feedback", "create", "run-1", "--id", "feedback-1", "--content", "Missing evidence", "--verification-id", "verification-1"}, http.MethodPost, "/v1/reviews/run-1/feedback", `{"content":"Missing evidence","id":"feedback-1","verification_id":"verification-1"}`},
+		{"create", []string{"report", "feedback", "create", "run-1", "--idempotency-key", "11111111-1111-4111-8111-111111111111", "--content", "Missing evidence", "--verification-id", "verification-1"}, http.MethodPost, "/v1/reviews/run-1/feedback", `{"content":"Missing evidence","idempotencyKey":"11111111-1111-4111-8111-111111111111","verification_id":"verification-1"}`},
 		{"list", []string{"report", "feedback", "list", "run-1"}, http.MethodGet, "/v1/reviews/run-1/feedback", ""},
 		{"delete", []string{"report", "feedback", "delete", "feedback-1", "--yes"}, http.MethodDelete, "/v1/review-feedback/feedback-1", ""},
 	}
@@ -526,5 +526,35 @@ func TestReviewFeedbackRequests(t *testing.T) {
 				t.Fatalf("calls=%d", called)
 			}
 		})
+	}
+}
+
+func TestReportFeedbackCreateGeneratesRetryKey(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Fatal(err)
+		}
+		key, _ := body["idempotencyKey"].(string)
+		if !uuidPattern.MatchString(key) {
+			t.Fatalf("invalid generated retry key: %q", key)
+		}
+		if _, present := body["id"]; present {
+			t.Fatalf("caller-supplied feedback ID: %v", body)
+		}
+		_, _ = io.WriteString(w, `{}`)
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_TOKEN", "test-token")
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+	var stdout, stderr bytes.Buffer
+	if exit := Main([]string{"report", "feedback", "create", "report-1", "--content", "Correction"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+		t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if exit := Main([]string{"report", "feedback", "create", "report-1", "--id", "chosen", "--content", "Correction"}, "test", strings.NewReader(""), &stdout, &stderr); exit == 0 {
+		t.Fatal("--id should not be accepted")
 	}
 }

@@ -33,8 +33,7 @@ func reportCommands() []*command {
 	teamAct := apiOperation("report team act", "confirm a saved team proposal to create work, or dismiss it; requires current team membership and live destination permissions. Handling is shared. New cases and playbooks retain restricted creator access", []string{"report-id"}, http.MethodPost, func(i invocation) string { return "/v1/reports/" + escaped(i.positional(0)) + "/actions" }, requestBody, false,
 		requiredOption(str("--proposal-id", "proposalId", "proposal UUID within the report")), requiredOption(choice("--action", "action", "action to take", "create", "dismiss")), str("--feedback", "feedback", "optional dismissal feedback"))
 	feedbackEndpoint := func(i invocation) string { return "/v1/reviews/" + escaped(i.positional(0)) + "/feedback" }
-	feedbackCreate := apiOperation("report feedback create", "add feedback to a saved report; reuse --id with the same content when retrying", []string{"report-id"}, http.MethodPost, feedbackEndpoint, requestBody, false,
-		requiredOption(str("--id", "id", "caller-generated feedback UUID; reuse it when retrying")),
+	feedbackCreate := apiOperation("report feedback create", "add feedback to a saved report; reuse --idempotency-key when retrying", []string{"report-id"}, http.MethodPost, feedbackEndpoint, requestBody, true,
 		requiredOption(str("--content", "content", "feedback text")),
 		str("--verification-id", "verification_id", "optional verification UUID in this report"))
 	feedbackList := apiOperation("report feedback list", "list feedback on a saved report", []string{"report-id"}, http.MethodGet, feedbackEndpoint, requestQuery, false)
