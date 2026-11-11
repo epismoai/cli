@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -475,6 +476,54 @@ func TestReportGenerationCriteria(t *testing.T) {
 			}
 			if body["criteria"] != "Check the release requirements" {
 				t.Fatalf("body = %+v", body)
+			}
+		})
+	}
+}
+
+func TestReviewFeedbackRequests(t *testing.T) {
+	tests := []struct {
+		name               string
+		args               []string
+		method, path, body string
+	}{
+		{"create", []string{"review", "feedback", "create", "run-1", "--id", "feedback-1", "--content", "Missing evidence", "--verification-id", "verification-1"}, http.MethodPost, "/v1/reviews/run-1/feedback", `{"content":"Missing evidence","id":"feedback-1","verification_id":"verification-1"}`},
+		{"list", []string{"review", "feedback", "list", "run-1"}, http.MethodGet, "/v1/reviews/run-1/feedback", ""},
+		{"delete", []string{"review", "feedback", "delete", "feedback-1", "--yes"}, http.MethodDelete, "/v1/review-feedback/feedback-1", ""},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			called := 0
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				called++
+				if r.Method != tc.method || r.URL.Path != tc.path {
+					t.Errorf("request %s %s", r.Method, r.URL.Path)
+				}
+				if r.Header.Get("Authorization") != "Bearer test-token" {
+					t.Error("missing authentication")
+				}
+				body, _ := io.ReadAll(r.Body)
+				if tc.body == "" && len(body) != 0 {
+					t.Errorf("unexpected body: %s", body)
+				}
+				if tc.body != "" {
+					var actual, expected map[string]any
+					if json.Unmarshal(body, &actual) != nil || json.Unmarshal([]byte(tc.body), &expected) != nil || !reflect.DeepEqual(actual, expected) {
+						t.Errorf("body = %s", body)
+					}
+				}
+				_, _ = io.WriteString(w, `{}`)
+			}))
+			defer server.Close()
+			t.Setenv("EPISMO_API_URL", server.URL)
+			t.Setenv("EPISMO_TOKEN", "test-token")
+			t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+			var stdout, stderr bytes.Buffer
+			if exit := Main(tc.args, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+				t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
+			}
+			if called != 1 {
+				t.Fatalf("calls=%d", called)
 			}
 		})
 	}

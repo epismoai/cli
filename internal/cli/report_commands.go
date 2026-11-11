@@ -32,7 +32,15 @@ func reportCommands() []*command {
 	teamList := apiOperation("report team list", "list team report summaries, newest first; deleted entries retain deleted_at with erased content; requires current team membership in the active workspace", []string{"team-id"}, http.MethodGet, func(i invocation) string { return teamEndpoint(i) + "/history" }, requestQuery, false, pagingOptions()...)
 	teamAct := apiOperation("report team act", "confirm a saved team proposal to create work, or dismiss it; requires current team membership and live destination permissions. Handling is shared. New cases and playbooks retain restricted creator access", []string{"report-id"}, http.MethodPost, func(i invocation) string { return "/v1/reports/" + escaped(i.positional(0)) + "/actions" }, requestBody, false,
 		requiredOption(str("--proposal-id", "proposalId", "proposal UUID within the report")), requiredOption(choice("--action", "action", "action to take", "create", "dismiss")), str("--feedback", "feedback", "optional dismissal feedback"))
+	feedbackEndpoint := func(i invocation) string { return "/v1/reviews/" + escaped(i.positional(0)) + "/feedback" }
+	feedbackCreate := apiOperation("review feedback create", "add feedback to a saved review or report; reuse --id with the same content when retrying", []string{"run-id"}, http.MethodPost, feedbackEndpoint, requestBody, false,
+		requiredOption(str("--id", "id", "caller-generated feedback UUID; reuse it when retrying")),
+		requiredOption(str("--content", "content", "feedback text")),
+		str("--verification-id", "verification_id", "optional verification UUID in this review"))
+	feedbackList := apiOperation("review feedback list", "list feedback on a saved review or report", []string{"run-id"}, http.MethodGet, feedbackEndpoint, requestQuery, false)
+	feedbackDelete := apiOperation("review feedback delete", "delete a feedback comment by its UUID", []string{"feedback-id"}, http.MethodDelete, func(i invocation) string { return "/v1/review-feedback/" + escaped(i.positional(0)) }, requestNone, false)
 	return []*command{
+		feedbackCreate, feedbackList, feedbackDelete,
 		remove,
 		get, commandAlias(get, "case report get"),
 		list, commandAlias(list, "case report list"),
