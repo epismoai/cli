@@ -37,7 +37,9 @@ func reportCommands() []*command {
 		requiredOption(str("--content", "content", "feedback text")),
 		str("--verification-id", "verification_id", "optional verification UUID in this report"))
 	feedbackList := apiOperation("report feedback list", "list feedback on a saved report", []string{"report-id"}, http.MethodGet, feedbackEndpoint, requestQuery, false)
-	feedbackDelete := apiOperation("report feedback delete", "delete a feedback comment by its UUID", []string{"feedback-id"}, http.MethodDelete, func(i invocation) string { return "/v1/review-feedback/" + escaped(i.positional(0)) }, requestNone, false)
+	feedbackDelete := apiOperation("report feedback delete", "delete a feedback comment from a saved report", []string{"report-id", "feedback-id"}, http.MethodDelete, func(i invocation) string {
+		return "/v1/reviews/" + escaped(i.positional(0)) + "/feedback?feedback_id=" + escaped(i.positional(1))
+	}, requestNone, false)
 	return []*command{
 		feedbackCreate, feedbackList, feedbackDelete,
 		remove,

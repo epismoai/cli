@@ -18046,19 +18046,17 @@
             }
           }
         }
-      }
-    },
-    "/v1/review-feedback/{id}": {
+      },
       "delete": {
-        "operationId": "deleteV1ReviewFeedbackId",
+        "operationId": "deleteV1ReviewsRunIdFeedback",
         "tags": [
           "reviews"
         ],
-        "summary": "DELETE /v1/review-feedback/{id}",
+        "summary": "DELETE /v1/reviews/{runId}/feedback",
         "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. Durable Markdown memory is available only to Review API credentials and standalone namespaces, not app OAuth. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers may search or delete memory but cannot create or edit it directly. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
         "parameters": [
           {
-            "name": "id",
+            "name": "runId",
             "in": "path",
             "required": true,
             "schema": {
@@ -18071,6 +18069,15 @@
             "required": false,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "feedback_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -18325,13 +18332,13 @@
         }
       }
     },
-    "/v1/review-memory": {
+    "/v1/memories": {
       "get": {
-        "operationId": "getV1ReviewMemory",
+        "operationId": "getV1Memories",
         "tags": [
           "reviews"
         ],
-        "summary": "GET /v1/review-memory",
+        "summary": "GET /v1/memories",
         "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. Durable Markdown memory is available only to Review API credentials and standalone namespaces, not app OAuth. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers may search or delete memory but cannot create or edit it directly. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
         "parameters": [
           {
@@ -18679,17 +18686,17 @@
         }
       }
     },
-    "/v1/review-memory/{id}": {
+    "/v1/memories/{memoryId}": {
       "delete": {
-        "operationId": "deleteV1ReviewMemoryId",
+        "operationId": "deleteV1MemoriesMemoryId",
         "tags": [
           "reviews"
         ],
-        "summary": "DELETE /v1/review-memory/{id}",
+        "summary": "DELETE /v1/memories/{memoryId}",
         "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. Durable Markdown memory is available only to Review API credentials and standalone namespaces, not app OAuth. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers may search or delete memory but cannot create or edit it directly. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
         "parameters": [
           {
-            "name": "id",
+            "name": "memoryId",
             "in": "path",
             "required": true,
             "schema": {
@@ -19066,7 +19073,7 @@
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "description": "Accessible successful review run to continue. All recorded ancestors are checked and their current feedback is supplied automatically; unavailable or excessive history fails explicitly."
+            "description": "Accessible successful review run to continue. Recent authorized ancestors and their feedback are considered within the context budget; limited coverage is disclosed."
           }
         },
         "required": [

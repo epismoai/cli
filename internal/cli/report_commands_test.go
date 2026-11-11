@@ -489,7 +489,7 @@ func TestReviewFeedbackRequests(t *testing.T) {
 	}{
 		{"create", []string{"report", "feedback", "create", "run-1", "--idempotency-key", "11111111-1111-4111-8111-111111111111", "--content", "Missing evidence", "--verification-id", "verification-1"}, http.MethodPost, "/v1/reviews/run-1/feedback", `{"content":"Missing evidence","idempotencyKey":"11111111-1111-4111-8111-111111111111","verification_id":"verification-1"}`},
 		{"list", []string{"report", "feedback", "list", "run-1"}, http.MethodGet, "/v1/reviews/run-1/feedback", ""},
-		{"delete", []string{"report", "feedback", "delete", "feedback-1", "--yes"}, http.MethodDelete, "/v1/review-feedback/feedback-1", ""},
+		{"delete", []string{"report", "feedback", "delete", "run-1", "feedback-1", "--yes"}, http.MethodDelete, "/v1/reviews/run-1/feedback", ""},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -498,6 +498,9 @@ func TestReviewFeedbackRequests(t *testing.T) {
 				called++
 				if r.Method != tc.method || r.URL.Path != tc.path {
 					t.Errorf("request %s %s", r.Method, r.URL.Path)
+				}
+				if tc.name == "delete" && r.URL.Query().Get("feedback_id") != "feedback-1" {
+					t.Errorf("missing feedback_id: %s", r.URL.RawQuery)
 				}
 				if r.Header.Get("Authorization") != "Bearer test-token" {
 					t.Error("missing authentication")
@@ -556,5 +559,43 @@ func TestReportFeedbackCreateGeneratesRetryKey(t *testing.T) {
 	stderr.Reset()
 	if exit := Main([]string{"report", "feedback", "create", "report-1", "--id", "chosen", "--content", "Correction"}, "test", strings.NewReader(""), &stdout, &stderr); exit == 0 {
 		t.Fatal("--id should not be accepted")
+	}
+}
+
+func TestMutationNetworkFailureIncludesRetryKey(t *testing.T) {
+	for _, args := range [][]string{
+		{"report", "feedback", "create", "report-1", "--content", "Correction"},
+		{"case", "start", "--title", "Example"},
+	} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			requestKeys := make(chan string, 1)
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				var body map[string]any
+				if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+					t.Error(err)
+					return
+				}
+				requestKey, _ := body["idempotencyKey"].(string)
+				requestKeys <- requestKey
+				conn, _, err := w.(http.Hijacker).Hijack()
+				if err != nil {
+					t.Error(err)
+					return
+				}
+				_ = conn.Close()
+			}))
+			defer server.Close()
+			t.Setenv("EPISMO_API_URL", server.URL)
+			t.Setenv("EPISMO_TOKEN", "test-token")
+			t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+			var stdout, stderr bytes.Buffer
+			if exit := Main(args, "test", strings.NewReader(""), &stdout, &stderr); exit == 0 {
+				t.Fatal("expected network error")
+			}
+			requestKey := <-requestKeys
+			if !uuidPattern.MatchString(requestKey) || !strings.Contains(stderr.String(), requestKey) {
+				t.Fatalf("key %q missing from error %s", requestKey, stderr.String())
+			}
+		})
 	}
 }

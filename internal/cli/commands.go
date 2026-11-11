@@ -51,7 +51,7 @@ func enrichCommands(commands []*command) []*command {
 		"case source get":          {"epismo case source get CASE_ID SOURCE_ID"},
 		"report feedback create":   {"epismo report feedback create REPORT_ID --content 'Evidence is missing'"},
 		"report feedback list":     {"epismo report feedback list REPORT_ID"},
-		"report feedback delete":   {"epismo report feedback delete FEEDBACK_UUID"},
+		"report feedback delete":   {"epismo report feedback delete REPORT_ID FEEDBACK_UUID"},
 		"report case get":          {"epismo report case get CASE_ID", "epismo report case get CASE_ID --report-id REPORT_ID"},
 		"report case list":         {"epismo report case list CASE_ID --page-size 20"},
 		"report case generate":     {"epismo report case generate CASE_ID"},
