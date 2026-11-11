@@ -487,9 +487,9 @@ func TestReviewFeedbackRequests(t *testing.T) {
 		args               []string
 		method, path, body string
 	}{
-		{"create", []string{"review", "feedback", "create", "run-1", "--id", "feedback-1", "--content", "Missing evidence", "--verification-id", "verification-1"}, http.MethodPost, "/v1/reviews/run-1/feedback", `{"content":"Missing evidence","id":"feedback-1","verification_id":"verification-1"}`},
-		{"list", []string{"review", "feedback", "list", "run-1"}, http.MethodGet, "/v1/reviews/run-1/feedback", ""},
-		{"delete", []string{"review", "feedback", "delete", "feedback-1", "--yes"}, http.MethodDelete, "/v1/review-feedback/feedback-1", ""},
+		{"create", []string{"report", "feedback", "create", "run-1", "--id", "feedback-1", "--content", "Missing evidence", "--verification-id", "verification-1"}, http.MethodPost, "/v1/reviews/run-1/feedback", `{"content":"Missing evidence","id":"feedback-1","verification_id":"verification-1"}`},
+		{"list", []string{"report", "feedback", "list", "run-1"}, http.MethodGet, "/v1/reviews/run-1/feedback", ""},
+		{"delete", []string{"report", "feedback", "delete", "feedback-1", "--yes"}, http.MethodDelete, "/v1/review-feedback/feedback-1", ""},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
