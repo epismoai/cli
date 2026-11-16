@@ -487,9 +487,9 @@ func TestReviewFeedbackRequests(t *testing.T) {
 		args               []string
 		method, path, body string
 	}{
-		{"create", []string{"report", "feedback", "create", "run-1", "--idempotency-key", "11111111-1111-4111-8111-111111111111", "--content", "Missing evidence", "--verification-id", "verification-1"}, http.MethodPost, "/v1/reviews/run-1/feedback", `{"content":"Missing evidence","idempotencyKey":"11111111-1111-4111-8111-111111111111","verification_id":"verification-1"}`},
-		{"list", []string{"report", "feedback", "list", "run-1"}, http.MethodGet, "/v1/reviews/run-1/feedback", ""},
-		{"delete", []string{"report", "feedback", "delete", "run-1", "feedback-1", "--yes"}, http.MethodDelete, "/v1/reviews/run-1/feedback/feedback-1", ""},
+		{"create", []string{"report", "feedback", "create", "report-1", "--idempotency-key", "11111111-1111-4111-8111-111111111111", "--content", "Missing evidence", "--verification-id", "verification-1"}, http.MethodPost, "/v1/reports/report-1/feedback", `{"content":"Missing evidence","idempotencyKey":"11111111-1111-4111-8111-111111111111","verificationId":"verification-1"}`},
+		{"list", []string{"report", "feedback", "list", "report-1"}, http.MethodGet, "/v1/reports/report-1/feedback", ""},
+		{"delete", []string{"report", "feedback", "delete", "report-1", "feedback-1", "--yes"}, http.MethodDelete, "/v1/reports/report-1/feedback/feedback-1", ""},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -595,5 +595,28 @@ func TestMutationNetworkFailureIncludesRetryKey(t *testing.T) {
 				t.Fatalf("key %q missing from error %s", requestKey, stderr.String())
 			}
 		})
+	}
+}
+
+func TestReportCancelRequest(t *testing.T) {
+	var method, path string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		method, path = r.Method, r.URL.Path
+		_, _ = io.WriteString(w, `{"job":{"id":"job-1","status":"cancelled","errorCode":"cancelled"}}`)
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_TOKEN", "test-token")
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+
+	var stdout, stderr bytes.Buffer
+	if exit := Main([]string{"report", "cancel", "job-1"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+		t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
+	}
+	if method != http.MethodPost || path != "/v1/reports/jobs/job-1/cancel" {
+		t.Fatalf("got %s %s", method, path)
+	}
+	if !strings.Contains(stdout.String(), `"cancelled"`) {
+		t.Fatalf("stdout = %s", stdout.String())
 	}
 }
