@@ -5,6 +5,7 @@ import "net/http"
 func reportCommands() []*command {
 	remove := apiOperation("report delete", "delete a Case, Personal, or Team report by report ID; existing decisions and created work remain", []string{"report-id"}, http.MethodDelete, func(i invocation) string { return "/v1/reports/" + escaped(i.positional(0)) }, requestQuery, false)
 	remove.Safety.Confirmation = true
+	cancel := apiOperation("report cancel", "cancel a queued or running Case, Personal, or Team report generation job by job ID", []string{"job-id"}, http.MethodPost, func(i invocation) string { return "/v1/reports/jobs/" + escaped(i.positional(0)) + "/cancel" }, requestNone, false)
 	caseEndpoint := func(i invocation) string { return "/v1/cases/" + escaped(i.positional(0)) }
 	reportEndpoint := func(i invocation) string { return caseEndpoint(i) + "/report" }
 	actionsEndpoint := func(i invocation) string { return reportEndpoint(i) + "/actions" }
@@ -32,17 +33,17 @@ func reportCommands() []*command {
 	teamList := apiOperation("report team list", "list team report summaries, newest first; deleted entries retain deleted_at with erased content; requires current team membership in the active workspace", []string{"team-id"}, http.MethodGet, func(i invocation) string { return teamEndpoint(i) + "/history" }, requestQuery, false, pagingOptions()...)
 	teamAct := apiOperation("report team act", "confirm a saved team proposal to create work, or dismiss it; requires current team membership and live destination permissions. Handling is shared. New cases and playbooks retain restricted creator access", []string{"report-id"}, http.MethodPost, func(i invocation) string { return "/v1/reports/" + escaped(i.positional(0)) + "/actions" }, requestBody, false,
 		requiredOption(str("--proposal-id", "proposalId", "proposal UUID within the report")), requiredOption(choice("--action", "action", "action to take", "create", "dismiss")), str("--feedback", "feedback", "optional dismissal feedback"))
-	feedbackEndpoint := func(i invocation) string { return "/v1/reviews/" + escaped(i.positional(0)) + "/feedback" }
+	feedbackEndpoint := func(i invocation) string { return "/v1/reports/" + escaped(i.positional(0)) + "/feedback" }
 	feedbackCreate := apiOperation("report feedback create", "add feedback to a saved report; reuse --idempotency-key when retrying", []string{"report-id"}, http.MethodPost, feedbackEndpoint, requestBody, true,
 		requiredOption(str("--content", "content", "feedback text")),
-		str("--verification-id", "verification_id", "optional verification UUID in this report"))
+		str("--verification-id", "verificationId", "optional verification UUID in this report"))
 	feedbackList := apiOperation("report feedback list", "list feedback on a saved report", []string{"report-id"}, http.MethodGet, feedbackEndpoint, requestQuery, false)
 	feedbackDelete := apiOperation("report feedback delete", "delete a feedback comment from a saved report", []string{"report-id", "feedback-id"}, http.MethodDelete, func(i invocation) string {
-		return "/v1/reviews/" + escaped(i.positional(0)) + "/feedback/" + escaped(i.positional(1))
+		return "/v1/reports/" + escaped(i.positional(0)) + "/feedback/" + escaped(i.positional(1))
 	}, requestNone, false)
 	return []*command{
 		feedbackCreate, feedbackList, feedbackDelete,
-		remove,
+		remove, cancel,
 		get, commandAlias(get, "case report get"),
 		list, commandAlias(list, "case report list"),
 		generate, commandAlias(generate, "case report generate"),
