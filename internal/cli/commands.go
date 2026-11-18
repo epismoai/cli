@@ -12,7 +12,7 @@ func buildCommands() []*command {
 	commands := []*command{
 		loginCommand(), logoutCommand(), whoamiCommand(), updateCommand(),
 		workspaceListCommand(), workspaceCurrentCommand(), workspaceUseCommand(), workspaceClearCommand(), workspaceCreateCommand(), workspaceCheckoutCommand(), workspaceUpdateCommand(), workspaceMemberListCommand(), workspaceMemberUpsertCommand(), workspaceMemberInviteCommand(), workspaceMemberDeleteCommand(), workspaceMemberHandoverCommand(), workspaceInvitationRevokeCommand(),
-		teamListCommand(), teamCreateCommand(), teamUpdateCommand(), teamMemberListCommand(), teamMemberAddCommand(), teamMemberDeleteCommand(),
+		teamListCommand(), teamCreateCommand(), teamUpdateCommand(), teamMemberListCommand(), teamMemberAddCommand(), teamMemberUpdateCommand(), teamMemberDeleteCommand(),
 		creditBalanceCommand(), creditCheckoutCommand(), tokenCreateCommand(), tokenListCommand(), tokenRevokeCommand(),
 	}
 	commands = append(commands, sharedTeamCommands()...)
@@ -442,10 +442,10 @@ func teamListCommand() *command {
 	return apiOperation("team list", "list teams visible in the selected workspace", nil, http.MethodGet, staticEndpoint("/v1/teams"), requestNone, false)
 }
 func teamCreateCommand() *command {
-	return apiOperation("team create", "create a team in the selected workspace", nil, http.MethodPost, staticEndpoint("/v1/teams"), requestBody, false, str("--name", "name", "team name"), str("--description", "description", "team description"))
+	return apiOperation("team create", "create a team in the selected workspace", nil, http.MethodPost, staticEndpoint("/v1/teams"), requestBody, false, str("--name", "name", "team name"), str("--description", "description", "team description"), boolOption("--universal", "universal", "automatically include all current and future workspace members (owner/admin only)"))
 }
 func teamUpdateCommand() *command {
-	return apiOperation("team update", "update a team you can access", []string{"team-id"}, http.MethodPatch, func(i invocation) string { return "/v1/teams/" + escaped(i.positional(0)) }, requestBody, false, str("--name", "name", "updated team name"), str("--description", "description", "updated team description"))
+	return apiOperation("team update", "update a team you can access", []string{"team-id"}, http.MethodPatch, func(i invocation) string { return "/v1/teams/" + escaped(i.positional(0)) }, requestBody, false, str("--name", "name", "updated team name"), str("--description", "description", "updated team description"), boolOption("--universal", "universal", "automatically include all current and future workspace members (owner/admin only)"))
 }
 
 func teamMemberListCommand() *command {
@@ -473,6 +473,39 @@ func teamMemberListCommand() *command {
 
 func teamMemberAddCommand() *command    { return teamMemberMutation("add", http.MethodPut) }
 func teamMemberDeleteCommand() *command { return teamMemberMutation("delete", http.MethodDelete) }
+func teamMemberUpdateCommand() *command {
+	return &command{
+		Path:    "team member update",
+		Summary: "update a team member's responsibility",
+		Args:    []string{"user-id"},
+		Options: []optionSpec{
+			requiredOption(str("--team-id", "teamId", "team id")),
+			requiredOption(str("--responsibility", "responsibility", "member responsibility within the team (pass empty string to clear)")),
+			workspaceIDOption(),
+		},
+		Safety: commandSafety{DryRun: true},
+		Run: func(a *app, inv invocation) (any, error) {
+			ctx, err := a.context()
+			if err != nil {
+				return nil, err
+			}
+			workspaceID := strings.TrimSpace(inv.text("workspaceId"))
+			if workspaceID == "" {
+				workspaceID = ctx.WorkspaceID
+			}
+			if workspaceID == "" && strings.TrimSpace(os.Getenv("EPISMO_TOKEN")) == "" {
+				return nil, &Error{Code: "INVALID_INPUT", Message: "No workspace selected.", Hint: "Run `epismo workspace use <workspace-id>` first, or pass --workspace-id.", ExitCode: 1}
+			}
+			userID := strings.TrimSpace(inv.positional(0))
+			if userID == "" {
+				return nil, &Error{Code: "INVALID_INPUT", Message: "<user-id> is required.", ExitCode: 1}
+			}
+			path := "/v1/teams/" + escaped(inv.text("teamId")) + "/members/" + escaped(userID)
+			body := map[string]any{"responsibility": inv.text("responsibility")}
+			return a.client.request(http.MethodPatch, withWorkspace(path, workspaceID), ctx.Auth.AccessToken, body)
+		},
+	}
+}
 func teamMemberMutation(name, method string) *command {
 	return &command{Path: "team member " + name, Summary: name + " member(s) in a team", Args: []string{"user-ids"}, Options: []optionSpec{requiredOption(str("--team-id", "teamId", "team id")), workspaceIDOption()}, Safety: commandSafety{DryRun: true}, Run: func(a *app, inv invocation) (any, error) {
 		users, err := stringArray(inv.positional(0), "<user-ids>")

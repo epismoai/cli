@@ -96,7 +96,7 @@ func TestEveryCommandHasExpectedDryRunSupport(t *testing.T) {
 		"workspace use": true, "workspace clear": true, "workspace create": true, "workspace checkout": true, "workspace update": true,
 		"workspace member upsert": true, "workspace member invite": true, "workspace member delete": true, "workspace member handover": true, "workspace invitation revoke": true,
 		"team invite": true, "team invitation revoke": true, "team invitation accept": true, "team disconnect": true,
-		"team create": true, "team update": true, "team member add": true, "team member delete": true,
+		"team create": true, "team update": true, "team member add": true, "team member update": true, "team member delete": true,
 		"credit checkout": true, "token create": true, "token revoke": true,
 		"playbook copy": true, "playbook create": true, "playbook version archive": true, "playbook version publish": true,
 		"playbook draft save": true, "playbook draft discard": true, "playbook draft publish": true,

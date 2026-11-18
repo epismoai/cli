@@ -83,7 +83,7 @@ func TestCommandSurface(t *testing.T) {
 	expected := strings.Fields(`
 		login logout whoami update completion doctor examples docs
 		workspace/list workspace/current workspace/use workspace/clear workspace/create workspace/checkout workspace/update workspace/member/list workspace/member/upsert workspace/member/invite workspace/member/delete workspace/member/handover workspace/invitation/revoke
-		team/invite team/invitation/list team/invitation/revoke team/invitation/get team/invitation/accept team/disconnect team/list team/create team/update team/member/list team/member/add team/member/delete
+		team/invite team/invitation/list team/invitation/revoke team/invitation/get team/invitation/accept team/disconnect team/list team/create team/update team/member/list team/member/add team/member/update team/member/delete
 		credit/balance credit/checkout token/create token/list token/revoke
 		case/start case/get case/list case/access/get case/access/set case/share case/assign case/update case/handoff/create case/handoff case/handoff/remove case/handoff/delete case/handoff/graph/get case/handoff/graph case/handoff/candidates/list case/handoff/candidate/list case/close case/reopen case/archive case/restore case/delete case/owner/transfer case/owner
 		case/task/create case/task/list case/task/get case/task/update case/task/set/status case/record/append case/record/list case/record/update case/record/delete
