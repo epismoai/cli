@@ -64,6 +64,7 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 		"team update":                  {"patch", "/v1/teams/{teamId}"},
 		"team member list":             {"post", "/v1/teams/members/list"},
 		"team member add":              {"put", "/v1/teams/{teamId}/members"},
+		"team member update":           {"patch", "/v1/teams/{teamId}/members/{userId}"},
 		"team member delete":           {"delete", "/v1/teams/{teamId}/members"},
 		"credit balance":               {"get", "/v1/credits"},
 		"credit checkout":              {"post", "/v1/credits"},

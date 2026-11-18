@@ -3811,6 +3811,158 @@
       }
     },
     "/v1/teams/{teamId}/members/{userId}": {
+      "patch": {
+        "operationId": "patchV1TeamsTeamIdMembersUserId",
+        "tags": [
+          "teams"
+        ],
+        "summary": "PATCH /v1/teams/{teamId}/members/{userId}",
+        "parameters": [
+          {
+            "name": "teamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTeamMemberRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateTeamMemberResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "operationId": "deleteV1TeamsTeamIdMembersUserId",
         "tags": [
@@ -21018,6 +21170,10 @@
             "default": "",
             "type": "string",
             "maxLength": 65535
+          },
+          "universal": {
+            "default": false,
+            "type": "boolean"
           }
         },
         "required": [
@@ -21036,6 +21192,9 @@
           "description": {
             "type": "string",
             "maxLength": 65535
+          },
+          "universal": {
+            "type": "boolean"
           }
         },
         "required": [],
@@ -21075,6 +21234,19 @@
         },
         "required": [
           "userIds"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateTeamMemberRequest": {
+        "type": "object",
+        "properties": {
+          "responsibility": {
+            "type": "string",
+            "maxLength": 65535
+          }
+        },
+        "required": [
+          "responsibility"
         ],
         "additionalProperties": false
       },
@@ -23334,6 +23506,9 @@
           },
           "description": {
             "type": "string"
+          },
+          "universal": {
+            "type": "boolean"
           }
         },
         "additionalProperties": true
@@ -23363,6 +23538,33 @@
             }
           },
           "nextCursor": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateTeamMemberResponse": {
+        "type": "object",
+        "required": [
+          "updated",
+          "teamId",
+          "userId",
+          "responsibility"
+        ],
+        "properties": {
+          "updated": {
+            "type": "boolean",
+            "const": true
+          },
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "responsibility": {
             "type": "string"
           }
         },
@@ -24721,6 +24923,57 @@
                 },
                 "username": {
                   "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "teams": {
+            "type": "array",
+            "description": "Linked teams visible to collaborators, with each team's goal/context and member responsibilities.",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "members"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "members": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "username"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "username": {
+                        "type": "string"
+                      },
+                      "workspaceHandle": {
+                        "type": "string"
+                      },
+                      "responsibility": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
                 }
               },
               "additionalProperties": false
