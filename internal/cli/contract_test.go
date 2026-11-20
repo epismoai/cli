@@ -41,6 +41,8 @@ func TestOpenAPIContractMetadata(t *testing.T) {
 func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 	contract := readOpenAPIContract(t)
 	operations := map[string]commandOperation{
+		"team owner get":               {"get", "/v1/teams/{teamId}/owner"},
+		"memory list":                  {"get", "/v1/memories"},
 		"workspace list":               {"get", "/v1/workspaces"},
 		"workspace use":                {"get", "/v1/workspaces"},
 		"workspace create":             {"post", "/v1/workspaces"},
@@ -86,8 +88,6 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 		"playbook draft publish":       {"post", "/v1/playbooks/{playbookId}/draft/publish"},
 		"playbook access get":          {"get", "/v1/playbooks/{playbookId}/access"},
 		"playbook access set":          {"put", "/v1/playbooks/{playbookId}/access"},
-		"playbook owner transfer":      {"patch", "/v1/playbooks/{playbookId}/owner"},
-		"playbook owner":               {"patch", "/v1/playbooks/{playbookId}/owner"},
 		"playbook archive":             {"delete", "/v1/playbooks/{playbookId}"},
 		"playbook share":               {"post", "/v1/playbooks/{playbookId}/share"},
 		"playbook alias set":           {"put", "/v1/aliases"},
@@ -171,8 +171,6 @@ func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 	operations["case restore"] = commandOperation{"post", "/v1/cases/{caseId}/restore"}
 	operations["case delete"] = commandOperation{"delete", "/v1/cases/{caseId}"}
 	operations["playbook assign"] = commandOperation{"patch", "/v1/playbooks/{playbookId}/assignee"}
-	operations["case owner transfer"] = commandOperation{"patch", "/v1/cases/{caseId}/owner"}
-	operations["case owner"] = commandOperation{"patch", "/v1/cases/{caseId}/owner"}
 	localOrAuth := map[string]bool{
 		"login": true, "logout": true, "whoami": true, "update": true, "completion": true, "doctor": true, "examples": true, "docs": true,
 		"workspace current": true, "workspace clear": true,

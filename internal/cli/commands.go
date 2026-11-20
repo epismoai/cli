@@ -15,10 +15,23 @@ func buildCommands() []*command {
 		teamListCommand(), teamCreateCommand(), teamUpdateCommand(), teamMemberListCommand(), teamMemberAddCommand(), teamMemberUpdateCommand(), teamMemberDeleteCommand(),
 		creditBalanceCommand(), creditCheckoutCommand(), tokenCreateCommand(), tokenListCommand(), tokenRevokeCommand(),
 	}
+	commands = append(commands,
+		apiOperation("team owner get", "read the managing account of a Team Space", []string{"team-id"}, http.MethodGet, func(i invocation) string {
+			return "/v1/teams/" + escaped(i.positional(0)) + "/owner"
+		}, requestQuery, false),
+	)
 	commands = append(commands, sharedTeamCommands()...)
 	commands = append(commands, caseCommands()...)
 	commands = append(commands, caseSourceCommands()...)
 	commands = append(commands, reportCommands()...)
+	memoryPaging := pagingOptions()
+	memoryPaging[0].Field = "page_size"
+	commands = append(commands, apiOperation("memory list", "list memories in your active personal or workspace space, or in a team you belong to", nil, http.MethodGet, func(invocation) string {
+		return "/v1/memories"
+	}, requestQuery, false, append(memoryPaging,
+		str("--space-id", "space_id", "team ID in the active workspace"),
+		str("--query", "query", "search memory content"),
+	)...))
 	commands = append(commands, caseHandoffCommands()...)
 	commands = append(commands, caseTaskCommands()...)
 	commands = append(commands, caseRecordCommands()...)
@@ -40,7 +53,6 @@ func enrichCommands(commands []*command) []*command {
 		"report team list":         {"epismo -w acme report team list TEAM_ID --page-size 20"},
 		"playbook search":          {"epismo playbook search --query onboarding", "epismo -w acme playbook search onboarding"},
 		"playbook create":          {`epismo playbook create --definition '{"title":"Onboarding","steps":[]}'`, "epismo playbook create --request @playbook.json"},
-		"playbook owner transfer":  {"epismo playbook owner transfer PLAYBOOK_ID --owner-id WORKSPACE_ID"},
 		"case start":               {"epismo case start --title 'Team invitation design'", "epismo case start --version-id VERSION_ID --title 'Launch review'"},
 		"case update":              {`epismo case update CASE_ID --input '{"customer":"Acme"}' --lock-version 1`, `epismo case update CASE_ID --version-id VERSION_ID --input '{"customer":"Acme"}' --lock-version 1`},
 		"case list":                {"epismo case list --assigned-to me --status open"},
@@ -445,7 +457,7 @@ func teamCreateCommand() *command {
 	return apiOperation("team create", "create a team in the selected workspace", nil, http.MethodPost, staticEndpoint("/v1/teams"), requestBody, false, str("--name", "name", "team name"), str("--description", "description", "team description"), boolOption("--universal", "universal", "automatically include all current and future workspace members (owner/admin only)"))
 }
 func teamUpdateCommand() *command {
-	return apiOperation("team update", "update a team you can access", []string{"team-id"}, http.MethodPatch, func(i invocation) string { return "/v1/teams/" + escaped(i.positional(0)) }, requestBody, false, str("--name", "name", "updated team name"), str("--description", "description", "updated team description"), boolOption("--universal", "universal", "automatically include all current and future workspace members (owner/admin only)"))
+	return apiOperation("team update", "update a team you can access", []string{"team-id"}, http.MethodPatch, func(i invocation) string { return "/v1/teams/" + escaped(i.positional(0)) }, requestBody, false, str("--name", "name", "updated team name"), str("--description", "description", "updated team description"), str("--managing-workspace-id", "managingWorkspaceId", "designate the active workspace for a Team without a managing workspace"), boolOption("--universal", "universal", "automatically include all current and future workspace members (owner/admin only)"))
 }
 
 func teamMemberListCommand() *command {

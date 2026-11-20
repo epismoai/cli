@@ -36,6 +36,11 @@ epismo case get CASE_ID
 
 Public cases and playbooks can be browsed before login. Private work and writes require authentication.
 
+In a workspace, use `--team-id TEAM_ID` to create a case or playbook in a
+Team Space, or `--private` for your membership Space. To move an existing item
+within the workspace, use `case access set` or `playbook access set` with
+`--scope-id` and the full additional grant map.
+
 ## Find what you need
 
 ```sh

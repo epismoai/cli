@@ -3384,6 +3384,142 @@
         }
       }
     },
+    "/v1/teams/{teamId}/owner": {
+      "get": {
+        "operationId": "getV1TeamsTeamIdOwner",
+        "tags": [
+          "teams"
+        ],
+        "summary": "GET /v1/teams/{teamId}/owner",
+        "parameters": [
+          {
+            "name": "teamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamSpace"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/teams/members/list": {
       "post": {
         "operationId": "postV1TeamsMembersList",
@@ -6379,6 +6515,287 @@
         }
       }
     },
+    "/v1/cases/{caseId}/access": {
+      "put": {
+        "operationId": "putV1CasesCaseIdAccess",
+        "tags": [
+          "cases"
+        ],
+        "summary": "PUT /v1/cases/{caseId}/access",
+        "description": "Replaces additional grants. The owning Space supplies edit access. To move the Case within its owning workspace, set scopeId to an eligible Team Space or to your current membership Space when moving from a Team.",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCaseAccessRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseAccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "getV1CasesCaseIdAccess",
+        "tags": [
+          "cases"
+        ],
+        "summary": "GET /v1/cases/{caseId}/access",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseAccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Structured API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/cases/{caseId}/sources": {
       "post": {
         "operationId": "postV1CasesCaseIdSources",
@@ -7306,286 +7723,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/JsonObject"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "402": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/cases/{caseId}/access": {
-      "get": {
-        "operationId": "getV1CasesCaseIdAccess",
-        "tags": [
-          "cases"
-        ],
-        "summary": "GET /v1/cases/{caseId}/access",
-        "parameters": [
-          {
-            "name": "caseId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "workspaceId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "security": [
-          {
-            "OAuth2": [
-              "read"
-            ]
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CaseAccessResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "402": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "operationId": "putV1CasesCaseIdAccess",
-        "tags": [
-          "cases"
-        ],
-        "summary": "PUT /v1/cases/{caseId}/access",
-        "parameters": [
-          {
-            "name": "caseId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "workspaceId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "security": [
-          {
-            "OAuth2": [
-              "write"
-            ]
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetCaseAccessRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CaseAccessResponse"
                 }
               }
             }
@@ -14671,7 +14808,7 @@
           "playbooks"
         ],
         "summary": "Set playbook access",
-        "description": "Replaces access: { visibility, grants } atomically. Grant keys accept user/team UUIDs or registered user emails; emails resolve to UUIDs before saving. Unresolved emails or conflicting roles for the same user reject the entire write. Responses use UUID keys. Requires editing access. Updates must retain at least one explicit user/team editor; empty or viewer-only grants are rejected. Owners retain full access. Assignment never grants access. Public permits published reads only.",
+        "description": "Replaces additional grants. The owning Space supplies edit access. To move the Playbook within its owning workspace, set scopeId to an eligible Team Space or to your current membership Space when moving from a Team.",
         "parameters": [
           {
             "name": "playbookId",
@@ -15282,300 +15419,6 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AssignPlaybookRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PlaybookResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "402": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/cases/{caseId}/owner": {
-      "patch": {
-        "operationId": "patchV1CasesCaseIdOwner",
-        "tags": [
-          "cases"
-        ],
-        "summary": "Transfer case ownership",
-        "description": "Transfers the owning and billing account between eligible personal and workspace homes. Requires ownership, expectedLockVersion, and idempotencyKey. Preserves assignment and sharing, and clears derived review reports. Workspace-to-workspace and user-to-user moves are rejected.",
-        "parameters": [
-          {
-            "name": "caseId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "workspaceId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "security": [
-          {
-            "OAuth2": [
-              "write"
-            ]
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TransferCaseOwnerRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CaseResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "402": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Structured API error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/playbooks/{playbookId}/owner": {
-      "patch": {
-        "operationId": "patchV1PlaybooksPlaybookIdOwner",
-        "tags": [
-          "playbooks"
-        ],
-        "summary": "Set playbook owner",
-        "description": "Any member may move a personally owned private playbook into the workspace this request is connected to. A workspace-owned playbook can only move to that workspace's owner or the playbook creator. Workspace-to-workspace and user-to-user moves are rejected.",
-        "parameters": [
-          {
-            "name": "playbookId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "workspaceId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "security": [
-          {
-            "OAuth2": [
-              "write"
-            ]
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TransferPlaybookOwnerRequest"
               }
             }
           }
@@ -18396,7 +18239,7 @@
           "reviews"
         ],
         "summary": "POST /v1/reviews/{runId}/feedback",
-        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. Durable Markdown memory is available only to Review API credentials and standalone namespaces, not app OAuth. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers may search or delete memory but cannot create or edit it directly. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
+        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. OAuth callers can list memory for their personal Space in the active context or for a team they belong to in that workspace. Review keys can list and delete notes in their own namespace. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers can search memory. Manual creation and editing are unavailable. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
         "parameters": [
           {
             "name": "runId",
@@ -18715,7 +18558,7 @@
           "reviews"
         ],
         "summary": "GET /v1/reviews/{runId}/feedback",
-        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. Durable Markdown memory is available only to Review API credentials and standalone namespaces, not app OAuth. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers may search or delete memory but cannot create or edit it directly. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
+        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. OAuth callers can list memory for their personal Space in the active context or for a team they belong to in that workspace. Review keys can list and delete notes in their own namespace. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers can search memory. Manual creation and editing are unavailable. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
         "parameters": [
           {
             "name": "runId",
@@ -19029,7 +18872,7 @@
           "reviews"
         ],
         "summary": "DELETE /v1/reviews/{runId}/feedback/{feedbackId}",
-        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. Durable Markdown memory is available only to Review API credentials and standalone namespaces, not app OAuth. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers may search or delete memory but cannot create or edit it directly. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
+        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. OAuth callers can list memory for their personal Space in the active context or for a team they belong to in that workspace. Review keys can list and delete notes in their own namespace. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers can search memory. Manual creation and editing are unavailable. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
         "parameters": [
           {
             "name": "runId",
@@ -19314,7 +19157,7 @@
           "reviews"
         ],
         "summary": "POST /v1/reports/{reportId}/feedback",
-        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. Durable Markdown memory is available only to Review API credentials and standalone namespaces, not app OAuth. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers may search or delete memory but cannot create or edit it directly. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
+        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. OAuth callers can list memory for their personal Space in the active context or for a team they belong to in that workspace. Review keys can list and delete notes in their own namespace. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers can search memory. Manual creation and editing are unavailable. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
         "parameters": [
           {
             "name": "reportId",
@@ -19633,7 +19476,7 @@
           "reviews"
         ],
         "summary": "GET /v1/reports/{reportId}/feedback",
-        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. Durable Markdown memory is available only to Review API credentials and standalone namespaces, not app OAuth. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers may search or delete memory but cannot create or edit it directly. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
+        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. OAuth callers can list memory for their personal Space in the active context or for a team they belong to in that workspace. Review keys can list and delete notes in their own namespace. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers can search memory. Manual creation and editing are unavailable. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
         "parameters": [
           {
             "name": "reportId",
@@ -19947,7 +19790,7 @@
           "reviews"
         ],
         "summary": "DELETE /v1/reports/{reportId}/feedback/{feedbackId}",
-        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. Durable Markdown memory is available only to Review API credentials and standalone namespaces, not app OAuth. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers may search or delete memory but cannot create or edit it directly. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
+        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. OAuth callers can list memory for their personal Space in the active context or for a team they belong to in that workspace. Review keys can list and delete notes in their own namespace. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers can search memory. Manual creation and editing are unavailable. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
         "parameters": [
           {
             "name": "reportId",
@@ -20232,7 +20075,7 @@
           "reviews"
         ],
         "summary": "GET /v1/memories",
-        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. Durable Markdown memory is available only to Review API credentials and standalone namespaces, not app OAuth. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers may search or delete memory but cannot create or edit it directly. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
+        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. OAuth callers can list memory for their personal Space in the active context or for a team they belong to in that workspace. Review keys can list and delete notes in their own namespace. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers can search memory. Manual creation and editing are unavailable. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
         "parameters": [
           {
             "name": "workspaceId",
@@ -20241,6 +20084,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "space_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "OAuth only. Team ID in the active workspace. Omit for your personal scope."
           },
           {
             "in": "query",
@@ -20305,11 +20157,22 @@
                         "type": "object",
                         "required": [
                           "id",
-                          "namespace_id",
                           "content",
                           "lock_version",
                           "created_at",
                           "updated_at"
+                        ],
+                        "oneOf": [
+                          {
+                            "required": [
+                              "namespace_id"
+                            ]
+                          },
+                          {
+                            "required": [
+                              "space_id"
+                            ]
+                          }
                         ],
                         "additionalProperties": false,
                         "properties": {
@@ -20318,6 +20181,10 @@
                             "format": "uuid"
                           },
                           "namespace_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "space_id": {
                             "type": "string",
                             "format": "uuid"
                           },
@@ -20586,7 +20453,7 @@
           "reviews"
         ],
         "summary": "DELETE /v1/memories/{memoryId}",
-        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. Durable Markdown memory is available only to Review API credentials and standalone namespaces, not app OAuth. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers may search or delete memory but cannot create or edit it directly. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
+        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. OAuth callers can list memory for their personal Space in the active context or for a team they belong to in that workspace. Review keys can list and delete notes in their own namespace. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers can search memory. Manual creation and editing are unavailable. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
         "parameters": [
           {
             "name": "memoryId",
@@ -20616,11 +20483,6 @@
         "security": [
           {
             "ReviewApiKey": []
-          },
-          {
-            "OAuth2": [
-              "write"
-            ]
           }
         ],
         "responses": {
@@ -21068,7 +20930,7 @@
               },
               "grants": {
                 "default": {},
-                "description": "Complete grant map keyed by user/team UUID or registered user email. Emails resolve to user UUIDs before saving. Replaces all explicit grants. Updates must retain at least one editor; creation retains creator editing through direct or Team access. Owners retain full access. Responsibility does not grant access.",
+                "description": "Complete grant map keyed by workspace membership, user, or team UUID or registered user email. Use personal:EMAIL or personal:USER_UUID for an explicit personal guest. Emails resolve before saving. Replaces all explicit grants. The owning Space supplies basic editing access. Store only additional grants. Responsibility does not grant access.",
                 "type": "object",
                 "propertyNames": {
                   "anyOf": [
@@ -21076,6 +20938,12 @@
                       "type": "string",
                       "format": "uuid",
                       "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "string"
                     },
                     {
                       "type": "string",
@@ -21094,6 +20962,11 @@
               }
             },
             "additionalProperties": false
+          },
+          "scopeId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "expectedLockVersion": {
             "type": "integer",
@@ -21195,6 +21068,11 @@
           },
           "universal": {
             "type": "boolean"
+          },
+          "managingWorkspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           }
         },
         "required": [],
@@ -21259,8 +21137,13 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
             "description": "User account you manage, or the workspace this request is connected to. Omit to use the active workspace or personal billing account. Any member may create restricted creator or current-Team sharing in that workspace; other initial sharing requires an owner or admin."
           },
+          "teamId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
           "private": {
-            "description": "Create with restricted visibility and a direct creator edit grant. Does not change the owning account or workspace management rights.",
+            "description": "Create in your private Space with restricted visibility and inherited editor access.",
             "type": "boolean",
             "const": true
           },
@@ -21289,7 +21172,7 @@
               },
               "grants": {
                 "default": {},
-                "description": "Complete grant map keyed by user/team UUID or registered user email. Emails resolve to user UUIDs before saving. Replaces all explicit grants. Updates must retain at least one editor; creation retains creator editing through direct or Team access. Owners retain full access. Responsibility does not grant access.",
+                "description": "Complete grant map keyed by workspace membership, user, or team UUID or registered user email. Use personal:EMAIL or personal:USER_UUID for an explicit personal guest. Emails resolve before saving. Replaces all explicit grants. The owning Space supplies basic editing access. Store only additional grants. Responsibility does not grant access.",
                 "type": "object",
                 "propertyNames": {
                   "anyOf": [
@@ -21297,6 +21180,12 @@
                       "type": "string",
                       "format": "uuid",
                       "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "string"
                     },
                     {
                       "type": "string",
@@ -21894,7 +21783,7 @@
               },
               "grants": {
                 "default": {},
-                "description": "Complete grant map keyed by user/team UUID or registered user email. Emails resolve to user UUIDs before saving. Replaces all explicit grants. Updates must retain at least one editor; creation retains creator editing through direct or Team access. Owners retain full access. Responsibility does not grant access.",
+                "description": "Complete grant map keyed by workspace membership, user, or team UUID or registered user email. Use personal:EMAIL or personal:USER_UUID for an explicit personal guest. Emails resolve before saving. Replaces all explicit grants. The owning Space supplies basic editing access. Store only additional grants. Responsibility does not grant access.",
                 "type": "object",
                 "propertyNames": {
                   "anyOf": [
@@ -21902,6 +21791,12 @@
                       "type": "string",
                       "format": "uuid",
                       "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "string"
                     },
                     {
                       "type": "string",
@@ -21920,6 +21815,11 @@
               }
             },
             "additionalProperties": false
+          },
+          "scopeId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "idempotencyKey": {
             "type": "string",
@@ -21992,51 +21892,6 @@
         },
         "required": [
           "assignedTo",
-          "idempotencyKey"
-        ]
-      },
-      "TransferCaseOwnerRequest": {
-        "type": "object",
-        "properties": {
-          "ownerId": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          },
-          "expectedLockVersion": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "idempotencyKey": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          }
-        },
-        "required": [
-          "ownerId",
-          "expectedLockVersion",
-          "idempotencyKey"
-        ]
-      },
-      "TransferPlaybookOwnerRequest": {
-        "type": "object",
-        "properties": {
-          "ownerId": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "description": "User or workspace account that should own the playbook. Any member may move a personally owned private playbook into the workspace this request is connected to. A workspace-owned playbook can only move to that workspace's owner or the playbook creator."
-          },
-          "idempotencyKey": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          }
-        },
-        "required": [
-          "ownerId",
           "idempotencyKey"
         ]
       },
@@ -22123,8 +21978,13 @@
             },
             "additionalProperties": {}
           },
+          "teamId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
           "private": {
-            "description": "Create with restricted visibility and a direct creator edit grant. Does not change the owning account or workspace management rights.",
+            "description": "Create in your private Space with restricted visibility and inherited editor access.",
             "type": "boolean",
             "const": true
           },
@@ -22153,7 +22013,7 @@
               },
               "grants": {
                 "default": {},
-                "description": "Complete grant map keyed by user/team UUID or registered user email. Emails resolve to user UUIDs before saving. Replaces all explicit grants. Updates must retain at least one editor; creation retains creator editing through direct or Team access. Owners retain full access. Responsibility does not grant access.",
+                "description": "Complete grant map keyed by workspace membership, user, or team UUID or registered user email. Use personal:EMAIL or personal:USER_UUID for an explicit personal guest. Emails resolve before saving. Replaces all explicit grants. The owning Space supplies basic editing access. Store only additional grants. Responsibility does not grant access.",
                 "type": "object",
                 "propertyNames": {
                   "anyOf": [
@@ -22161,6 +22021,12 @@
                       "type": "string",
                       "format": "uuid",
                       "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "string"
                     },
                     {
                       "type": "string",
@@ -22294,8 +22160,13 @@
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
+          "teamId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
           "private": {
-            "description": "Create with restricted visibility and a direct creator edit grant. Does not change the owning account or workspace management rights.",
+            "description": "Create in your private Space with restricted visibility and inherited editor access.",
             "type": "boolean",
             "const": true
           },
@@ -22324,7 +22195,7 @@
               },
               "grants": {
                 "default": {},
-                "description": "Complete grant map keyed by user/team UUID or registered user email. Emails resolve to user UUIDs before saving. Replaces all explicit grants. Updates must retain at least one editor; creation retains creator editing through direct or Team access. Owners retain full access. Responsibility does not grant access.",
+                "description": "Complete grant map keyed by workspace membership, user, or team UUID or registered user email. Use personal:EMAIL or personal:USER_UUID for an explicit personal guest. Emails resolve before saving. Replaces all explicit grants. The owning Space supplies basic editing access. Store only additional grants. Responsibility does not grant access.",
                 "type": "object",
                 "propertyNames": {
                   "anyOf": [
@@ -22332,6 +22203,12 @@
                       "type": "string",
                       "format": "uuid",
                       "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "string"
                     },
                     {
                       "type": "string",
@@ -23379,6 +23256,10 @@
             "type": "string",
             "format": "uuid"
           },
+          "membershipId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "username": {
             "type": "string"
           },
@@ -23491,6 +23372,24 @@
         },
         "additionalProperties": false
       },
+      "TeamSpace": {
+        "type": "object",
+        "required": [
+          "teamId",
+          "ownerId"
+        ],
+        "properties": {
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ownerId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
       "Team": {
         "type": "object",
         "required": [
@@ -23498,6 +23397,10 @@
         ],
         "properties": {
           "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "managingWorkspaceId": {
             "type": "string",
             "format": "uuid"
           },
@@ -23619,6 +23522,10 @@
         ],
         "properties": {
           "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scopeId": {
             "type": "string",
             "format": "uuid"
           },
@@ -23752,9 +23659,16 @@
             "default": {},
             "type": "object",
             "propertyNames": {
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "additionalProperties": {
               "type": "string",
@@ -24090,6 +24004,10 @@
             "type": "string",
             "format": "uuid"
           },
+          "scopeId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "access": {
             "$ref": "#/components/schemas/Access"
           },
@@ -24294,12 +24212,12 @@
           },
           "subjectType": {
             "type": "string",
-            "description": "Report subject: case, user or team."
+            "description": "Report subject: case, personal or team."
           },
           "subjectId": {
             "type": "string",
             "format": "uuid",
-            "description": "Evaluated Case, User or Team UUID."
+            "description": "Evaluated Case, Personal Space, or Team UUID."
           },
           "health": {
             "type": "string",
@@ -24852,7 +24770,8 @@
         "required": [
           "tasks",
           "records",
-          "recordsScope"
+          "recordsScope",
+          "canViewReport"
         ],
         "properties": {
           "case": {
@@ -24891,6 +24810,9 @@
           "recordsNextCursor": {
             "type": "string"
           },
+          "canViewReport": {
+            "type": "boolean"
+          },
           "handoffGraph": {
             "$ref": "#/components/schemas/CaseHandoffGraph"
           },
@@ -24902,11 +24824,11 @@
           },
           "report": {
             "$ref": "#/components/schemas/Report",
-            "description": "Latest saved case report; work readers only. History is fetched separately."
+            "description": "Latest saved Case report for primary members of the Case Space. History is fetched separately."
           },
           "reportJob": {
             "$ref": "#/components/schemas/ReportJob",
-            "description": "Latest case report generation job; work readers only."
+            "description": "Latest Case report generation job for primary members of the Case Space."
           },
           "sharedUsers": {
             "type": "array",
