@@ -31,7 +31,7 @@ func TestOwnershipAndLifecycleRequests(t *testing.T) {
 		{"copy default home", "POST", "/v1/playbooks/source/copies", []string{"playbook", "copy", "source", "--source-version-id", "version"}, "ownerId", nil},
 		{"case explicit home", "POST", "/v1/cases", []string{"case", "start", "--owner-id", "home", "--title", "Work"}, "ownerId", "home"},
 		{"playbook assignment", "PATCH", "/v1/playbooks/guide/assignee", []string{"playbook", "assign", "guide", "--assigned-to", "user"}, "assignedTo", "user"},
-		{"case ownership", "PATCH", "/v1/cases/case/owner", []string{"case", "owner", "transfer", "case", "--owner-id", "home", "--lock-version", "7"}, "expectedLockVersion", float64(7)},
+		{"case scope move", "PUT", "/v1/cases/case/access", []string{"case", "access", "set", "case", "--access", `{"visibility":"restricted","grants":{}}`, "--scope-id", "team-1", "--lock-version", "7"}, "scopeId", "team-1"},
 
 		{"playbook restore", "POST", "/v1/playbooks/guide/restore", []string{"playbook", "restore", "guide"}, "", nil},
 		{"case archive", "POST", "/v1/cases/case/archive", []string{"case", "archive", "case", "--lock-version", "3", "--yes"}, "expectedLockVersion", float64(3)},

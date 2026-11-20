@@ -197,7 +197,6 @@ func TestCreationSharingFlags(t *testing.T) {
 
 func TestDiscardedSharingFlagsAreNotAdvertisedOrAccepted(t *testing.T) {
 	for _, args := range [][]string{
-		{"case", "start", "--team-id", "team"},
 		{"case", "access", "set", "case", "--team-ids", "team", "--lock-version", "1"},
 		{"case", "access", "set", "case", "--keep-direct-access", "--lock-version", "1"},
 		{"playbook", "access", "set", "book", "--team-id", "team"},

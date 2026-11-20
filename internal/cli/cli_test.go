@@ -81,18 +81,18 @@ func TestRefreshRaceAdoptsCredentialsWrittenByAnotherProcess(t *testing.T) {
 
 func TestCommandSurface(t *testing.T) {
 	expected := strings.Fields(`
-		login logout whoami update completion doctor examples docs
+		login logout whoami update completion doctor examples docs memory/list
 		workspace/list workspace/current workspace/use workspace/clear workspace/create workspace/checkout workspace/update workspace/member/list workspace/member/upsert workspace/member/invite workspace/member/delete workspace/member/handover workspace/invitation/revoke
-		team/invite team/invitation/list team/invitation/revoke team/invitation/get team/invitation/accept team/disconnect team/list team/create team/update team/member/list team/member/add team/member/update team/member/delete
+		team/owner/get team/invite team/invitation/list team/invitation/revoke team/invitation/get team/invitation/accept team/disconnect team/list team/create team/update team/member/list team/member/add team/member/update team/member/delete
 		credit/balance credit/checkout token/create token/list token/revoke
-		case/start case/get case/list case/access/get case/access/set case/share case/assign case/update case/handoff/create case/handoff case/handoff/remove case/handoff/delete case/handoff/graph/get case/handoff/graph case/handoff/candidates/list case/handoff/candidate/list case/close case/reopen case/archive case/restore case/delete case/owner/transfer case/owner
+		case/start case/get case/list case/access/get case/access/set case/share case/assign case/update case/handoff/create case/handoff case/handoff/remove case/handoff/delete case/handoff/graph/get case/handoff/graph case/handoff/candidates/list case/handoff/candidate/list case/close case/reopen case/archive case/restore case/delete
 		case/task/create case/task/list case/task/get case/task/update case/task/set/status case/record/append case/record/list case/record/update case/record/delete
 		case/report/get case/report/list case/report/generate case/report/act report/feedback/create report/feedback/list report/feedback/delete
 		report/delete report/cancel report/case/get report/case/list report/case/generate report/case/act report/personal/generate report/personal/get report/personal/list report/personal/act report/team/generate report/team/get report/team/list report/team/act
 		case/source/link case/source/unlink case/source/refresh case/source/get
 		record/append record/list record/update record/delete
 		task/create task/list task/get task/update task/set/status
-		playbook/copy playbook/copies/list playbook/search playbook/list playbook/resource/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/access/get playbook/access/set playbook/owner/transfer playbook/owner playbook/archive playbook/restore playbook/assign playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
+		playbook/copy playbook/copies/list playbook/search playbook/list playbook/resource/list playbook/create playbook/get playbook/version/list playbook/version/get playbook/version/archive playbook/version/publish playbook/draft/get playbook/draft/save playbook/draft/discard playbook/draft/publish playbook/access/get playbook/access/set playbook/archive playbook/restore playbook/assign playbook/share playbook/alias/set playbook/alias/list playbook/alias/delete
 		playbook/suggestion/create playbook/suggestion/get playbook/suggestion/list playbook/suggestion/update playbook/suggestion/resolve
 		suggestion/create suggestion/get suggestion/list suggestion/update suggestion/resolve
 	`)
@@ -104,6 +104,31 @@ func TestCommandSurface(t *testing.T) {
 	sort.Strings(actual)
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("command surface mismatch\nactual:   %v\nexpected: %v", actual, expected)
+	}
+}
+
+func TestMemoryListRequest(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		if got := request.URL.RequestURI(); got != "/v1/memories?page_size=20&query=handoff&space_id=team-id" {
+			t.Errorf("request path = %q", got)
+		}
+		if got := request.Header.Get("Authorization"); got != "Bearer test-token" {
+			t.Errorf("authorization = %q", got)
+		}
+		_, _ = io.WriteString(w, `{"memories":[{"space_id":"team-id","content":"Review handoffs"}]}`)
+	}))
+	defer server.Close()
+	t.Setenv("EPISMO_API_URL", server.URL)
+	t.Setenv("EPISMO_TOKEN", "test-token")
+	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+
+	var stdout, stderr bytes.Buffer
+	args := []string{"memory", "list", "--query", "handoff", "--space-id", "team-id", "--page-size", "20"}
+	if code := Main(args, "test", strings.NewReader(""), &stdout, &stderr); code != 0 {
+		t.Fatalf("exit = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "Review handoffs") {
+		t.Fatalf("missing memory in %s", stdout.String())
 	}
 }
 
