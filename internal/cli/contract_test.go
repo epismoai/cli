@@ -41,7 +41,8 @@ func TestOpenAPIContractMetadata(t *testing.T) {
 func TestEveryRemoteCommandUsesDocumentedOperation(t *testing.T) {
 	contract := readOpenAPIContract(t)
 	operations := map[string]commandOperation{
-		"team owner get":               {"get", "/v1/teams/{teamId}/owner"},
+		"case transfer":                {"post", "/v1/cases/{caseId}/transfer"},
+		"playbook transfer":            {"post", "/v1/playbooks/{playbookId}/transfer"},
 		"memory list":                  {"get", "/v1/memories"},
 		"workspace list":               {"get", "/v1/workspaces"},
 		"workspace use":                {"get", "/v1/workspaces"},

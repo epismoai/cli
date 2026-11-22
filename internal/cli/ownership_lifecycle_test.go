@@ -27,16 +27,17 @@ func TestOwnershipAndLifecycleRequests(t *testing.T) {
 		field              string
 		value              any
 	}{
-		{"create default home", "POST", "/v1/playbooks", []string{"playbook", "create", "--definition", `{"title":"Guide"}`}, "ownerId", nil},
-		{"copy default home", "POST", "/v1/playbooks/source/copies", []string{"playbook", "copy", "source", "--source-version-id", "version"}, "ownerId", nil},
-		{"case explicit home", "POST", "/v1/cases", []string{"case", "start", "--owner-id", "home", "--title", "Work"}, "ownerId", "home"},
+		{"create default home", "POST", "/v1/playbooks", []string{"playbook", "create", "--definition", `{"title":"Guide"}`}, "owner", nil},
+		{"copy default home", "POST", "/v1/playbooks/source/copies", []string{"playbook", "copy", "source", "--source-version-id", "version"}, "owner", nil},
+		{"case explicit home without title", "POST", "/v1/cases", []string{"case", "start", "--owner", "me"}, "owner", "me"},
 		{"playbook assignment", "PATCH", "/v1/playbooks/guide/assignee", []string{"playbook", "assign", "guide", "--assigned-to", "user"}, "assignedTo", "user"},
-		{"case scope move", "PUT", "/v1/cases/case/access", []string{"case", "access", "set", "case", "--access", `{"visibility":"restricted","grants":{}}`, "--scope-id", "team-1", "--lock-version", "7"}, "scopeId", "team-1"},
+		{"case owner transfer", "POST", "/v1/cases/PANDA-317/transfer", []string{"case", "transfer", "PANDA-317", "--owner", "team:engineering", "--lock-version", "7"}, "owner", "team:engineering"},
+		{"playbook owner transfer", "POST", "/v1/playbooks/book/transfer", []string{"playbook", "transfer", "book", "--owner", "me"}, "owner", "me"},
 
 		{"playbook restore", "POST", "/v1/playbooks/guide/restore", []string{"playbook", "restore", "guide"}, "", nil},
-		{"case archive", "POST", "/v1/cases/case/archive", []string{"case", "archive", "case", "--lock-version", "3", "--yes"}, "expectedLockVersion", float64(3)},
-		{"case restore", "POST", "/v1/cases/case/restore", []string{"case", "restore", "case", "--lock-version", "4"}, "expectedLockVersion", float64(4)},
-		{"case delete", "DELETE", "/v1/cases/case", []string{"case", "delete", "case", "--lock-version", "5", "--yes"}, "expectedLockVersion", float64(5)},
+		{"case archive", "POST", "/v1/cases/PANDA-317/archive", []string{"case", "archive", "PANDA-317", "--lock-version", "3", "--yes"}, "expectedLockVersion", float64(3)},
+		{"case restore", "POST", "/v1/cases/PANDA-317/restore", []string{"case", "restore", "PANDA-317", "--lock-version", "4"}, "expectedLockVersion", float64(4)},
+		{"case delete", "DELETE", "/v1/cases/PANDA-317", []string{"case", "delete", "PANDA-317", "--lock-version", "5", "--yes"}, "expectedLockVersion", float64(5)},
 		{"handover preview", "POST", "/v1/workspaces/home/member-handover", []string{"workspace", "member", "handover", "home", "--member-id", "old", "--successor-id", "new"}, "preview", true},
 		{"handover transfer approvals", "POST", "/v1/workspaces/home/member-handover", []string{"workspace", "member", "handover", "home", "--member-id", "old", "--successor-id", "new", "--preview=false", "--transfer-approvals"}, "transferApprovals", true},
 		{"handover finalize", "POST", "/v1/workspaces/home/member-handover", []string{"workspace", "member", "handover", "home", "--member-id", "old", "--successor-id", "new", "--preview=false", "--finalize"}, "preview", false},
@@ -56,7 +57,7 @@ func TestOwnershipAndLifecycleRequests(t *testing.T) {
 				if tc.field != "" && body[tc.field] != tc.value {
 					t.Errorf("body[%s] = %#v, want %#v", tc.field, body[tc.field], tc.value)
 				}
-				if tc.name == "create default home" || tc.name == "copy default home" || tc.name == "case explicit home" {
+				if tc.name == "create default home" || tc.name == "copy default home" || tc.name == "case explicit home without title" {
 					if _, exists := body["access"]; exists {
 						t.Errorf("omitted sharing must reach the API as omitted, got %#v", body["access"])
 					}
@@ -81,8 +82,10 @@ func TestOwnershipAndLifecycleRequests(t *testing.T) {
 						}
 					}
 				}
-				if tc.name == "case ownership" && body["ownerId"] != "home" {
-					t.Errorf("ownerId = %#v", body["ownerId"])
+				if tc.name == "case explicit home without title" {
+					if _, exists := body["title"]; exists {
+						t.Errorf("omitted title must reach the API as omitted, got %#v", body["title"])
+					}
 				}
 				if tc.name == "handover finalize" && body["finalize"] != true {
 					t.Errorf("finalize = %#v", body["finalize"])

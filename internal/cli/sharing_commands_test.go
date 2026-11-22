@@ -21,8 +21,8 @@ func TestSharingCommandsSendNestedAccessAndKeepGrantUUIDs(t *testing.T) {
 	}{
 		{"case start", []string{"case", "start", "--title", "Shared work", "--access", settings}, "POST", "/v1/cases"},
 		{"case access", []string{"case", "access", "set", "case-id", "--access", settings, "--lock-version", "7", "--yes"}, "PUT", "/v1/cases/case-id/access"},
-		{"playbook create", []string{"playbook", "create", "--owner-id", "owner-id", "--definition", `{"title":"Shared guide","steps":[]}`, "--access", settings}, "POST", "/v1/playbooks"},
-		{"playbook copy", []string{"playbook", "copy", "source-id", "--source-version-id", "version-id", "--owner-id", "owner-id", "--access", settings}, "POST", "/v1/playbooks/source-id/copies"},
+		{"playbook create", []string{"playbook", "create", "--owner", "me", "--definition", `{"title":"Shared guide","steps":[]}`, "--access", settings}, "POST", "/v1/playbooks"},
+		{"playbook copy", []string{"playbook", "copy", "source-id", "--source-version-id", "version-id", "--owner", "me", "--access", settings}, "POST", "/v1/playbooks/source-id/copies"},
 		{"input access", []string{"playbook", "access", "set", "playbook-id", "--request", `{"access":{"visibility":"public","grants":{"abcdefab-cdef-4abc-8def-abcdefabcdef":"viewer"}}}`, "--yes"}, "PUT", "/v1/playbooks/playbook-id/access"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -57,7 +57,7 @@ func TestSharingCommandsSendNestedAccessAndKeepGrantUUIDs(t *testing.T) {
 			if !strings.Contains(stdout.String(), principal) {
 				t.Fatalf("output changed UUID: %s", stdout.String())
 			}
-			if tc.name == "playbook copy" && (body["sourceVersionId"] != "version-id" || body["ownerId"] != "owner-id") {
+			if tc.name == "playbook copy" && (body["sourceVersionId"] != "version-id" || body["owner"] != "me") {
 				t.Fatalf("copy body=%#v", body)
 			}
 			if tc.name == "case access" && body["expectedLockVersion"] != float64(7) {
@@ -157,13 +157,12 @@ func TestEmailGrantKeysArePreservedInAccessRequests(t *testing.T) {
 
 func TestCreationSharingFlags(t *testing.T) {
 	const first = "11111111-1111-4111-8111-111111111111"
-	const second = "22222222-2222-4222-8222-222222222222"
 	for _, command := range [][]string{
 		{"case", "start", "--title", "Team work"},
 		{"playbook", "create", "--definition", `{"schemaVersion":1,"title":"Guide"}`},
 		{"playbook", "copy", "source", "--source-version-id", "version"},
 	} {
-		for _, selection := range [][]string{{"--private"}, {"--team-ids", first + "," + second}} {
+		for _, selection := range [][]string{{"--owner", "me"}, {"--owner", "team:" + first}} {
 			t.Run(strings.Join(append(command, selection...), " "), func(t *testing.T) {
 				var body map[string]any
 				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -183,11 +182,7 @@ func TestCreationSharingFlags(t *testing.T) {
 				if _, exists := body["access"]; exists {
 					t.Fatalf("implicit access hides sharing omission: %#v", body)
 				}
-				if selection[0] == "--private" {
-					if body["private"] != true {
-						t.Fatalf("body=%#v", body)
-					}
-				} else if !reflect.DeepEqual(body["teamIds"], []any{first, second}) {
+				if body["owner"] != selection[1] {
 					t.Fatalf("body=%#v", body)
 				}
 			})
@@ -197,6 +192,18 @@ func TestCreationSharingFlags(t *testing.T) {
 
 func TestDiscardedSharingFlagsAreNotAdvertisedOrAccepted(t *testing.T) {
 	for _, args := range [][]string{
+		{"team", "update", "team", "--managing-workspace-id", "workspace"},
+		{"team", "update", "team", "--owner-workspace-id", "workspace"},
+		{"case", "list", "--owner", "me"},
+		{"case", "list", "--owner-id", "workspace"},
+		{"playbook", "list", "--owner", "team:engineering"},
+		{"playbook", "list", "--owner-id", "workspace"},
+
+		{"case", "access", "set", "case", "--scope-id", "team", "--lock-version", "1"},
+		{"case", "start", "--private"},
+		{"case", "start", "--team-id", "team"},
+		{"playbook", "create", "--owner-id", "account"},
+		{"playbook", "copy", "book", "--source-version-id", "version", "--team-ids", "team"},
 		{"case", "access", "set", "case", "--team-ids", "team", "--lock-version", "1"},
 		{"case", "access", "set", "case", "--keep-direct-access", "--lock-version", "1"},
 		{"playbook", "access", "set", "book", "--team-id", "team"},
