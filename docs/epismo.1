@@ -31,10 +31,16 @@ commands reject this option instead of ignoring it.
 .TP
 .B -y, --yes
 Skip an interactive confirmation prompt.
+.SH OWNERSHIP
+Creation, copying, and ownership transfer require --owner me or
+--owner team:NAME-OR-ID when a workspace is selected, including a saved default.
+Outside a workspace, omitting --owner selects the caller's personal account.
+Use case transfer or playbook transfer to change ownership while preserving
+additional sharing.
 .SH EXAMPLES
 .nf
 epismo workspace use acme
-epismo case start --title "Customer Onboarding"
+epismo case start --owner me --title "Customer Onboarding"
 epismo case record append CASE_ID --kind note --content "Completed setup"
 epismo -w acme playbook search onboarding --output table
 .fi

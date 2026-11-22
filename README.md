@@ -30,16 +30,17 @@ Binaries and checksums are available from [GitHub Releases](https://github.com/e
 ```sh
 epismo login
 epismo workspace use acme # optional: select your workspace
-epismo case start --title "Customer onboarding" --private
+epismo case start --owner me --title "Customer onboarding"
 epismo case get CASE_ID
 ```
 
 Public cases and playbooks can be browsed before login. Private work and writes require authentication.
 
-In a workspace, use `--team-id TEAM_ID` to create a case or playbook in a
-Team Space, or `--private` for your membership Space. To move an existing item
-within the workspace, use `case access set` or `playbook access set` with
-`--scope-id` and the full additional grant map.
+When creating a case or playbook in a workspace, use `--owner me` for your
+own Space or `--owner team:<name-or-id>` for a Team Space. In personal space,
+omitting `--owner` selects your own account. Use `case transfer` or
+`playbook transfer` to change the owner within the workspace while preserving
+additional sharing.
 
 ## Find what you need
 

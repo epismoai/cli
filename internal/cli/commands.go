@@ -15,11 +15,7 @@ func buildCommands() []*command {
 		teamListCommand(), teamCreateCommand(), teamUpdateCommand(), teamMemberListCommand(), teamMemberAddCommand(), teamMemberUpdateCommand(), teamMemberDeleteCommand(),
 		creditBalanceCommand(), creditCheckoutCommand(), tokenCreateCommand(), tokenListCommand(), tokenRevokeCommand(),
 	}
-	commands = append(commands,
-		apiOperation("team owner get", "read the managing account of a Team Space", []string{"team-id"}, http.MethodGet, func(i invocation) string {
-			return "/v1/teams/" + escaped(i.positional(0)) + "/owner"
-		}, requestQuery, false),
-	)
+
 	commands = append(commands, sharedTeamCommands()...)
 	commands = append(commands, caseCommands()...)
 	commands = append(commands, caseSourceCommands()...)
@@ -52,8 +48,8 @@ func enrichCommands(commands []*command) []*command {
 		"report team get":          {"epismo -w acme report team get TEAM_ID --job-id JOB_ID", "epismo -w acme report team get TEAM_ID --report-id REPORT_ID"},
 		"report team list":         {"epismo -w acme report team list TEAM_ID --page-size 20"},
 		"playbook search":          {"epismo playbook search --query onboarding", "epismo -w acme playbook search onboarding"},
-		"playbook create":          {`epismo playbook create --definition '{"title":"Onboarding","steps":[]}'`, "epismo playbook create --request @playbook.json"},
-		"case start":               {"epismo case start --title 'Team invitation design'", "epismo case start --version-id VERSION_ID --title 'Launch review'"},
+		"playbook create":          {`epismo playbook create --owner me --definition '{"title":"Onboarding","steps":[]}'`, "epismo playbook create --owner me --request @playbook.json"},
+		"case start":               {"epismo case start --owner me --title 'Team invitation design'", "epismo case start --owner me --version-id VERSION_ID"},
 		"case update":              {`epismo case update CASE_ID --input '{"customer":"Acme"}' --lock-version 1`, `epismo case update CASE_ID --version-id VERSION_ID --input '{"customer":"Acme"}' --lock-version 1`},
 		"case list":                {"epismo case list --assigned-to me --status open"},
 		"case get":                 {"epismo case get CASE_ID"},
@@ -151,7 +147,7 @@ func doctorCommand() *command {
 
 func examplesCommand() *command {
 	return &command{Path: "examples", Summary: "show common Epismo workflows", Run: func(_ *app, _ invocation) (any, error) {
-		return map[string]any{"examples": []any{"epismo login", "epismo case start --title 'Team invitation design'", "epismo case record append CASE_ID --kind note --origin agent --request @context.json", "epismo case list --assigned-to me --status open", "epismo case get CASE_ID", "epismo playbook list"}}, nil
+		return map[string]any{"examples": []any{"epismo login", "epismo case start --owner me --title 'Team invitation design'", "epismo case record append CASE_ID --kind note --origin agent --request @context.json", "epismo case list --assigned-to me --status open", "epismo case get CASE_ID", "epismo playbook list"}}, nil
 	}}
 }
 
@@ -457,7 +453,7 @@ func teamCreateCommand() *command {
 	return apiOperation("team create", "create a team in the selected workspace", nil, http.MethodPost, staticEndpoint("/v1/teams"), requestBody, false, str("--name", "name", "team name"), str("--description", "description", "team description"), boolOption("--universal", "universal", "automatically include all current and future workspace members (owner/admin only)"))
 }
 func teamUpdateCommand() *command {
-	return apiOperation("team update", "update a team you can access", []string{"team-id"}, http.MethodPatch, func(i invocation) string { return "/v1/teams/" + escaped(i.positional(0)) }, requestBody, false, str("--name", "name", "updated team name"), str("--description", "description", "updated team description"), str("--managing-workspace-id", "managingWorkspaceId", "designate the active workspace for a Team without a managing workspace"), boolOption("--universal", "universal", "automatically include all current and future workspace members (owner/admin only)"))
+	return apiOperation("team update", "update a team you can access", []string{"team-id"}, http.MethodPatch, func(i invocation) string { return "/v1/teams/" + escaped(i.positional(0)) }, requestBody, false, str("--name", "name", "updated team name"), str("--description", "description", "updated team description"), boolOption("--universal", "universal", "automatically include all current and future workspace members (owner/admin only)"))
 }
 
 func teamMemberListCommand() *command {
