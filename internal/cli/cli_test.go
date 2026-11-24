@@ -87,8 +87,8 @@ func TestCommandSurface(t *testing.T) {
 		credit/balance credit/checkout token/create token/list token/revoke
 		case/transfer case/start case/get case/list case/access/get case/access/set case/share case/assign case/update case/handoff/create case/handoff case/handoff/remove case/handoff/delete case/handoff/graph/get case/handoff/graph case/handoff/candidates/list case/handoff/candidate/list case/close case/reopen case/archive case/restore case/delete
 		case/task/create case/task/list case/task/get case/task/update case/task/set/status case/record/append case/record/list case/record/update case/record/delete
-		case/report/get case/report/list case/report/generate case/report/act report/feedback/create report/feedback/list report/feedback/delete
-		report/delete report/cancel report/case/get report/case/list report/case/generate report/case/act report/personal/generate report/personal/get report/personal/list report/personal/act report/team/generate report/team/get report/team/list report/team/act
+		case/review/get case/review/list case/review/run case/review/act review/feedback/create review/feedback/list review/feedback/delete
+		review/delete review/cancel review/case/get review/case/list review/case/run review/case/act review/personal/run review/personal/get review/personal/list review/personal/act review/team/run review/team/get review/team/list review/team/act
 		case/source/link case/source/unlink case/source/refresh case/source/get
 		record/append record/list record/update record/delete
 		task/create task/list task/get task/update task/set/status
@@ -851,7 +851,7 @@ func TestSourceCommandsSendAuthenticatedRequests(t *testing.T) {
 		body   map[string]any
 	}{
 		{"link", []string{"case", "source", "link", "case-id", "--url", "https://acme.slack.com/archives/C1/p1234567890123456", "--idempotency-key", "retry-key"}, http.MethodPost, "/v1/cases/case-id/sources", map[string]any{"url": "https://acme.slack.com/archives/C1/p1234567890123456", "idempotencyKey": "retry-key"}},
-		{"gdrive link", []string{"case", "source", "link", "case-id", "--url", "https://docs.google.com/document/d/file-id/edit", "--idempotency-key", "retry-key"}, http.MethodPost, "/v1/cases/case-id/sources", map[string]any{"url": "https://docs.google.com/document/d/file-id/edit", "idempotencyKey": "retry-key"}},
+		{"discord link", []string{"case", "source", "link", "case-id", "--url", "https://discord.com/channels/123/456/789", "--idempotency-key", "retry-key"}, http.MethodPost, "/v1/cases/case-id/sources", map[string]any{"url": "https://discord.com/channels/123/456/789", "idempotencyKey": "retry-key"}},
 		{"unlink", []string{"case", "source", "unlink", "case-id", "source-id", "--idempotency-key", "retry-key"}, http.MethodDelete, "/v1/cases/case-id/sources/source-id", map[string]any{"idempotencyKey": "retry-key"}},
 		{"refresh", []string{"case", "source", "refresh", "case-id", "source-id", "--idempotency-key", "retry-key"}, http.MethodPost, "/v1/cases/case-id/sources/source-id/refresh", map[string]any{"idempotencyKey": "retry-key"}},
 		{"get", []string{"case", "source", "get", "case-id", "source-id"}, http.MethodGet, "/v1/cases/case-id/sources/source-id", nil},

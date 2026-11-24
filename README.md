@@ -54,7 +54,7 @@ Append `--help` to any command for its arguments and options.
 
 - [CLI guide](https://epismo.ai/en/docs/cli): setup and everyday workflows.
 - [Command reference](https://epismo.ai/en/docs/cli/reference): available commands and global options.
-- [Cases guide](https://epismo.ai/en/docs/cli/cases): records, tasks, handoffs, reports, and sharing.
+- [Cases guide](https://epismo.ai/en/docs/cli/cases): records, tasks, handoffs, reviews, and sharing.
 
 ## Scripts and agents
 

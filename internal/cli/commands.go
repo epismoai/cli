@@ -19,7 +19,7 @@ func buildCommands() []*command {
 	commands = append(commands, sharedTeamCommands()...)
 	commands = append(commands, caseCommands()...)
 	commands = append(commands, caseSourceCommands()...)
-	commands = append(commands, reportCommands()...)
+	commands = append(commands, reviewCommands()...)
 	memoryPaging := pagingOptions()
 	memoryPaging[0].Field = "page_size"
 	commands = append(commands, apiOperation("memory list", "list memories in your active personal or workspace space, or in a team you belong to", nil, http.MethodGet, func(invocation) string {
@@ -43,39 +43,39 @@ func buildCommands() []*command {
 
 func enrichCommands(commands []*command) []*command {
 	examples := map[string][]string{
-		"report team act":          {"epismo -w acme report team act REPORT_ID --proposal-id PROPOSAL_ID --action create"},
-		"report team generate":     {"epismo -w acme report team generate TEAM_ID"},
-		"report team get":          {"epismo -w acme report team get TEAM_ID --job-id JOB_ID", "epismo -w acme report team get TEAM_ID --report-id REPORT_ID"},
-		"report team list":         {"epismo -w acme report team list TEAM_ID --page-size 20"},
-		"playbook search":          {"epismo playbook search --query onboarding", "epismo -w acme playbook search onboarding"},
-		"playbook create":          {`epismo playbook create --owner me --definition '{"title":"Onboarding","steps":[]}'`, "epismo playbook create --owner me --request @playbook.json"},
-		"case start":               {"epismo case start --owner me --title 'Team invitation design'", "epismo case start --owner me --version-id VERSION_ID"},
-		"case update":              {`epismo case update CASE_ID --input '{"customer":"Acme"}' --lock-version 1`, `epismo case update CASE_ID --version-id VERSION_ID --input '{"customer":"Acme"}' --lock-version 1`},
-		"case list":                {"epismo case list --assigned-to me --status open"},
-		"case get":                 {"epismo case get CASE_ID"},
-		"case source link":         {"epismo case source link CASE_ID --url https://acme.slack.com/archives/C123/p1234567890123456", "epismo case source link CASE_ID --url https://docs.google.com/document/d/FILE_ID/edit"},
-		"case source unlink":       {"epismo case source unlink CASE_ID SOURCE_ID"},
-		"case source refresh":      {"epismo case source refresh CASE_ID SOURCE_ID"},
-		"case source get":          {"epismo case source get CASE_ID SOURCE_ID"},
-		"report feedback create":   {"epismo report feedback create REPORT_ID --content 'Evidence is missing'"},
-		"report feedback list":     {"epismo report feedback list REPORT_ID"},
-		"report feedback delete":   {"epismo report feedback delete REPORT_ID FEEDBACK_UUID"},
-		"report case get":          {"epismo report case get CASE_ID", "epismo report case get CASE_ID --report-id REPORT_ID"},
-		"report case list":         {"epismo report case list CASE_ID --page-size 20"},
-		"report case generate":     {"epismo report case generate CASE_ID"},
-		"report case act":          {"epismo report case act CASE_ID --report-id REPORT_ID --proposal-id PROPOSAL_ID --action create"},
-		"case report get":          {"epismo case report get CASE_ID", "epismo case report get CASE_ID --report-id REPORT_ID"},
-		"report personal generate": {"epismo report personal generate", "epismo -w acme report personal generate"},
-		"report personal act":      {"epismo report personal act REPORT_ID --proposal-id PROPOSAL_ID --action create"},
-		"case report list":         {"epismo case report list CASE_ID --page-size 20"},
-		"case report generate":     {"epismo case report generate CASE_ID"},
-		"case report act":          {"epismo case report act CASE_ID --report-id REPORT_ID --proposal-id PROPOSAL_ID --action create"},
-		"case handoff create":      {"epismo case handoff create SALES_CASE_ID --to-case-id ENGINEERING_CASE_ID", "epismo case handoff create ENGINEERING_CASE_ID --from-case-id SALES_CASE_ID"},
-		"case task set status":     {"epismo case task set status TASK_ID --status approved --lock-version LOCK_VERSION"},
-		"case record append":       {`epismo case record append CASE_ID --kind note --origin agent --content 'Goal: team invitations. Decision: reuse existing email flow. Open: expiry behavior. Next: inspect invitation code.'`, `epismo case record append CASE_ID --kind note --origin agent --content 'Assessment: shared evidence is sufficient; see the cited results.'`, "epismo case record append CASE_ID --request @record.json"},
-		"case record update":       {`epismo case record update RECORD_ID --content 'Updated decision'`},
-		"case record delete":       {"epismo case record delete RECORD_ID"},
-		"workspace list":           {"epismo workspace list --output table", "epismo --workspace acme workspace member list"},
+		"review team act":        {"epismo -w acme review team act REVIEW_ID --proposal-id PROPOSAL_ID --action create"},
+		"review team run":        {"epismo -w acme review team run TEAM_ID"},
+		"review team get":        {"epismo -w acme review team get TEAM_ID --job-id JOB_ID", "epismo -w acme review team get TEAM_ID --review-id REVIEW_ID"},
+		"review team list":       {"epismo -w acme review team list TEAM_ID --page-size 20"},
+		"playbook search":        {"epismo playbook search --query onboarding", "epismo -w acme playbook search onboarding"},
+		"playbook create":        {`epismo playbook create --owner me --definition '{"title":"Onboarding","steps":[]}'`, "epismo playbook create --owner me --request @playbook.json"},
+		"case start":             {"epismo case start --owner me --title 'Team invitation design'", "epismo case start --owner me --version-id VERSION_ID"},
+		"case update":            {`epismo case update CASE_ID --input '{"customer":"Acme"}' --lock-version 1`, `epismo case update CASE_ID --version-id VERSION_ID --input '{"customer":"Acme"}' --lock-version 1`},
+		"case list":              {"epismo case list --assigned-to me --status open"},
+		"case get":               {"epismo case get CASE_ID"},
+		"case source link":       {"epismo case source link CASE_ID --url https://acme.slack.com/archives/C123/p1234567890123456", "epismo case source link CASE_ID --url https://docs.google.com/document/d/FILE_ID/edit"},
+		"case source unlink":     {"epismo case source unlink CASE_ID SOURCE_ID"},
+		"case source refresh":    {"epismo case source refresh CASE_ID SOURCE_ID"},
+		"case source get":        {"epismo case source get CASE_ID SOURCE_ID"},
+		"review feedback create": {"epismo review feedback create REVIEW_ID --content 'Evidence is missing'"},
+		"review feedback list":   {"epismo review feedback list REVIEW_ID"},
+		"review feedback delete": {"epismo review feedback delete REVIEW_ID FEEDBACK_UUID"},
+		"review case get":        {"epismo review case get CASE_ID", "epismo review case get CASE_ID --review-id REVIEW_ID"},
+		"review case list":       {"epismo review case list CASE_ID --page-size 20"},
+		"review case run":        {"epismo review case run CASE_ID"},
+		"review case act":        {"epismo review case act CASE_ID --review-id REVIEW_ID --proposal-id PROPOSAL_ID --action create"},
+		"case review get":        {"epismo case review get CASE_ID", "epismo case review get CASE_ID --review-id REVIEW_ID"},
+		"review personal run":    {"epismo review personal run", "epismo -w acme review personal run"},
+		"review personal act":    {"epismo review personal act REVIEW_ID --proposal-id PROPOSAL_ID --action create"},
+		"case review list":       {"epismo case review list CASE_ID --page-size 20"},
+		"case review run":        {"epismo case review run CASE_ID"},
+		"case review act":        {"epismo case review act CASE_ID --review-id REVIEW_ID --proposal-id PROPOSAL_ID --action create"},
+		"case handoff create":    {"epismo case handoff create SALES_CASE_ID --to-case-id ENGINEERING_CASE_ID", "epismo case handoff create ENGINEERING_CASE_ID --from-case-id SALES_CASE_ID"},
+		"case task set status":   {"epismo case task set status TASK_ID --status approved --lock-version LOCK_VERSION"},
+		"case record append":     {`epismo case record append CASE_ID --kind note --origin agent --content 'Goal: team invitations. Decision: reuse existing email flow. Open: expiry behavior. Next: inspect invitation code.'`, `epismo case record append CASE_ID --kind note --origin agent --content 'Assessment: shared evidence is sufficient; see the cited results.'`, "epismo case record append CASE_ID --request @record.json"},
+		"case record update":     {`epismo case record update RECORD_ID --content 'Updated decision'`},
+		"case record delete":     {"epismo case record delete RECORD_ID"},
+		"workspace list":         {"epismo workspace list --output table", "epismo --workspace acme workspace member list"},
 	}
 	for _, command := range commands {
 		if values, ok := examples[command.Path]; ok {

@@ -38,14 +38,14 @@ func TestCaseReportRequests(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 
 	for _, args := range [][]string{
-		{"report", "case", "get", "case-1"},
-		{"report", "case", "generate", "case-1", "--idempotency-key", "11111111-1111-4111-8111-111111111111"},
-		{"report", "case", "act", "case-1", "--report-id", "report-1", "--proposal-id", "proposal-1", "--action", "create"},
-		{"report", "case", "act", "case-1", "--report-id", "report-1", "--proposal-id", "proposal-1", "--action", "dismiss", "--feedback", "Not needed"},
-		{"case", "report", "get", "case-1"},
-		{"case", "report", "generate", "case-1", "--idempotency-key", "11111111-1111-4111-8111-111111111111"},
-		{"case", "report", "act", "case-1", "--report-id", "report-1", "--proposal-id", "proposal-1", "--action", "create"},
-		{"case", "report", "act", "case-1", "--report-id", "report-1", "--proposal-id", "proposal-1", "--action", "dismiss", "--feedback", "Not needed"},
+		{"review", "case", "get", "case-1"},
+		{"review", "case", "run", "case-1", "--idempotency-key", "11111111-1111-4111-8111-111111111111"},
+		{"review", "case", "act", "case-1", "--review-id", "report-1", "--proposal-id", "proposal-1", "--action", "create"},
+		{"review", "case", "act", "case-1", "--review-id", "report-1", "--proposal-id", "proposal-1", "--action", "dismiss", "--feedback", "Not needed"},
+		{"case", "review", "get", "case-1"},
+		{"case", "review", "run", "case-1", "--idempotency-key", "11111111-1111-4111-8111-111111111111"},
+		{"case", "review", "act", "case-1", "--review-id", "report-1", "--proposal-id", "proposal-1", "--action", "create"},
+		{"case", "review", "act", "case-1", "--review-id", "report-1", "--proposal-id", "proposal-1", "--action", "dismiss", "--feedback", "Not needed"},
 	} {
 		var stdout, stderr bytes.Buffer
 		if exit := Main(args, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
@@ -58,37 +58,37 @@ func TestCaseReportRequests(t *testing.T) {
 	}
 
 	for offset := 0; offset <= 4; offset += 4 {
-		// 1. report case get
-		if requests[offset+0].method != http.MethodGet || requests[offset+0].path != "/v1/cases/case-1/report" {
+		// 1. review case get
+		if requests[offset+0].method != http.MethodGet || requests[offset+0].path != "/v1/cases/case-1/reviews" {
 			t.Fatalf("Review get = %+v", requests[offset+0])
 		}
 
-		// 2. report case generate
-		if requests[offset+1].method != http.MethodPost || requests[offset+1].path != "/v1/cases/case-1/report" {
+		// 2. review case run
+		if requests[offset+1].method != http.MethodPost || requests[offset+1].path != "/v1/cases/case-1/reviews" {
 			t.Fatalf("Review generate = %+v", requests[offset+1])
 		}
 		if requests[offset+1].body["idempotencyKey"] != "11111111-1111-4111-8111-111111111111" {
 			t.Fatalf("generate idempotencyKey = %+v", requests[offset+1].body)
 		}
 
-		// 3. report case act create
-		if requests[offset+2].method != http.MethodPost || requests[offset+2].path != "/v1/cases/case-1/report/actions" {
+		// 3. review case act create
+		if requests[offset+2].method != http.MethodPost || requests[offset+2].path != "/v1/cases/case-1/reviews/actions" {
 			t.Fatalf("Review act create = %+v", requests[offset+2])
 		}
-		if requests[offset+2].body["reportId"] != "report-1" || requests[offset+2].body["proposalId"] != "proposal-1" || requests[offset+2].body["action"] != "create" {
+		if requests[offset+2].body["reviewId"] != "report-1" || requests[offset+2].body["proposalId"] != "proposal-1" || requests[offset+2].body["action"] != "create" {
 			t.Fatalf("act create body = %+v", requests[offset+2].body)
 		}
 
 		for _, index := range []int{offset + 2, offset + 3} {
 			for key := range requests[index].body {
-				if key != "reportId" && key != "proposalId" && key != "action" && key != "feedback" {
+				if key != "reviewId" && key != "proposalId" && key != "action" && key != "feedback" {
 					t.Fatalf("unexpected action field %q: %+v", key, requests[index].body)
 				}
 			}
 		}
 
-		// 4. report case act dismiss
-		if requests[offset+3].method != http.MethodPost || requests[offset+3].path != "/v1/cases/case-1/report/actions" {
+		// 4. review case act dismiss
+		if requests[offset+3].method != http.MethodPost || requests[offset+3].path != "/v1/cases/case-1/reviews/actions" {
 			t.Fatalf("Review act dismiss = %+v", requests[offset+3])
 		}
 		if requests[offset+3].body["action"] != "dismiss" || requests[offset+3].body["feedback"] != "Not needed" {
@@ -106,10 +106,10 @@ func TestCaseReportHistoryRequests(t *testing.T) {
 		response  string
 		resultKey string
 	}{
-		{"history page", []string{"report", "case", "list", "case-1", "--page-size", "2", "--cursor", "older+/=?"}, "/v1/cases/case-1/report/history", map[string]string{"pageSize": "2", "cursor": "older+/=?"}, `{"reports":[{"id":"old","summary":"Past review"}],"nextCursor":"next"}`, "reports"},
-		{"selected review", []string{"report", "case", "get", "case-1", "--report-id", "old-report"}, "/v1/cases/case-1/report", map[string]string{"reportId": "old-report"}, `{"report":{"id":"old-report","content":"Full historical review"},"historical":true}`, "historical"},
-		{"case report history alias", []string{"case", "report", "list", "case-1", "--page-size", "2", "--cursor", "older+/=?"}, "/v1/cases/case-1/report/history", map[string]string{"pageSize": "2", "cursor": "older+/=?"}, `{"reports":[{"id":"old","summary":"Past review"}],"nextCursor":"next"}`, "reports"},
-		{"case report get alias", []string{"case", "report", "get", "case-1", "--report-id", "old-report"}, "/v1/cases/case-1/report", map[string]string{"reportId": "old-report"}, `{"report":{"id":"old-report","content":"Full historical review"},"historical":true}`, "historical"},
+		{"history page", []string{"review", "case", "list", "case-1", "--page-size", "2", "--cursor", "older+/=?"}, "/v1/cases/case-1/reviews/history", map[string]string{"pageSize": "2", "cursor": "older+/=?"}, `{"reports":[{"id":"old","summary":"Past review"}],"nextCursor":"next"}`, "reports"},
+		{"selected review", []string{"review", "case", "get", "case-1", "--review-id", "old-report"}, "/v1/cases/case-1/reviews", map[string]string{"reviewId": "old-report"}, `{"report":{"id":"old-report","content":"Full historical review"},"historical":true}`, "historical"},
+		{"case review history alias", []string{"case", "review", "list", "case-1", "--page-size", "2", "--cursor", "older+/=?"}, "/v1/cases/case-1/reviews/history", map[string]string{"pageSize": "2", "cursor": "older+/=?"}, `{"reports":[{"id":"old","summary":"Past review"}],"nextCursor":"next"}`, "reports"},
+		{"case review get alias", []string{"case", "review", "get", "case-1", "--review-id", "old-report"}, "/v1/cases/case-1/reviews", map[string]string{"reviewId": "old-report"}, `{"report":{"id":"old-report","content":"Full historical review"},"historical":true}`, "historical"},
 		{"case detail includes latest review", []string{"case", "get", "case-1"}, "/v1/cases/case-1", map[string]string{}, `{"case":{"id":"case-1"},"report":{"id":"latest","content":"Full latest review"},"reportJob":{"id":"job","status":"complete"}}`, "report"},
 	}
 	for _, tt := range tests {
@@ -166,7 +166,7 @@ func TestPersonalReportRequest(t *testing.T) {
 	calls := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls++
-		if r.Method != http.MethodPost || r.URL.Path != "/v1/reports/personal" {
+		if r.Method != http.MethodPost || r.URL.Path != "/v1/me/reviews" {
 			t.Errorf("request: %s %s", r.Method, r.URL.Path)
 		}
 		if r.Header.Get("Authorization") != "Bearer test-token" {
@@ -189,7 +189,7 @@ func TestPersonalReportRequest(t *testing.T) {
 	t.Setenv("EPISMO_TOKEN", "test-token")
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	var stdout, stderr bytes.Buffer
-	exit := Main([]string{"report", "personal", "generate", "--idempotency-key", "11111111-1111-4111-8111-111111111111"}, "test", strings.NewReader(""), &stdout, &stderr)
+	exit := Main([]string{"review", "personal", "run", "--idempotency-key", "11111111-1111-4111-8111-111111111111"}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exit != 0 {
 		t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
 	}
@@ -211,14 +211,14 @@ func TestPersonalReportGetRequests(t *testing.T) {
 		name, flag, field, id string
 	}{
 		{name: "latest"},
-		{name: "saved report", flag: "--report-id", field: "reportId", id: "report-1"},
+		{name: "saved review", flag: "--review-id", field: "reviewId", id: "report-1"},
 		{name: "generation job", flag: "--job-id", field: "jobId", id: "job-1"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			calls := 0
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				calls++
-				if r.Method != http.MethodGet || r.URL.Path != "/v1/reports/personal" {
+				if r.Method != http.MethodGet || r.URL.Path != "/v1/me/reviews" {
 					t.Errorf("request: %s %s", r.Method, r.URL.Path)
 				}
 				if r.Header.Get("Authorization") != "Bearer test-token" {
@@ -237,7 +237,7 @@ func TestPersonalReportGetRequests(t *testing.T) {
 			t.Setenv("EPISMO_API_URL", server.URL)
 			t.Setenv("EPISMO_TOKEN", "test-token")
 			t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
-			args := []string{"report", "personal", "get"}
+			args := []string{"review", "personal", "get"}
 			if test.flag != "" {
 				args = append(args, test.flag, test.id)
 			}
@@ -265,7 +265,7 @@ func TestPersonalReportHistoryRequest(t *testing.T) {
 	calls := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls++
-		if r.Method != http.MethodGet || r.URL.Path != "/v1/reports/personal/history" {
+		if r.Method != http.MethodGet || r.URL.Path != "/v1/me/reviews/history" {
 			t.Errorf("request: %s %s", r.Method, r.URL.Path)
 		}
 		if r.URL.Query().Get("pageSize") != "10" || r.URL.Query().Get("cursor") != "cursor-1" {
@@ -278,7 +278,7 @@ func TestPersonalReportHistoryRequest(t *testing.T) {
 	t.Setenv("EPISMO_TOKEN", "test-token")
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	var stdout, stderr bytes.Buffer
-	exit := Main([]string{"report", "personal", "list", "--page-size", "10", "--cursor", "cursor-1"}, "test", strings.NewReader(""), &stdout, &stderr)
+	exit := Main([]string{"review", "personal", "list", "--page-size", "10", "--cursor", "cursor-1"}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exit != 0 {
 		t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
 	}
@@ -299,7 +299,7 @@ func TestPersonalReportActRequest(t *testing.T) {
 	calls := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls++
-		if r.Method != http.MethodPost || r.URL.Path != "/v1/reports/report-1/actions" {
+		if r.Method != http.MethodPost || r.URL.Path != "/v1/reviews/report-1/actions" {
 			t.Errorf("request: %s %s", r.Method, r.URL.Path)
 		}
 		var body map[string]any
@@ -316,7 +316,7 @@ func TestPersonalReportActRequest(t *testing.T) {
 	t.Setenv("EPISMO_TOKEN", "test-token")
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	var stdout, stderr bytes.Buffer
-	exit := Main([]string{"report", "personal", "act", "report-1", "--proposal-id", "proposal-1", "--action", "create"}, "test", strings.NewReader(""), &stdout, &stderr)
+	exit := Main([]string{"review", "personal", "act", "report-1", "--proposal-id", "proposal-1", "--action", "create"}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exit != 0 {
 		t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
 	}
@@ -330,7 +330,7 @@ func TestTeamReportRequests(t *testing.T) {
 		verb, method, suffix string
 		flags                []string
 	}{
-		{"generate", http.MethodPost, "", []string{"--idempotency-key", "11111111-1111-4111-8111-111111111111"}},
+		{"run", http.MethodPost, "", []string{"--idempotency-key", "11111111-1111-4111-8111-111111111111"}},
 		{"get", http.MethodGet, "", []string{"--job-id", "job-1"}},
 		{"list", http.MethodGet, "/history", []string{"--page-size", "5", "--cursor", "older"}},
 	} {
@@ -338,7 +338,7 @@ func TestTeamReportRequests(t *testing.T) {
 			calls := 0
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				calls++
-				if r.Method != tc.method || r.URL.Path != "/v1/teams/team-1/report"+tc.suffix {
+				if r.Method != tc.method || r.URL.Path != "/v1/teams/team-1/reviews"+tc.suffix {
 					t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
 				}
 				if r.Header.Get("Authorization") != "Bearer test-token" {
@@ -350,7 +350,7 @@ func TestTeamReportRequests(t *testing.T) {
 				if tc.verb == "list" && (r.URL.Query().Get("pageSize") != "5" || r.URL.Query().Get("cursor") != "older") {
 					t.Errorf("query=%s", r.URL.RawQuery)
 				}
-				if tc.verb == "generate" {
+				if tc.verb == "run" {
 					var body map[string]any
 					if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 						t.Fatal(err)
@@ -366,7 +366,7 @@ func TestTeamReportRequests(t *testing.T) {
 			t.Setenv("EPISMO_API_URL", server.URL)
 			t.Setenv("EPISMO_TOKEN", "test-token")
 			t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
-			args := append([]string{"report", "team", tc.verb, "team-1"}, tc.flags...)
+			args := append([]string{"review", "team", tc.verb, "team-1"}, tc.flags...)
 			var stdout, stderr bytes.Buffer
 			if exit := Main(args, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
 				t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
@@ -390,7 +390,7 @@ func TestTeamReportActRequest(t *testing.T) {
 	calls := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls++
-		if r.Method != http.MethodPost || r.URL.Path != "/v1/reports/report-1/actions" {
+		if r.Method != http.MethodPost || r.URL.Path != "/v1/reviews/report-1/actions" {
 			t.Errorf("request: %s %s", r.Method, r.URL.Path)
 		}
 		var body map[string]any
@@ -407,7 +407,7 @@ func TestTeamReportActRequest(t *testing.T) {
 	t.Setenv("EPISMO_TOKEN", "test-token")
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	var stdout, stderr bytes.Buffer
-	exit := Main([]string{"report", "team", "act", "report-1", "--proposal-id", "proposal-1", "--action", "create"}, "test", strings.NewReader(""), &stdout, &stderr)
+	exit := Main([]string{"review", "team", "act", "report-1", "--proposal-id", "proposal-1", "--action", "create"}, "test", strings.NewReader(""), &stdout, &stderr)
 	if exit != 0 {
 		t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
 	}
@@ -427,10 +427,10 @@ func TestReportDeleteUsesSharedEndpoint(t *testing.T) {
 	t.Setenv("EPISMO_TOKEN", "test-token")
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	var stdout, stderr bytes.Buffer
-	if exit := Main([]string{"report", "delete", "report-1", "--yes"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+	if exit := Main([]string{"review", "delete", "report-1", "--yes"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
 		t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
 	}
-	if method != http.MethodDelete || path != "/v1/reports/report-1" {
+	if method != http.MethodDelete || path != "/v1/reviews/report-1" {
 		t.Fatalf("request: %s %s", method, path)
 	}
 }
@@ -443,7 +443,7 @@ func TestReportListPreservesDeletedHistory(t *testing.T) {
 	t.Setenv("EPISMO_API_URL", server.URL)
 	t.Setenv("EPISMO_TOKEN", "test-token")
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
-	for _, args := range [][]string{{"report", "case", "list", "case-1"}, {"report", "personal", "list"}, {"report", "team", "list", "team-1"}} {
+	for _, args := range [][]string{{"review", "case", "list", "case-1"}, {"review", "personal", "list"}, {"review", "team", "list", "team-1"}} {
 		var stdout, stderr bytes.Buffer
 		if exit := Main(args, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 || !strings.Contains(stdout.String(), "deleted_at") {
 			t.Fatalf("args=%v exit=%d stdout=%s stderr=%s", args, exit, stdout.String(), stderr.String())
@@ -453,9 +453,9 @@ func TestReportListPreservesDeletedHistory(t *testing.T) {
 
 func TestReportGenerationCriteria(t *testing.T) {
 	for _, args := range [][]string{
-		{"report", "case", "generate", "case-1"},
-		{"report", "personal", "generate"},
-		{"report", "team", "generate", "team-1"},
+		{"review", "case", "run", "case-1"},
+		{"review", "personal", "run"},
+		{"review", "team", "run", "team-1"},
 	} {
 		t.Run(strings.Join(args, " "), func(t *testing.T) {
 			var body map[string]any
@@ -487,9 +487,9 @@ func TestReviewFeedbackRequests(t *testing.T) {
 		args               []string
 		method, path, body string
 	}{
-		{"create", []string{"report", "feedback", "create", "report-1", "--idempotency-key", "11111111-1111-4111-8111-111111111111", "--content", "Missing evidence", "--verification-id", "verification-1"}, http.MethodPost, "/v1/reports/report-1/feedback", `{"content":"Missing evidence","idempotencyKey":"11111111-1111-4111-8111-111111111111","verificationId":"verification-1"}`},
-		{"list", []string{"report", "feedback", "list", "report-1"}, http.MethodGet, "/v1/reports/report-1/feedback", ""},
-		{"delete", []string{"report", "feedback", "delete", "report-1", "feedback-1", "--yes"}, http.MethodDelete, "/v1/reports/report-1/feedback/feedback-1", ""},
+		{"create", []string{"review", "feedback", "create", "report-1", "--idempotency-key", "11111111-1111-4111-8111-111111111111", "--content", "Missing evidence", "--verification-id", "verification-1"}, http.MethodPost, "/v1/reviews/report-1/feedback", `{"content":"Missing evidence","idempotencyKey":"11111111-1111-4111-8111-111111111111","verificationId":"verification-1"}`},
+		{"list", []string{"review", "feedback", "list", "report-1"}, http.MethodGet, "/v1/reviews/report-1/feedback", ""},
+		{"delete", []string{"review", "feedback", "delete", "report-1", "feedback-1", "--yes"}, http.MethodDelete, "/v1/reviews/report-1/feedback/feedback-1", ""},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -550,19 +550,19 @@ func TestReportFeedbackCreateGeneratesRetryKey(t *testing.T) {
 	t.Setenv("EPISMO_TOKEN", "test-token")
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 	var stdout, stderr bytes.Buffer
-	if exit := Main([]string{"report", "feedback", "create", "report-1", "--content", "Correction"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+	if exit := Main([]string{"review", "feedback", "create", "report-1", "--content", "Correction"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
 		t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
 	}
 	stdout.Reset()
 	stderr.Reset()
-	if exit := Main([]string{"report", "feedback", "create", "report-1", "--id", "chosen", "--content", "Correction"}, "test", strings.NewReader(""), &stdout, &stderr); exit == 0 {
+	if exit := Main([]string{"review", "feedback", "create", "report-1", "--id", "chosen", "--content", "Correction"}, "test", strings.NewReader(""), &stdout, &stderr); exit == 0 {
 		t.Fatal("--id should not be accepted")
 	}
 }
 
 func TestMutationNetworkFailureIncludesRetryKey(t *testing.T) {
 	for _, args := range [][]string{
-		{"report", "feedback", "create", "report-1", "--content", "Correction"},
+		{"review", "feedback", "create", "report-1", "--content", "Correction"},
 		{"case", "start", "--title", "Example"},
 	} {
 		t.Run(strings.Join(args, " "), func(t *testing.T) {
@@ -610,10 +610,10 @@ func TestReportCancelRequest(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 
 	var stdout, stderr bytes.Buffer
-	if exit := Main([]string{"report", "cancel", "job-1"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+	if exit := Main([]string{"review", "cancel", "job-1"}, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
 		t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
 	}
-	if method != http.MethodPost || path != "/v1/reports/jobs/job-1/cancel" {
+	if method != http.MethodPost || path != "/v1/reviews/jobs/job-1/cancel" {
 		t.Fatalf("got %s %s", method, path)
 	}
 	if !strings.Contains(stdout.String(), `"cancelled"`) {
