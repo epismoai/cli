@@ -88,7 +88,7 @@ func TestCommandSurface(t *testing.T) {
 		case/transfer case/start case/get case/list case/access/get case/access/set case/share case/assign case/update case/handoff/create case/handoff case/handoff/remove case/handoff/delete case/handoff/graph/get case/handoff/graph case/handoff/candidates/list case/handoff/candidate/list case/close case/reopen case/archive case/restore case/delete
 		case/task/create case/task/list case/task/get case/task/update case/task/set/status case/record/append case/record/list case/record/update case/record/delete
 		case/review/get case/review/list case/review/run case/review/act review/feedback/create review/feedback/list review/feedback/delete
-		review/delete review/cancel review/case/get review/case/list review/case/run review/case/act review/personal/run review/personal/get review/personal/list review/personal/act review/team/run review/team/get review/team/list review/team/act
+		review/delete review/cancel review/case/get review/case/list review/case/run review/case/act review/personal/run review/personal/get review/personal/list review/personal/act review/personal/schedule/get review/personal/schedule/set review/personal/schedule/delete review/personal/watch/get review/personal/watch/set review/team/run review/team/get review/team/list review/team/act review/team/schedule/get review/team/schedule/set review/team/schedule/delete review/team/watch/get review/team/watch/set
 		case/source/link case/source/unlink case/source/refresh case/source/get
 		record/append record/list record/update record/delete
 		task/create task/list task/get task/update task/set/status
