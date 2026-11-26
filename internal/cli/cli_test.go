@@ -81,7 +81,7 @@ func TestRefreshRaceAdoptsCredentialsWrittenByAnotherProcess(t *testing.T) {
 
 func TestCommandSurface(t *testing.T) {
 	expected := strings.Fields(`
-		login logout whoami update completion doctor examples docs memory/list
+		login logout whoami update completion doctor examples docs memory/list memory/create memory/update memory/delete
 		workspace/list workspace/current workspace/use workspace/clear workspace/create workspace/checkout workspace/update workspace/member/list workspace/member/upsert workspace/member/invite workspace/member/delete workspace/member/handover workspace/invitation/revoke
 		team/invite team/invitation/list team/invitation/revoke team/invitation/get team/invitation/accept team/disconnect team/list team/create team/update team/member/list team/member/add team/member/update team/member/delete
 		credit/balance credit/checkout token/create token/list token/revoke
@@ -109,13 +109,13 @@ func TestCommandSurface(t *testing.T) {
 
 func TestMemoryListRequest(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
-		if got := request.URL.RequestURI(); got != "/v1/memories?page_size=20&query=handoff&space_id=team-id" {
+		if got := request.URL.RequestURI(); got != "/v1/memories?page_size=20&query=handoff&scope_id=team-id" {
 			t.Errorf("request path = %q", got)
 		}
 		if got := request.Header.Get("Authorization"); got != "Bearer test-token" {
 			t.Errorf("authorization = %q", got)
 		}
-		_, _ = io.WriteString(w, `{"memories":[{"space_id":"team-id","content":"Review handoffs"}]}`)
+		_, _ = io.WriteString(w, `{"memories":[{"scope_id":"team-id","title":"Handoffs","content":"Review handoffs"}]}`)
 	}))
 	defer server.Close()
 	t.Setenv("EPISMO_API_URL", server.URL)
@@ -123,7 +123,7 @@ func TestMemoryListRequest(t *testing.T) {
 	t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
 
 	var stdout, stderr bytes.Buffer
-	args := []string{"memory", "list", "--query", "handoff", "--space-id", "team-id", "--page-size", "20"}
+	args := []string{"memory", "list", "--query", "handoff", "--scope-id", "team-id", "--page-size", "20"}
 	if code := Main(args, "test", strings.NewReader(""), &stdout, &stderr); code != 0 {
 		t.Fatalf("exit = %d, stderr = %s", code, stderr.String())
 	}
