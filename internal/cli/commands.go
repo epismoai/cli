@@ -22,12 +22,34 @@ func buildCommands() []*command {
 	commands = append(commands, reviewCommands()...)
 	memoryPaging := pagingOptions()
 	memoryPaging[0].Field = "page_size"
-	commands = append(commands, apiOperation("memory list", "list memories in your active personal or workspace space, or in a team you belong to", nil, http.MethodGet, func(invocation) string {
-		return "/v1/memories"
-	}, requestQuery, false, append(memoryPaging,
-		str("--space-id", "space_id", "team ID in the active workspace"),
-		str("--query", "query", "search memory content"),
-	)...))
+	commands = append(commands,
+		apiOperation("memory list", "list Core Memory notes in your active personal or workspace space, or in a team you belong to", nil, http.MethodGet, func(invocation) string {
+			return "/v1/memories"
+		}, requestQuery, false, append(memoryPaging,
+			str("--scope-id", "scope_id", "target scope UUID (personal Space or team ID in the active workspace)"),
+			str("--query", "query", "search memory title or content"),
+		)...),
+		apiOperation("memory create", "create a Core Memory note in an authorized scope", nil, http.MethodPost, func(invocation) string {
+			return "/v1/memories"
+		}, requestBody, false,
+			str("--scope-id", "scope_id", "target scope UUID (personal Space or team ID in the active workspace)"),
+			str("--title", "title", "optional short heading (max 160 bytes)"),
+			requiredOption(str("--content", "content", "Markdown note body (1 to 4,000 bytes)")),
+		),
+		apiOperation("memory update", "update a Core Memory note in an authorized scope", []string{"memory-id"}, http.MethodPatch, func(i invocation) string {
+			return "/v1/memories/" + escaped(i.positional(0))
+		}, requestBody, false,
+			str("--scope-id", "scope_id", "target scope UUID (personal Space or team ID in the active workspace)"),
+			str("--title", "title", "optional replacement heading (max 160 bytes)"),
+			requiredOption(str("--content", "content", "replacement Markdown note body (1 to 4,000 bytes)")),
+			integer("--lock-version", "lock_version", "optional expected lock_version for optimistic concurrency"),
+		),
+		apiOperation("memory delete", "delete a Core Memory note from an authorized scope", []string{"memory-id"}, http.MethodDelete, func(i invocation) string {
+			return "/v1/memories/" + escaped(i.positional(0))
+		}, requestQuery, false,
+			str("--scope-id", "scope_id", "target scope UUID (personal Space or team ID in the active workspace)"),
+		),
+	)
 	commands = append(commands, caseHandoffCommands()...)
 	commands = append(commands, caseTaskCommands()...)
 	commands = append(commands, caseRecordCommands()...)

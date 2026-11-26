@@ -16437,7 +16437,7 @@
           "reviews"
         ],
         "summary": "POST /v1/reviews/{runId}/feedback",
-        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. OAuth callers can list memory for their personal Space in the active context or for a team they belong to in that workspace. Review keys can list and delete notes in their own namespace. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers can search memory. Manual creation and editing are unavailable. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
+        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case\u2019s audience. OAuth callers can list memory for their personal Space in the active context or for a team they belong to in that workspace. Review keys can list and delete notes in their own namespace. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers can search memory. Manual creation and editing are unavailable. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
         "parameters": [
           {
             "name": "runId",
@@ -16756,7 +16756,7 @@
           "reviews"
         ],
         "summary": "GET /v1/reviews/{runId}/feedback",
-        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. OAuth callers can list memory for their personal Space in the active context or for a team they belong to in that workspace. Review keys can list and delete notes in their own namespace. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers can search memory. Manual creation and editing are unavailable. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
+        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case\u2019s audience. OAuth callers can list memory for their personal Space in the active context or for a team they belong to in that workspace. Review keys can list and delete notes in their own namespace. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers can search memory. Manual creation and editing are unavailable. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
         "parameters": [
           {
             "name": "runId",
@@ -17070,7 +17070,7 @@
           "reviews"
         ],
         "summary": "DELETE /v1/reviews/{runId}/feedback/{feedbackId}",
-        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. OAuth callers can list memory for their personal Space in the active context or for a team they belong to in that workspace. Review keys can list and delete notes in their own namespace. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers can search memory. Manual creation and editing are unavailable. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
+        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case\u2019s audience. OAuth callers can list memory for their personal Space in the active context or for a team they belong to in that workspace. Review keys can list and delete notes in their own namespace. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers can search memory. Manual creation and editing are unavailable. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
         "parameters": [
           {
             "name": "runId",
@@ -17355,7 +17355,7 @@
           "reviews"
         ],
         "summary": "GET /v1/memories",
-        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. OAuth callers can list memory for their personal Space in the active context or for a team they belong to in that workspace. Review keys can list and delete notes in their own namespace. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers can search memory. Manual creation and editing are unavailable. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
+        "description": "Core Memory notes scoped to a personal Space, team, or Review API key (up to 16 notes and 16,000 bytes total per scope, max 4,000 bytes per note). Both Review API keys and OAuth callers can list, create, update, and delete notes in their authorized scope using scope_id.",
         "parameters": [
           {
             "name": "workspaceId",
@@ -17367,12 +17367,12 @@
           },
           {
             "in": "query",
-            "name": "space_id",
+            "name": "scope_id",
             "schema": {
               "type": "string",
               "format": "uuid"
             },
-            "description": "OAuth only. Team ID in the active workspace. Omit for your personal scope."
+            "description": "Optional target scope UUID (for OAuth: personal Space or team ID in the active workspace; for Review API keys: must match the key scope)."
           },
           {
             "in": "query",
@@ -17398,14 +17398,6 @@
             "name": "cursor",
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "namespace_id",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
             }
           }
         ],
@@ -17437,22 +17429,12 @@
                         "type": "object",
                         "required": [
                           "id",
+                          "scope_id",
+                          "title",
                           "content",
                           "lock_version",
                           "created_at",
                           "updated_at"
-                        ],
-                        "oneOf": [
-                          {
-                            "required": [
-                              "namespace_id"
-                            ]
-                          },
-                          {
-                            "required": [
-                              "space_id"
-                            ]
-                          }
                         ],
                         "additionalProperties": false,
                         "properties": {
@@ -17460,13 +17442,12 @@
                             "type": "string",
                             "format": "uuid"
                           },
-                          "namespace_id": {
+                          "scope_id": {
                             "type": "string",
                             "format": "uuid"
                           },
-                          "space_id": {
-                            "type": "string",
-                            "format": "uuid"
+                          "title": {
+                            "type": "string"
                           },
                           "content": {
                             "type": "string"
@@ -17475,10 +17456,6 @@
                             "type": "integer",
                             "minimum": 1,
                             "maximum": 9007199254740991
-                          },
-                          "last_run_id": {
-                            "type": "string",
-                            "format": "uuid"
                           },
                           "created_at": {
                             "type": "string",
@@ -17500,7 +17477,7 @@
             }
           },
           "400": {
-            "description": "Successful JSON response",
+            "description": "Error JSON response",
             "content": {
               "application/json": {
                 "schema": {
@@ -17517,6 +17494,9 @@
                       ],
                       "additionalProperties": false,
                       "properties": {
+                        "code": {
+                          "type": "string"
+                        },
                         "message": {
                           "type": "string"
                         }
@@ -17528,7 +17508,7 @@
             }
           },
           "401": {
-            "description": "Successful JSON response",
+            "description": "Error JSON response",
             "content": {
               "application/json": {
                 "schema": {
@@ -17545,6 +17525,9 @@
                       ],
                       "additionalProperties": false,
                       "properties": {
+                        "code": {
+                          "type": "string"
+                        },
                         "message": {
                           "type": "string"
                         }
@@ -17556,7 +17539,7 @@
             }
           },
           "403": {
-            "description": "Successful JSON response",
+            "description": "Error JSON response",
             "content": {
               "application/json": {
                 "schema": {
@@ -17573,6 +17556,9 @@
                       ],
                       "additionalProperties": false,
                       "properties": {
+                        "code": {
+                          "type": "string"
+                        },
                         "message": {
                           "type": "string"
                         }
@@ -17584,7 +17570,7 @@
             }
           },
           "404": {
-            "description": "Successful JSON response",
+            "description": "Error JSON response",
             "content": {
               "application/json": {
                 "schema": {
@@ -17601,6 +17587,9 @@
                       ],
                       "additionalProperties": false,
                       "properties": {
+                        "code": {
+                          "type": "string"
+                        },
                         "message": {
                           "type": "string"
                         }
@@ -17612,7 +17601,7 @@
             }
           },
           "409": {
-            "description": "Successful JSON response",
+            "description": "Error JSON response",
             "content": {
               "application/json": {
                 "schema": {
@@ -17629,62 +17618,9 @@
                       ],
                       "additionalProperties": false,
                       "properties": {
-                        "message": {
+                        "code": {
                           "type": "string"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "error"
-                  ],
-                  "additionalProperties": false,
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "required": [
-                        "message"
-                      ],
-                      "additionalProperties": false,
-                      "properties": {
-                        "message": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "415": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "error"
-                  ],
-                  "additionalProperties": false,
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "required": [
-                        "message"
-                      ],
-                      "additionalProperties": false,
-                      "properties": {
+                        },
                         "message": {
                           "type": "string"
                         }
@@ -17696,7 +17632,7 @@
             }
           },
           "503": {
-            "description": "Successful JSON response",
+            "description": "Error JSON response",
             "content": {
               "application/json": {
                 "schema": {
@@ -17713,6 +17649,312 @@
                       ],
                       "additionalProperties": false,
                       "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "postV1Memories",
+        "tags": [
+          "reviews"
+        ],
+        "summary": "POST /v1/memories",
+        "description": "Core Memory notes scoped to a personal Space, team, or Review API key (up to 16 notes and 16,000 bytes total per scope, max 4,000 bytes per note). Both Review API keys and OAuth callers can list, create, update, and delete notes in their authorized scope using scope_id.",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "ReviewApiKey": []
+          },
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "content"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "scope_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "title": {
+                    "type": "string",
+                    "maxLength": 160
+                  },
+                  "content": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created memory note",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "memory"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "memory": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "scope_id",
+                        "title",
+                        "content",
+                        "lock_version",
+                        "created_at",
+                        "updated_at"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "scope_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "content": {
+                          "type": "string"
+                        },
+                        "lock_version": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updated_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "message"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "message"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "message"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "message"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "message"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "message"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
                         "message": {
                           "type": "string"
                         }
@@ -17727,20 +17969,338 @@
       }
     },
     "/v1/memories/{memoryId}": {
-      "delete": {
-        "operationId": "deleteV1MemoriesMemoryId",
+      "patch": {
+        "operationId": "patchV1MemoriesMemoryId",
         "tags": [
           "reviews"
         ],
-        "summary": "DELETE /v1/memories/{memoryId}",
-        "description": "Feedback belongs to a run and optionally a verification. Case feedback may be reflected in reports visible to that Case’s audience. OAuth callers can list memory for their personal Space in the active context or for a team they belong to in that workspace. Review keys can list and delete notes in their own namespace. The agent creates, updates, consolidates and deletes notes after successful reviews. Callers can search memory. Manual creation and editing are unavailable. Feedback lists return up to 100 entries. Memory lists use cursor pagination (default 50, maximum 100). Namespace selectors cannot expand key access. Memory survives review-history and feedback deletion; deleting memory does not redact historical outputs or provider logs.",
+        "summary": "PATCH /v1/memories/{memoryId}",
+        "description": "Core Memory notes scoped to a personal Space, team, or Review API key (up to 16 notes and 16,000 bytes total per scope, max 4,000 bytes per note). Both Review API keys and OAuth callers can list, create, update, and delete notes in their authorized scope using scope_id.",
         "parameters": [
           {
             "name": "memoryId",
             "in": "path",
             "required": true,
             "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": false,
+            "schema": {
               "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "ReviewApiKey": []
+          },
+          {
+            "OAuth2": [
+              "write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "content"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "scope_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "title": {
+                    "type": "string",
+                    "maxLength": 160
+                  },
+                  "content": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000
+                  },
+                  "lock_version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated memory note",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "memory"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "memory": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "scope_id",
+                        "title",
+                        "content",
+                        "lock_version",
+                        "created_at",
+                        "updated_at"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "scope_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "content": {
+                          "type": "string"
+                        },
+                        "lock_version": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updated_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "message"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "message"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "message"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "message"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "message"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error JSON response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "message"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteV1MemoriesMemoryId",
+        "tags": [
+          "reviews"
+        ],
+        "summary": "DELETE /v1/memories/{memoryId}",
+        "description": "Core Memory notes scoped to a personal Space, team, or Review API key (up to 16 notes and 16,000 bytes total per scope, max 4,000 bytes per note). Both Review API keys and OAuth callers can list, create, update, and delete notes in their authorized scope using scope_id.",
+        "parameters": [
+          {
+            "name": "memoryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           },
           {
@@ -17753,16 +18313,22 @@
           },
           {
             "in": "query",
-            "name": "namespace_id",
+            "name": "scope_id",
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
+            },
+            "description": "Optional target scope UUID (for OAuth: personal Space or team ID in the active workspace; for Review API keys: must match the key scope)."
           }
         ],
         "security": [
           {
             "ReviewApiKey": []
+          },
+          {
+            "OAuth2": [
+              "write"
+            ]
           }
         ],
         "responses": {
@@ -17780,7 +18346,7 @@
             }
           },
           "400": {
-            "description": "Successful JSON response",
+            "description": "Error JSON response",
             "content": {
               "application/json": {
                 "schema": {
@@ -17797,6 +18363,9 @@
                       ],
                       "additionalProperties": false,
                       "properties": {
+                        "code": {
+                          "type": "string"
+                        },
                         "message": {
                           "type": "string"
                         }
@@ -17808,7 +18377,7 @@
             }
           },
           "401": {
-            "description": "Successful JSON response",
+            "description": "Error JSON response",
             "content": {
               "application/json": {
                 "schema": {
@@ -17825,6 +18394,9 @@
                       ],
                       "additionalProperties": false,
                       "properties": {
+                        "code": {
+                          "type": "string"
+                        },
                         "message": {
                           "type": "string"
                         }
@@ -17836,7 +18408,7 @@
             }
           },
           "403": {
-            "description": "Successful JSON response",
+            "description": "Error JSON response",
             "content": {
               "application/json": {
                 "schema": {
@@ -17853,6 +18425,9 @@
                       ],
                       "additionalProperties": false,
                       "properties": {
+                        "code": {
+                          "type": "string"
+                        },
                         "message": {
                           "type": "string"
                         }
@@ -17864,7 +18439,7 @@
             }
           },
           "404": {
-            "description": "Successful JSON response",
+            "description": "Error JSON response",
             "content": {
               "application/json": {
                 "schema": {
@@ -17881,6 +18456,9 @@
                       ],
                       "additionalProperties": false,
                       "properties": {
+                        "code": {
+                          "type": "string"
+                        },
                         "message": {
                           "type": "string"
                         }
@@ -17892,7 +18470,7 @@
             }
           },
           "409": {
-            "description": "Successful JSON response",
+            "description": "Error JSON response",
             "content": {
               "application/json": {
                 "schema": {
@@ -17909,62 +18487,9 @@
                       ],
                       "additionalProperties": false,
                       "properties": {
-                        "message": {
+                        "code": {
                           "type": "string"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "error"
-                  ],
-                  "additionalProperties": false,
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "required": [
-                        "message"
-                      ],
-                      "additionalProperties": false,
-                      "properties": {
-                        "message": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "415": {
-            "description": "Successful JSON response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "error"
-                  ],
-                  "additionalProperties": false,
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "required": [
-                        "message"
-                      ],
-                      "additionalProperties": false,
-                      "properties": {
+                        },
                         "message": {
                           "type": "string"
                         }
@@ -17976,7 +18501,7 @@
             }
           },
           "503": {
-            "description": "Successful JSON response",
+            "description": "Error JSON response",
             "content": {
               "application/json": {
                 "schema": {
@@ -17993,6 +18518,9 @@
                       ],
                       "additionalProperties": false,
                       "properties": {
+                        "code": {
+                          "type": "string"
+                        },
                         "message": {
                           "type": "string"
                         }
@@ -19931,7 +20459,7 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "epk_...",
-        "description": "Review-only API key created in Settings → AI."
+        "description": "Review-only API key created in Settings \u2192 AI."
       },
       "OAuth2": {
         "type": "oauth2",

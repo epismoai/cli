@@ -93,6 +93,7 @@ func TestDryRunRejectsReadOnlyCommands(t *testing.T) {
 func TestEveryCommandHasExpectedDryRunSupport(t *testing.T) {
 	want := map[string]bool{
 		"login": true, "logout": true,
+		"memory create": true, "memory update": true, "memory delete": true,
 		"workspace use": true, "workspace clear": true, "workspace create": true, "workspace checkout": true, "workspace update": true,
 		"workspace member upsert": true, "workspace member invite": true, "workspace member delete": true, "workspace member handover": true, "workspace invitation revoke": true,
 		"team invite": true, "team invitation revoke": true, "team invitation accept": true, "team disconnect": true,
