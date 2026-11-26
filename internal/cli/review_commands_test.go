@@ -620,3 +620,81 @@ func TestReportCancelRequest(t *testing.T) {
 		t.Fatalf("stdout = %s", stdout.String())
 	}
 }
+
+func TestReportScheduleAndWatchRequests(t *testing.T) {
+	tests := []struct {
+		name         string
+		args         []string
+		method, path string
+		body         map[string]any
+	}{
+		{
+			name:   "personal schedule set",
+			args:   []string{"review", "personal", "schedule", "set", "--weekdays", "mon,wed,fri", "--times", "09:00,18:00", "--timezone", "UTC", "--instructions", "Focus on blockers", "--criteria", "Flag overdue tasks"},
+			method: http.MethodPut,
+			path:   "/v1/me/reviews/schedule",
+			body: map[string]any{
+				"weekdays":     []any{"mon", "wed", "fri"},
+				"times":        []any{"09:00", "18:00"},
+				"timezone":     "UTC",
+				"instructions": "Focus on blockers",
+				"criteria":     "Flag overdue tasks",
+			},
+		},
+		{
+			name:   "team schedule set",
+			args:   []string{"review", "team", "schedule", "set", "team-1", "--weekdays", "1,5", "--times", "09:00", "--timezone", "Asia/Tokyo", "--instructions", "Summarize risks"},
+			method: http.MethodPut,
+			path:   "/v1/teams/team-1/reviews/schedule",
+			body: map[string]any{
+				"weekdays":     []any{"1", "5"},
+				"times":        []any{"09:00"},
+				"timezone":     "Asia/Tokyo",
+				"instructions": "Summarize risks",
+			},
+		},
+		{
+			name:   "personal watch set",
+			args:   []string{"review", "personal", "watch", "set", "--watching=true"},
+			method: http.MethodPut,
+			path:   "/v1/me/reviews/watch",
+			body:   map[string]any{"watching": true},
+		},
+		{
+			name:   "team watch set",
+			args:   []string{"review", "team", "watch", "set", "team-1", "--watching=false"},
+			method: http.MethodPut,
+			path:   "/v1/teams/team-1/reviews/watch",
+			body:   map[string]any{"watching": false},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var gotMethod, gotPath string
+			var gotBody map[string]any
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				gotMethod, gotPath = r.Method, r.URL.Path
+				if err := json.NewDecoder(r.Body).Decode(&gotBody); err != nil {
+					t.Error(err)
+				}
+				_, _ = io.WriteString(w, `{}`)
+			}))
+			defer server.Close()
+			t.Setenv("EPISMO_API_URL", server.URL)
+			t.Setenv("EPISMO_TOKEN", "test-token")
+			t.Setenv("EPISMO_CONFIG_DIR", t.TempDir())
+
+			var stdout, stderr bytes.Buffer
+			if exit := Main(tc.args, "test", strings.NewReader(""), &stdout, &stderr); exit != 0 {
+				t.Fatalf("exit=%d stderr=%s", exit, stderr.String())
+			}
+			if gotMethod != tc.method || gotPath != tc.path {
+				t.Fatalf("got %s %s, want %s %s", gotMethod, gotPath, tc.method, tc.path)
+			}
+			if !reflect.DeepEqual(gotBody, tc.body) {
+				t.Fatalf("got body %#v, want %#v", gotBody, tc.body)
+			}
+		})
+	}
+}

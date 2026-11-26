@@ -107,6 +107,7 @@ func TestEveryCommandHasExpectedDryRunSupport(t *testing.T) {
 		"case source link": true, "case source unlink": true, "case source refresh": true,
 		"review feedback create": true, "review feedback delete": true,
 		"review delete": true, "review cancel": true, "review case run": true, "review case act": true, "case review run": true, "case review act": true, "review personal run": true, "review team run": true, "review team act": true, "review personal act": true,
+		"review personal schedule set": true, "review personal schedule delete": true, "review personal watch set": true, "review team schedule set": true, "review team schedule delete": true, "review team watch set": true,
 		"case task create": true, "case task update": true, "case task set status": true, "case record append": true, "case record update": true, "case record delete": true,
 		"record append": true, "record update": true, "record delete": true, "task create": true,
 		"task update": true, "task set status": true,
